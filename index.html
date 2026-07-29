@@ -39,6 +39,17 @@
       position: relative;
     }
 
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.45;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");
+    }
+
     /* airmail stripe strip along the very top */
     .airmail-strip {
       height: 10px;
@@ -118,16 +129,34 @@
     .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
     .hero {
-      max-width: 780px;
+      max-width: 1040px;
       margin: 0 auto;
       padding: 4.5rem 2rem 3.5rem;
       position: relative;
       animation: rise 0.7s ease both;
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+    .hero-art { position: relative; min-height: 260px; }
+    .mail-tag {
+      position: absolute;
+      bottom: 0.5rem;
+      left: 0.5rem;
+      border: 1px dashed var(--stamp);
+      padding: 0.4rem 0.7rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      color: var(--stamp);
+      transform: rotate(-4deg);
+      background: rgba(241,230,200,0.5);
     }
     .postmark {
       position: absolute;
-      top: 2.5rem;
-      right: 2rem;
+      top: 0;
+      right: 0.5rem;
       width: 108px;
       height: 108px;
       border: 3px solid var(--stamp);
@@ -153,6 +182,15 @@
       line-height: 1.3;
       letter-spacing: 0.06em;
       text-transform: uppercase;
+    }
+    .spud-doodle {
+      position: absolute;
+      top: 4.2rem;
+      left: 0;
+      width: 190px;
+      height: auto;
+      opacity: 0.9;
+      transform: rotate(-4deg);
     }
     .hero-label {
       font-family: 'Special Elite', monospace;
@@ -231,11 +269,75 @@
     strong { color: var(--ink); font-weight: 700; }
 
     .highlight {
-      background: transparent;
-      padding: 0 0.15em;
-      border-bottom: 3px solid var(--gold);
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10'><path d='M0 6 Q 8 1 16 6 T 32 6 T 48 6 T 64 6 T 80 6 T 100 6' fill='none' stroke='%23b8791a' stroke-width='3'/></svg>");
+      background-repeat: repeat-x;
+      background-position: bottom 1px left;
+      background-size: 42px 10px;
+      padding-bottom: 3px;
       font-weight: 700;
       color: var(--ink);
+    }
+
+    .band {
+      background: var(--paper-dark);
+      border-top: 2px dashed var(--border);
+      border-bottom: 2px dashed var(--border);
+      position: relative;
+    }
+    .band::before, .band::after {
+      content: '\2702';
+      position: absolute;
+      top: -0.65rem;
+      font-size: 0.8rem;
+      color: var(--border);
+    }
+    .band::before { left: 1.5rem; }
+    .band::after { right: 1.5rem; }
+
+    .form-card {
+      background: var(--card);
+      border: 2px solid var(--brown);
+      padding: 2rem;
+      position: relative;
+      margin-top: 1.5rem;
+    }
+    .form-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 34px 34px 0;
+      border-color: transparent var(--paper) transparent transparent;
+    }
+    .form-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 0 34px 34px 0;
+      border-color: transparent var(--border) transparent transparent;
+      opacity: 0.6;
+      clip-path: polygon(100% 0, 100% 100%, 96% 4%);
+    }
+    .form-stamp {
+      position: absolute;
+      top: 1.25rem;
+      right: 3.25rem;
+      border: 2px solid var(--red);
+      color: var(--red);
+      font-family: 'Special Elite', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.6rem;
+      transform: rotate(-8deg);
+      opacity: 0.8;
+      text-transform: uppercase;
     }
 
     .rules-table {
@@ -266,6 +368,12 @@
     .rules-table tr:nth-child(even) td { background: rgba(58,31,12,0.04); }
     .rules-table .ok  { color: var(--green); font-weight: 700; font-family: 'Space Mono', monospace; }
     .rules-table .no  { color: var(--red); font-weight: 700; font-family: 'Space Mono', monospace; }
+    .form-note {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-style: italic;
+    }
 
     .prize-grid {
       display: grid;
@@ -281,9 +389,9 @@
       box-shadow: 4px 4px 0 rgba(58,31,12,0.18);
     }
     .prize-box { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .prize-box:nth-child(1) { transform: rotate(-1.2deg); }
-    .prize-box:nth-child(2) { transform: rotate(0.8deg); }
-    .prize-box:nth-child(3) { transform: rotate(-0.6deg); }
+    .prize-box:nth-child(1) { transform: rotate(-1.2deg) translateY(6px); }
+    .prize-box:nth-child(2) { transform: rotate(0.8deg) translateY(-10px); }
+    .prize-box:nth-child(3) { transform: rotate(-0.6deg) translateY(2px); }
     .prize-box:hover { transform: rotate(0deg) translateY(-4px); box-shadow: 6px 8px 0 rgba(58,31,12,0.22); }
     .prize-box::before {
       content: '';
@@ -435,9 +543,14 @@
       .hero { animation: none; }
     }
 
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-art { display: none; }
+    }
+
     @media (max-width: 700px) {
       .prize-grid { grid-template-columns: 1fr; }
-      .postmark { display: none; }
+      .prize-box, .prize-box:hover { transform: none; }
     }
 
     @media (max-width: 600px) {
@@ -491,17 +604,29 @@
   </nav>
 
   <div class="hero">
-    <div class="postmark"><span class="postmark-text">Posted<br />Melbourne<br />AU</span></div>
-    <p class="hero-label">// A Hack Club YSWS by sami9889</p>
-    <h1>You Spud,<br /><span>We Spud.</span></h1>
-    <p>
-      Everyone's shipping 500KB of JavaScript just to show some text on a page.
-      Build something under 15KB (no frameworks, no React, no Tailwind)
-      and Sami will mail you a parcel from Australia.
-    </p>
-    <div class="hero-btns">
-      <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="btn btn-dark">Ship your spud →</a>
-      <a href="#rules" class="btn btn-outline">Read the rules</a>
+    <div class="hero-text">
+      <p class="hero-label">// A Hack Club YSWS by sami9889</p>
+      <h1>You Spud,<br /><span>We Spud.</span></h1>
+      <p>
+        Everyone's shipping 500KB of JavaScript just to show some text on a page.
+        Build something under 15KB (no frameworks, no React, no Tailwind)
+        and Sami will mail you a parcel from Australia.
+      </p>
+      <div class="hero-btns">
+        <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="btn btn-dark">Ship your spud →</a>
+        <a href="#rules" class="btn btn-outline">Read the rules</a>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="postmark"><span class="postmark-text">Posted<br />Melbourne<br />AU</span></div>
+      <svg class="spud-doodle" viewBox="0 0 120 90">
+        <path d="M22 55 C10 46 14 28 30 22 C38 12 58 9 70 17 C86 14 104 26 100 42 C110 52 104 70 88 72 C80 82 58 84 46 76 C30 78 16 68 22 55 Z" fill="none" stroke="var(--stamp)" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="45" cy="42" r="2.4" fill="var(--stamp)"/>
+        <circle cx="68" cy="34" r="2.2" fill="var(--stamp)"/>
+        <circle cx="60" cy="58" r="2.3" fill="var(--stamp)"/>
+        <circle cx="80" cy="52" r="2" fill="var(--stamp)"/>
+      </svg>
+      <div class="mail-tag">AIRMAIL<br />PAR AVION</div>
     </div>
   </div>
 
@@ -528,71 +653,153 @@
   <div class="section" id="rules">
     <h2>The rules</h2>
     <p>Keep it simple. Keep it small. Keep it vanilla.</p>
+    <p>Fonts and CDN scripts (like Google Fonts) don't count toward your KB limit, but only decoration and styling get that pass, your actual app or game logic has to be the code you wrote and it counts. That's the size of your real files as written, not a gzipped or minified-then-measured number. A blank page, a "hello world" print, or an unmodified starter template doesn't qualify, however small it is.</p>
 
-    <table class="rules-table">
-      <thead>
-        <tr>
-          <th>Rule</th>
-          <th>Standard (&lt;15KB)</th>
-          <th>Hard Mode (&lt;5KB)</th>
-          <th>Ultra Hard (&lt;2KB)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Frameworks (React, Vue, etc.)</td>
-          <td class="no">Not allowed</td>
-          <td class="no">Not allowed</td>
-          <td class="no">Not allowed</td>
-        </tr>
-        <tr>
-          <td>CSS libraries (Tailwind, Bootstrap)</td>
-          <td class="no">Not allowed</td>
-          <td class="no">Not allowed</td>
-          <td class="no">Not allowed</td>
-        </tr>
-        <tr>
-          <td>Build tools / bundlers</td>
-          <td class="no">Not allowed</td>
-          <td class="no">Not allowed</td>
-          <td class="no">Not allowed</td>
-        </tr>
-        <tr>
-          <td>Vanilla HTML + CSS + JS</td>
-          <td class="ok">Allowed</td>
-          <td class="ok">Allowed</td>
-          <td class="ok">Allowed</td>
-        </tr>
-        <tr>
-          <td>External fonts &amp; CDN scripts</td>
-          <td class="ok">Allowed (don't count)</td>
-          <td class="ok">Allowed (don't count)</td>
-          <td class="ok">Allowed (don't count)</td>
-        </tr>
-        <tr>
-          <td>Must be live with a public URL</td>
-          <td class="ok">Required</td>
-          <td class="ok">Required</td>
-          <td class="ok">Required</td>
-        </tr>
-        <tr>
-          <td>Source code must be public</td>
-          <td class="ok">Required</td>
-          <td class="ok">Required</td>
-          <td class="ok">Required</td>
-        </tr>
-        <tr>
-          <td>Potato theme</td>
-          <td class="ok">Bonus points</td>
-          <td class="ok">Bonus points</td>
-          <td class="ok">Bonus points</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="form-card">
+      <div class="form-stamp">Declared</div>
+      <table class="rules-table">
+        <thead>
+          <tr>
+            <th>Rule</th>
+            <th>Standard (&lt;15KB)</th>
+            <th>Hard Mode (&lt;5KB)</th>
+            <th>Ultra Hard (&lt;2KB)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Frameworks (React, Vue, etc.)</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+          </tr>
+          <tr>
+            <td>CSS libraries (Tailwind, Bootstrap)</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+          </tr>
+          <tr>
+            <td>Build tools / bundlers</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+          </tr>
+          <tr>
+            <td>Vanilla HTML + CSS + JS</td>
+            <td class="ok">Allowed</td>
+            <td class="ok">Allowed</td>
+            <td class="ok">Allowed</td>
+          </tr>
+          <tr>
+            <td>Total size counted across all your files combined</td>
+            <td class="ok">Applies</td>
+            <td class="ok">Applies</td>
+            <td class="ok">Applies</td>
+          </tr>
+          <tr>
+            <td>Splitting code across many files to dodge the total</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+          </tr>
+          <tr>
+            <td>External fonts &amp; CDN scripts (styling/decoration only)</td>
+            <td class="ok">Allowed (don't count)</td>
+            <td class="ok">Allowed (don't count)</td>
+            <td class="ok">Allowed (don't count)</td>
+          </tr>
+          <tr>
+            <td>Loading your actual app/game logic from a CDN</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+          </tr>
+          <tr>
+            <td>Iframing in a separately hosted app to dodge the limit</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+          </tr>
+          <tr>
+            <td>Real logic lives on your own server, page is just a shell</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+          </tr>
+          <tr>
+            <td>Must be live with a public URL</td>
+            <td class="ok">Required</td>
+            <td class="ok">Required</td>
+            <td class="ok">Required</td>
+          </tr>
+          <tr>
+            <td>Source code must be public</td>
+            <td class="ok">Required</td>
+            <td class="ok">Required</td>
+            <td class="ok">Required</td>
+          </tr>
+          <tr>
+            <td>Must actually do something</td>
+            <td class="ok">Required</td>
+            <td class="ok">Required</td>
+            <td class="ok">Required</td>
+          </tr>
+          <tr>
+            <td>Blank pages / "hello world" only</td>
+            <td class="no">Not eligible</td>
+            <td class="no">Not eligible</td>
+            <td class="no">Not eligible</td>
+          </tr>
+          <tr>
+            <td>Unmodified starter template or boilerplate</td>
+            <td class="no">Not eligible</td>
+            <td class="no">Not eligible</td>
+            <td class="no">Not eligible</td>
+          </tr>
+          <tr>
+            <td>Someone else's project submitted as your own</td>
+            <td class="no">Not eligible</td>
+            <td class="no">Not eligible</td>
+            <td class="no">Not eligible</td>
+          </tr>
+          <tr>
+            <td>Using AI to help debug or fix a specific issue</td>
+            <td class="ok">Allowed</td>
+            <td class="ok">Allowed</td>
+            <td class="ok">Allowed</td>
+          </tr>
+          <tr>
+            <td>Using AI to generate your core app/game logic</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+            <td class="no">Not allowed</td>
+          </tr>
+          <tr>
+            <td>Minified or hand-golfed code</td>
+            <td class="ok">Allowed</td>
+            <td class="ok">Allowed</td>
+            <td class="ok">Allowed</td>
+          </tr>
+          <tr>
+            <td>Near-duplicate resubmissions to farm extra parcels</td>
+            <td class="no">Not eligible</td>
+            <td class="no">Not eligible</td>
+            <td class="no">Not eligible</td>
+          </tr>
+          <tr>
+            <td>Potato theme</td>
+            <td class="ok">Bonus points</td>
+            <td class="ok">Bonus points</td>
+            <td class="ok">Bonus points</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="form-note">Every submission gets checked by hand. Templates, boilerplate, iframe tricks, backend-offloaded logic, and empty joke entries get politely skipped, no exceptions. One parcel per person per project.</p>
+    </div>
   </div>
 
-  <hr class="divider" />
-
+  <div class="band">
   <div class="section" id="prizes">
     <h2>What you win</h2>
     <p>Physically mailed to you, from Australia, and it's more than just spuds. Three tiers, each one stacks on the last.</p>
@@ -632,8 +839,7 @@
       </div>
     </div>
   </div>
-
-  <hr class="divider" />
+  </div>
 
   <div class="section" id="submit">
     <h2>How to submit</h2>
@@ -682,6 +888,14 @@
       <details>
         <summary>What counts toward the 15KB?</summary>
         <p>All your files: HTML, CSS, JS, images. External stuff loaded from CDNs (like Google Fonts) doesn't count, but keep the spirit of it. The point is to prove you don't need a million dependencies.</p>
+      </details>
+      <details>
+        <summary>Can I just ship a blank page that says "hello world"?</summary>
+        <p>No. It has to actually do something, even something tiny: a game, a tool, a toy, an experiment. That also rules out unmodified starter templates (default Vite page, create-react-app splash, etc.) and logic loaded in from a CDN just to dodge the size limit. Under 15KB is the challenge, not "under 1 line." Sami checks every submission by hand.</p>
+      </details>
+      <details>
+        <summary>Can I use AI tools like Copilot or ChatGPT?</summary>
+        <p>For debugging and fixing a specific issue, sure. For generating your actual app or game logic wholesale, no. The core idea and code need to be yours, that's the whole point of the challenge.</p>
       </details>
       <details>
         <summary>Does it have to be a website?</summary>
