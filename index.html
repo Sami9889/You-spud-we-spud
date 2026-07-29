@@ -7,19 +7,22 @@
   <meta name="description" content="Build a site, game, or tool under 15KB — no frameworks, no React, no Tailwind. Ship it and get a real potato mailed to you." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --cream: #f5edd8;
-      --brown: #3b1f0c;
-      --mud: #6b3a1f;
-      --gold: #c8860a;
-      --straw: #e8c96a;
-      --green: #4a7c2f;
-      --dirt: #8b5e3c;
-      --light: #faf5e8;
+      --brown: #2e1608;
+      --mud: #5c2f12;
+      --gold: #d4920c;
+      --gold-light: #f0b429;
+      --straw: #eace6e;
+      --green: #3d6b24;
+      --green-light: #4a8530;
+      --dirt: #7a5230;
+      --light: #fdf8ee;
+      --dark-bg: #1a0c04;
     }
 
     html { scroll-behavior: smooth; }
@@ -29,9 +32,6 @@
       color: var(--brown);
       font-family: 'Space Grotesk', sans-serif;
       overflow-x: hidden;
-      background-image:
-        radial-gradient(ellipse at 10% 90%, rgba(107,58,31,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 90% 10%, rgba(74,124,47,0.06) 0%, transparent 60%);
     }
 
     /* ── NOISE TEXTURE ── */
@@ -39,174 +39,281 @@
       content: '';
       position: fixed;
       inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
       pointer-events: none;
-      z-index: 0;
+      z-index: 1000;
     }
 
     /* ── ANIMATIONS ── */
-    @keyframes float { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-12px) rotate(2deg)} }
-    @keyframes wiggle { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
-    @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(200,134,10,0.4)} 50%{box-shadow:0 0 0 16px rgba(200,134,10,0)} }
-    @keyframes scanline { from{transform:translateY(-100%)} to{transform:translateY(100vh)} }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes float    { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-18px) rotate(3deg)} }
+    @keyframes wiggle   { 0%,100%{transform:rotate(-4deg) scale(1)} 50%{transform:rotate(4deg) scale(1.05)} }
+    @keyframes marquee  { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(212,146,12,0.5)} 60%{box-shadow:0 0 0 18px rgba(212,146,12,0)} }
+    @keyframes blink    { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes popIn    { 0%{transform:scale(0.8);opacity:0} 80%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
+    @keyframes drift    { 0%{transform:translateY(0) translateX(0)} 33%{transform:translateY(-8px) translateX(4px)} 66%{transform:translateY(4px) translateX(-3px)} 100%{transform:translateY(0) translateX(0)} }
+    @keyframes scanline { from{top:-4px} to{top:100%} }
 
     .fade-up {
       opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.7s ease, transform 0.7s ease;
+      transform: translateY(36px);
+      transition: opacity 0.75s cubic-bezier(.22,1,.36,1), transform 0.75s cubic-bezier(.22,1,.36,1);
     }
-    .fade-up.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
 
     /* ── TICKER ── */
     .ticker-wrap {
-      background: var(--brown);
+      background: var(--dark-bg);
       color: var(--straw);
-      padding: 10px 0;
+      padding: 9px 0;
       overflow: hidden;
       font-family: 'Space Mono', monospace;
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      border-bottom: 3px solid var(--gold);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      border-bottom: 2px solid var(--gold);
+      position: relative;
+      z-index: 50;
     }
     .ticker-inner {
       display: flex;
       white-space: nowrap;
-      animation: marquee 22s linear infinite;
+      animation: marquee 28s linear infinite;
     }
     .ticker-inner span { padding: 0 2rem; }
+    .ticker-inner .sep { color: var(--gold); opacity: 0.6; }
 
     /* ── NAV ── */
     nav {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(245,237,216,0.92);
-      backdrop-filter: blur(8px);
-      border-bottom: 2px solid var(--dirt);
+      background: rgba(245,237,216,0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 2px solid rgba(122,82,48,0.3);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.75rem 2rem;
+      padding: 0.7rem 2rem;
     }
-    .nav-logo { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em; color: var(--brown); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
-    .nav-logo .spud { font-size: 1.4rem; animation: wiggle 2.5s ease-in-out infinite; display: inline-block; }
-    .nav-links { display: flex; gap: 1.5rem; }
-    .nav-links a { text-decoration: none; color: var(--mud); font-size: 0.9rem; font-weight: 600; transition: color 0.2s; }
+    .nav-logo {
+      font-weight: 800;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      color: var(--brown);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-logo .spud {
+      font-size: 1.5rem;
+      animation: wiggle 3s ease-in-out infinite;
+      display: inline-block;
+    }
+    .nav-links { display: flex; gap: 1.75rem; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--mud);
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: color 0.2s;
+      letter-spacing: 0.01em;
+    }
     .nav-links a:hover { color: var(--gold); }
     .nav-cta {
       background: var(--brown);
       color: var(--straw);
-      padding: 0.5rem 1.2rem;
+      padding: 0.5rem 1.3rem;
       border: none;
       cursor: pointer;
       font-family: 'Space Mono', monospace;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.07em;
       text-decoration: none;
-      transition: background 0.2s, transform 0.1s;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: inline-block;
     }
-    .nav-cta:hover { background: var(--mud); transform: translateY(-1px); }
+    .nav-cta:hover {
+      background: var(--mud);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(46,22,8,0.25);
+    }
 
     /* ── HERO ── */
     .hero {
-      min-height: 90vh;
+      min-height: 92vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 4rem 2rem;
+      padding: 5rem 2rem 4rem;
       position: relative;
       overflow: hidden;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 100%, rgba(212,146,12,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse at 5% 80%, rgba(107,58,31,0.1) 0%, transparent 55%),
+        radial-gradient(ellipse at 95% 20%, rgba(61,107,36,0.07) 0%, transparent 55%),
+        var(--cream);
     }
 
-    .hero-bg-potato {
+    .hero-bg-spud {
       position: absolute;
-      font-size: 12rem;
-      opacity: 0.05;
-      animation: float 6s ease-in-out infinite;
+      opacity: 0.055;
+      animation: float 8s ease-in-out infinite;
       pointer-events: none;
       user-select: none;
+      filter: blur(1px);
     }
-    .hero-bg-potato:nth-child(1) { top: 5%; left: -4%; animation-delay: 0s; }
-    .hero-bg-potato:nth-child(2) { bottom: 5%; right: -4%; animation-delay: -3s; font-size: 9rem; }
-    .hero-bg-potato:nth-child(3) { top: 50%; left: 80%; font-size: 7rem; animation-delay: -1.5s; opacity: 0.04; }
+    .hero-bg-spud:nth-child(1) { font-size: 14rem; top: 2%; left: -5%; animation-delay: 0s; }
+    .hero-bg-spud:nth-child(2) { font-size: 10rem; bottom: 4%; right: -3%; animation-delay: -4s; opacity: 0.04; }
+    .hero-bg-spud:nth-child(3) { font-size: 7rem; top: 55%; left: 78%; animation-delay: -2s; opacity: 0.035; }
 
-    .badge {
-      display: inline-block;
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
       background: var(--green);
       color: #fff;
       font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.12em;
-      padding: 0.35rem 1rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      padding: 0.4rem 1.1rem;
       text-transform: uppercase;
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
+      animation: popIn 0.6s cubic-bezier(.22,1,.36,1) 0.2s both;
+    }
+    .hero-eyebrow .dot-live {
+      width: 7px; height: 7px;
+      background: #7dff8a;
+      border-radius: 50%;
+      animation: blink 1.8s ease-in-out infinite;
     }
 
     h1 {
-      font-size: clamp(3rem, 10vw, 7.5rem);
+      font-size: clamp(3.5rem, 11vw, 8.5rem);
       font-weight: 800;
-      line-height: 0.95;
-      letter-spacing: -0.03em;
+      line-height: 0.92;
+      letter-spacing: -0.04em;
       color: var(--brown);
-      margin-bottom: 1rem;
+      margin-bottom: 1.25rem;
       position: relative;
+      animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) 0.35s both;
     }
     h1 .line2 {
       display: block;
       color: var(--gold);
-      -webkit-text-stroke: 2px var(--mud);
+      -webkit-text-stroke: 2.5px var(--mud);
       paint-order: stroke fill;
     }
 
     .hero-sub {
-      max-width: 560px;
-      font-size: 1.15rem;
-      line-height: 1.65;
+      max-width: 540px;
+      font-size: 1.1rem;
+      line-height: 1.7;
       color: var(--mud);
-      margin: 1.5rem auto 2.5rem;
+      margin: 0 auto 2.5rem;
+      animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) 0.5s both;
+    }
+    .hero-sub strong { color: var(--brown); }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) 0.65s both;
     }
 
-    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
     .btn-primary {
       background: var(--brown);
       color: var(--straw);
-      padding: 0.9rem 2rem;
+      padding: 1rem 2.25rem;
       font-family: 'Space Mono', monospace;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.07em;
       text-decoration: none;
       border: 3px solid var(--brown);
       transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-      animation: pulse 2.5s infinite;
+      animation: pulse 2.8s 1.5s infinite;
+      display: inline-block;
     }
-    .btn-primary:hover { background: var(--mud); border-color: var(--mud); transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--gold); }
+    .btn-primary:hover {
+      background: var(--mud);
+      border-color: var(--mud);
+      transform: translate(-3px, -3px);
+      box-shadow: 5px 5px 0 var(--gold);
+      animation: none;
+    }
     .btn-secondary {
       background: transparent;
       color: var(--brown);
-      padding: 0.9rem 2rem;
+      padding: 1rem 2.25rem;
       font-family: 'Space Mono', monospace;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 700;
       text-decoration: none;
       border: 3px solid var(--brown);
       transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: inline-block;
     }
-    .btn-secondary:hover { background: var(--straw); transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--mud); }
+    .btn-secondary:hover {
+      background: var(--straw);
+      transform: translate(-3px, -3px);
+      box-shadow: 5px 5px 0 var(--mud);
+    }
 
-    .scroll-hint { margin-top: 3rem; font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--dirt); letter-spacing: 0.1em; opacity: 0.7; }
-    .scroll-hint span { animation: blink 1.5s ease-in-out infinite; }
+    .scroll-hint {
+      margin-top: 4rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--dirt);
+      letter-spacing: 0.12em;
+      opacity: 0.65;
+      animation: fadeUp 0.8s cubic-bezier(.22,1,.36,1) 0.85s both;
+    }
+    .scroll-hint span { animation: blink 1.6s ease-in-out infinite; }
 
-    /* ── SECTION LABELS ── */
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      background: var(--brown);
+      border-top: 3px solid var(--gold);
+      border-bottom: 3px solid var(--gold);
+      padding: 2rem;
+    }
+    .stats-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      text-align: center;
+    }
+    .stat-item { padding: 1rem; }
+    .stat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      color: var(--straw);
+      line-height: 1;
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 0.4rem;
+      display: block;
+    }
+    .stat-divider { border-left: 1px solid rgba(255,255,255,0.12); }
+
+    /* ── SECTION UTILS ── */
     section { position: relative; }
     .section-label {
       display: inline-block;
@@ -219,23 +326,82 @@
       padding-left: 0.75rem;
       margin-bottom: 1rem;
     }
+    .section-heading {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1.05;
+      margin-bottom: 1.5rem;
+    }
 
-    /* ── ABOUT SECTION ── */
+    /* ── ABOUT ── */
     .about {
-      padding: 5rem 2rem;
+      padding: 6rem 2rem;
       max-width: 900px;
       margin: 0 auto;
     }
-    .about h2 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 1.5rem; }
-    .about p { font-size: 1.1rem; line-height: 1.75; color: var(--mud); max-width: 660px; }
-    .about p + p { margin-top: 1rem; }
-    .highlight { background: var(--straw); padding: 0 0.25rem; }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+      margin-top: 2rem;
+    }
+    .about-text p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--mud);
+    }
+    .about-text p + p { margin-top: 1.1rem; }
+    .highlight {
+      background: var(--straw);
+      padding: 0.05em 0.3em;
+      font-weight: 600;
+    }
+    .about-callout {
+      background: var(--brown);
+      color: var(--cream);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .about-callout::before {
+      content: '🥔';
+      position: absolute;
+      font-size: 7rem;
+      opacity: 0.06;
+      bottom: -1rem;
+      right: -1rem;
+      animation: drift 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .about-callout .callout-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--straw);
+      opacity: 0.8;
+      margin-bottom: 0.75rem;
+    }
+    .about-callout p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.8);
+    }
+    .about-callout strong { color: var(--straw); }
+    .about-callout .big-emoji {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 1rem;
+      animation: wiggle 4s ease-in-out infinite;
+    }
 
     /* ── RULES ── */
     .rules-section {
-      background: var(--brown);
+      background: var(--dark-bg);
       color: var(--cream);
-      padding: 5rem 2rem;
+      padding: 6rem 2rem;
       position: relative;
       overflow: hidden;
     }
@@ -243,70 +409,141 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 3px;
-      background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 20px, transparent 20px, transparent 30px);
+      height: 4px;
+      background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 24px, transparent 24px, transparent 36px);
+    }
+    .rules-section::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 24px, transparent 24px, transparent 36px);
     }
     .rules-inner { max-width: 900px; margin: 0 auto; }
-    .rules-section .section-label { color: var(--straw); border-color: var(--straw); }
-    .rules-section h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 2.5rem; color: var(--cream); }
+    .rules-section .section-label { color: var(--straw); border-color: var(--gold); }
+    .rules-section .section-heading { color: var(--cream); }
 
+    /* Terminal */
     .terminal {
-      background: #0d0d0d;
-      border: 2px solid var(--gold);
+      background: #080808;
+      border: 1.5px solid rgba(212,146,12,0.6);
       font-family: 'Space Mono', monospace;
-      font-size: 0.9rem;
-      padding: 1.5rem;
+      font-size: 0.88rem;
+      padding: 1.5rem 1.75rem;
       position: relative;
       overflow: hidden;
+      margin-bottom: 2.5rem;
     }
+    .terminal::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0,
+        transparent 3px,
+        rgba(255,255,255,0.008) 3px,
+        rgba(255,255,255,0.008) 4px
+      );
+      pointer-events: none;
+    }
+    /* scanline */
     .terminal::after {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 100%;
-      background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px);
+      left: 0; right: 0;
+      height: 60px;
+      background: linear-gradient(transparent, rgba(212,146,12,0.03), transparent);
+      animation: scanline 4s linear infinite;
       pointer-events: none;
     }
-    .terminal-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #333; }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #1e1e1e;
+    }
     .dot { width: 12px; height: 12px; border-radius: 50%; }
     .dot.red { background: #ff5f56; }
     .dot.yellow { background: #ffbd2e; }
     .dot.green { background: #27c93f; }
-    .term-title { color: #666; font-size: 0.75rem; margin-left: auto; }
-    .term-line { color: #a8c99a; line-height: 2; }
+    .term-title { color: #444; font-size: 0.72rem; margin-left: auto; }
+    .term-line { line-height: 2.1; }
     .term-line .prompt { color: var(--gold); }
-    .term-line .comment { color: #555; }
+    .term-line .comment { color: #3d3d3d; }
+    .term-line .key { color: #a8c99a; }
     .term-line .value { color: #ff9944; }
     .term-line .ok { color: #27c93f; }
     .term-line .warn { color: #ffbd2e; }
+    .term-line .cursor { animation: blink 1s step-end infinite; color: var(--gold); }
 
-    .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-    .rule-card {
-      border: 2px solid rgba(255,255,255,0.1);
-      padding: 1.5rem;
-      position: relative;
-      transition: border-color 0.2s, transform 0.2s;
+    /* Rule cards */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
     }
-    .rule-card:hover { border-color: var(--gold); transform: translateY(-3px); }
-    .rule-card .num { font-family: 'Space Mono', monospace; font-size: 2.5rem; font-weight: 700; color: rgba(255,255,255,0.08); position: absolute; top: 0.5rem; right: 1rem; }
-    .rule-card h3 { font-size: 1rem; font-weight: 700; color: var(--straw); margin-bottom: 0.5rem; }
-    .rule-card p { font-size: 0.9rem; color: rgba(255,255,255,0.65); line-height: 1.6; }
+    .rule-card {
+      border: 1.5px solid rgba(255,255,255,0.08);
+      padding: 1.75rem 1.5rem;
+      position: relative;
+      transition: border-color 0.25s, transform 0.25s, background 0.25s;
+      background: rgba(255,255,255,0.02);
+    }
+    .rule-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-4px);
+      background: rgba(255,255,255,0.04);
+    }
+    .rule-card .num {
+      font-family: 'Space Mono', monospace;
+      font-size: 3rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.05);
+      position: absolute;
+      top: 0.5rem;
+      right: 1rem;
+      line-height: 1;
+    }
+    .rule-card .rule-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+    .rule-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--straw);
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.01em;
+    }
+    .rule-card p { font-size: 0.85rem; color: rgba(255,255,255,0.55); line-height: 1.65; }
 
     /* ── PRIZES ── */
     .prizes {
-      padding: 5rem 2rem;
+      padding: 6rem 2rem;
       max-width: 900px;
       margin: 0 auto;
     }
-    .prizes h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
-    .prizes-subtitle { font-size: 1rem; color: var(--dirt); margin-bottom: 3rem; font-family: 'Space Mono', monospace; }
-
-    .prize-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+    .prizes-subtitle {
+      font-size: 0.9rem;
+      color: var(--dirt);
+      margin-bottom: 3rem;
+      font-family: 'Space Mono', monospace;
+      margin-top: 0.25rem;
+    }
+    .prize-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
     .prize-card {
-      border: 3px solid var(--brown);
-      padding: 2rem;
+      border: 2.5px solid var(--brown);
+      padding: 2.25rem 2rem;
       background: var(--light);
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.25s cubic-bezier(.22,1,.36,1), box-shadow 0.25s;
       position: relative;
       overflow: hidden;
     }
@@ -314,101 +551,181 @@
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 6px;
+      height: 5px;
     }
-    .prize-card.standard::before { background: var(--dirt); }
-    .prize-card.hard::before { background: var(--gold); }
-    .prize-card:hover { transform: translate(-3px, -3px); box-shadow: 6px 6px 0 var(--brown); }
+    .prize-card.standard::before { background: linear-gradient(90deg, var(--dirt), #a06040); }
+    .prize-card.hard::before { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+    .prize-card:hover { transform: translate(-4px, -4px); box-shadow: 7px 7px 0 var(--brown); }
+
+    .prize-mode-bg {
+      position: absolute;
+      bottom: -1rem;
+      right: -0.5rem;
+      font-size: 6rem;
+      opacity: 0.06;
+      pointer-events: none;
+      animation: drift 7s ease-in-out infinite;
+    }
+    .hard .prize-mode-bg { animation-delay: -3s; }
 
     .prize-tag {
       font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      padding: 0.3rem 0.75rem;
-      margin-bottom: 1.25rem;
+      padding: 0.3rem 0.8rem;
+      margin-bottom: 1.5rem;
       display: inline-block;
+      font-weight: 700;
     }
     .standard .prize-tag { background: var(--dirt); color: #fff; }
     .hard .prize-tag { background: var(--gold); color: var(--brown); }
 
     .prize-size {
       font-family: 'Space Mono', monospace;
-      font-size: 3rem;
+      font-size: 3.5rem;
       font-weight: 700;
       line-height: 1;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.2rem;
     }
     .standard .prize-size { color: var(--brown); }
     .hard .prize-size { color: var(--gold); }
 
-    .prize-size-label { font-size: 0.85rem; color: var(--dirt); margin-bottom: 1.5rem; font-family: 'Space Mono', monospace; }
+    .prize-size-label {
+      font-size: 0.8rem;
+      color: var(--dirt);
+      margin-bottom: 1.75rem;
+      font-family: 'Space Mono', monospace;
+    }
     .prize-items { list-style: none; }
-    .prize-items li { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px dashed rgba(59,31,12,0.15); font-size: 0.95rem; line-height: 1.5; }
+    .prize-items li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px dashed rgba(59,31,12,0.15);
+      font-size: 0.93rem;
+      line-height: 1.5;
+      color: var(--mud);
+    }
     .prize-items li:last-child { border-bottom: none; }
-    .prize-items li::before { content: '→'; font-family: 'Space Mono', monospace; color: var(--gold); flex-shrink: 0; margin-top: 0.1rem; }
+    .prize-items li::before {
+      content: '→';
+      font-family: 'Space Mono', monospace;
+      color: var(--gold);
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      font-weight: 700;
+    }
+
+    /* Hard mode badge */
+    .hard-badge {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: var(--gold-light);
+      color: var(--brown);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 0.25rem 0.6rem;
+      text-transform: uppercase;
+    }
 
     /* ── HOW TO ── */
     .howto {
-      background: var(--straw);
-      padding: 5rem 2rem;
-      border-top: 3px solid var(--brown);
-      border-bottom: 3px solid var(--brown);
+      background: var(--brown);
+      padding: 6rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .howto::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: repeating-linear-gradient(90deg, var(--gold) 0, var(--gold) 24px, transparent 24px, transparent 36px);
     }
     .howto-inner { max-width: 900px; margin: 0 auto; }
-    .howto h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; margin-bottom: 2.5rem; letter-spacing: -0.02em; color: var(--brown); }
+    .howto .section-label { color: var(--straw); border-color: var(--gold); }
+    .howto .section-heading { color: var(--cream); }
 
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-    .step {
-      background: var(--cream);
-      border: 2px solid var(--brown);
-      padding: 1.5rem;
-      position: relative;
-      transition: transform 0.2s;
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 1px;
+      background: rgba(255,255,255,0.08);
+      margin-bottom: 3rem;
+      border: 1px solid rgba(255,255,255,0.08);
     }
-    .step:hover { transform: translate(-2px, -2px); }
+    .step {
+      background: var(--dark-bg);
+      padding: 2rem 1.5rem;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .step:hover { background: #220e04; }
     .step-num {
       font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.65rem;
       font-weight: 700;
-      letter-spacing: 0.1em;
-      color: var(--dirt);
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+    .step-icon {
+      font-size: 1.75rem;
+      display: block;
       margin-bottom: 0.75rem;
     }
-    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--brown); }
-    .step p { font-size: 0.875rem; color: var(--mud); line-height: 1.6; }
-    .step .connector {
-      position: absolute;
-      right: -1.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1.2rem;
-      color: var(--mud);
-      font-family: 'Space Mono', monospace;
-    }
-    .step:last-child .connector { display: none; }
+    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--cream); }
+    .step p { font-size: 0.85rem; color: rgba(255,255,255,0.55); line-height: 1.65; }
 
     .submit-cta {
-      background: var(--brown);
-      padding: 2rem;
+      background: var(--gold);
+      padding: 2.25rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 1.5rem;
     }
-    .submit-cta p { color: var(--cream); font-size: 1rem; max-width: 480px; line-height: 1.6; }
-    .submit-cta p strong { color: var(--straw); }
+    .submit-cta p { color: var(--brown); font-size: 1rem; max-width: 480px; line-height: 1.65; font-weight: 500; }
+    .submit-cta strong { font-weight: 800; }
     .submit-cta a { flex-shrink: 0; }
+    .submit-cta .btn-ship {
+      background: var(--brown);
+      color: var(--straw);
+      padding: 1rem 2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      border: 2.5px solid var(--brown);
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: inline-block;
+    }
+    .submit-cta .btn-ship:hover {
+      background: var(--dark-bg);
+      border-color: var(--dark-bg);
+      transform: translate(-3px, -3px);
+      box-shadow: 5px 5px 0 rgba(0,0,0,0.3);
+    }
 
     /* ── FAQ ── */
-    .faq { padding: 5rem 2rem; max-width: 700px; margin: 0 auto; }
-    .faq h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; margin-bottom: 2rem; letter-spacing: -0.02em; }
+    .faq {
+      padding: 6rem 2rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
 
     details {
-      border-bottom: 2px solid var(--brown);
-      padding: 1rem 0;
+      border-bottom: 2px solid rgba(46,22,8,0.2);
+      padding: 0;
     }
+    details:first-of-type { border-top: 2px solid rgba(46,22,8,0.2); }
     summary {
       font-weight: 700;
       font-size: 1rem;
@@ -417,50 +734,138 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 1.25rem 0;
       user-select: none;
+      color: var(--brown);
+      transition: color 0.2s;
     }
     summary::-webkit-details-marker { display: none; }
-    summary::after { content: '+'; font-family: 'Space Mono', monospace; font-size: 1.3rem; color: var(--gold); transition: transform 0.2s; }
-    details[open] summary::after { content: '−'; }
-    details p { padding-top: 0.75rem; color: var(--mud); line-height: 1.7; font-size: 0.95rem; }
+    summary:hover { color: var(--mud); }
+    .details-icon {
+      width: 26px;
+      height: 26px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 1rem;
+      flex-shrink: 0;
+      transition: background 0.2s, color 0.2s;
+      color: var(--gold);
+      border-color: var(--gold);
+    }
+    details[open] .details-icon { background: var(--gold); color: var(--brown); }
+    .details-icon::before { content: '+'; }
+    details[open] .details-icon::before { content: '−'; }
+    details p {
+      padding: 0 0 1.5rem;
+      color: var(--mud);
+      line-height: 1.75;
+      font-size: 0.95rem;
+    }
 
     /* ── FOOTER ── */
     footer {
-      background: var(--brown);
-      color: rgba(255,255,255,0.6);
-      padding: 3rem 2rem;
+      background: var(--dark-bg);
+      color: rgba(255,255,255,0.5);
+      padding: 4rem 2rem 2.5rem;
       border-top: 4px solid var(--gold);
     }
     .footer-inner {
       max-width: 900px;
       margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2rem;
-      text-align: center;
     }
-    .footer-big { font-family: 'Space Mono', monospace; font-size: 0.75rem; letter-spacing: 0.12em; color: rgba(255,255,255,0.35); }
-    .hackclub-credit {
+    .footer-top {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      margin-bottom: 3rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    .hackclub-credit p { font-size: 0.8rem; color: rgba(255,255,255,0.45); font-family: 'Space Mono', monospace; letter-spacing: 0.05em; }
-    .hackclub-credit a { display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
-    .hackclub-credit a:hover { opacity: 0.8; }
-    .hackclub-credit svg { height: 36px; width: auto; }
-    .footer-links { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
-    .footer-links a { color: rgba(255,255,255,0.45); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
-    .footer-links a:hover { color: var(--straw); }
-    .footer-bottom { font-size: 0.75rem; font-family: 'Space Mono', monospace; }
+    .footer-brand .footer-logo {
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: var(--straw);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+    .footer-brand p {
+      font-size: 0.8rem;
+      font-family: 'Space Mono', monospace;
+      color: rgba(255,255,255,0.35);
+      line-height: 1.7;
+      max-width: 240px;
+    }
+    .footer-links-col h4 {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 1rem;
+    }
+    .footer-links-col a {
+      display: block;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      font-size: 0.88rem;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
+    .footer-links-col a:hover { color: var(--straw); }
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.75rem;
+      font-family: 'Space Mono', monospace;
+      color: rgba(255,255,255,0.2);
+    }
+    .hackclub-logo-link {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: rgba(255,255,255,0.35);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      transition: color 0.2s;
+    }
+    .hackclub-logo-link:hover { color: var(--straw); }
+    .hackclub-logo-link svg { height: 28px; width: auto; }
+
+    /* ── CONFETTI ── */
+    .confetti-piece {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      top: -10px;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0;
+    }
 
     /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .about-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .stats-inner { grid-template-columns: 1fr; }
+      .stat-divider { border-left: none; border-top: 1px solid rgba(255,255,255,0.12); }
+      .footer-top { flex-direction: column; }
+    }
     @media (max-width: 640px) {
       .nav-links { display: none; }
       .submit-cta { text-align: center; justify-content: center; }
-      .step .connector { display: none; }
+      .footer-bottom { flex-direction: column; text-align: center; }
     }
   </style>
 </head>
@@ -470,19 +875,33 @@
   <div class="ticker-wrap" aria-hidden="true">
     <div class="ticker-inner">
       <span>🥔 YOU SPUD, WE SPUD</span>
-      <span>▸ BUILD UNDER 15KB</span>
-      <span>▸ NO FRAMEWORKS</span>
-      <span>▸ WIN INSTANT MASHED POTATOES</span>
-      <span>▸ HARD MODE: UNDER 5KB</span>
-      <span>▸ AUSTRALIAN CHICKEN SALT ON THE LINE</span>
-      <span>▸ DROP YOUR LINK IN #SHIP</span>
+      <span class="sep">///</span>
+      <span>BUILD UNDER 15KB</span>
+      <span class="sep">///</span>
+      <span>NO FRAMEWORKS. NO REACT. NO EXCUSES.</span>
+      <span class="sep">///</span>
+      <span>WIN INSTANT MASHED POTATOES</span>
+      <span class="sep">///</span>
+      <span>HARD MODE → UNDER 5KB</span>
+      <span class="sep">///</span>
+      <span>🇦🇺 AUSTRALIAN CHICKEN SALT ON THE LINE</span>
+      <span class="sep">///</span>
+      <span>DROP YOUR LINK IN #SHIP</span>
+      <span class="sep">///</span>
       <span>🥔 YOU SPUD, WE SPUD</span>
-      <span>▸ BUILD UNDER 15KB</span>
-      <span>▸ NO FRAMEWORKS</span>
-      <span>▸ WIN INSTANT MASHED POTATOES</span>
-      <span>▸ HARD MODE: UNDER 5KB</span>
-      <span>▸ AUSTRALIAN CHICKEN SALT ON THE LINE</span>
-      <span>▸ DROP YOUR LINK IN #SHIP</span>
+      <span class="sep">///</span>
+      <span>BUILD UNDER 15KB</span>
+      <span class="sep">///</span>
+      <span>NO FRAMEWORKS. NO REACT. NO EXCUSES.</span>
+      <span class="sep">///</span>
+      <span>WIN INSTANT MASHED POTATOES</span>
+      <span class="sep">///</span>
+      <span>HARD MODE → UNDER 5KB</span>
+      <span class="sep">///</span>
+      <span>🇦🇺 AUSTRALIAN CHICKEN SALT ON THE LINE</span>
+      <span class="sep">///</span>
+      <span>DROP YOUR LINK IN #SHIP</span>
+      <span class="sep">///</span>
     </div>
   </div>
 
@@ -490,6 +909,7 @@
   <nav>
     <a href="#" class="nav-logo"><span class="spud">🥔</span> You Spud, We Spud</a>
     <div class="nav-links">
+      <a href="#about">About</a>
       <a href="#rules">Rules</a>
       <a href="#prizes">Prizes</a>
       <a href="#submit">Submit</a>
@@ -500,11 +920,14 @@
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-bg-potato" aria-hidden="true">🥔</div>
-    <div class="hero-bg-potato" aria-hidden="true">🍟</div>
-    <div class="hero-bg-potato" aria-hidden="true">🫘</div>
+    <div class="hero-bg-spud" aria-hidden="true">🥔</div>
+    <div class="hero-bg-spud" aria-hidden="true">🍟</div>
+    <div class="hero-bg-spud" aria-hidden="true">🫘</div>
 
-    <div class="badge">A Hack Club YSWS Challenge</div>
+    <div class="hero-eyebrow">
+      <span class="dot-live"></span>
+      A Hack Club YSWS Challenge
+    </div>
 
     <h1>
       You Spud,
@@ -514,36 +937,70 @@
     <p class="hero-sub">
       Modern web dev is way too heavy. We're downloading half the internet just to center a div.
       <strong>So we're fixing it.</strong><br /><br />
-      Ship something under 15KB — no frameworks, no React, no Tailwind — and we'll mail you an actual potato.
+      Ship something under 15KB — no frameworks, no React, no Tailwind — and we'll mail you an actual potato. From Australia.
     </p>
 
     <div class="hero-actions">
-      <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="btn-primary">🥔 SHIP YOUR SPUD</a>
-      <a href="#rules" class="btn-secondary">READ THE RULES</a>
+      <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="btn-primary" id="mainCta">🥔 SHIP YOUR SPUD</a>
+      <a href="#rules" class="btn-secondary">READ THE RULES →</a>
     </div>
 
     <p class="scroll-hint">scroll down <span>↓</span></p>
   </section>
 
+  <!-- STATS STRIP -->
+  <div class="stats-strip">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <span class="stat-num">15KB</span>
+        <span class="stat-label">Max File Size</span>
+      </div>
+      <div class="stat-item stat-divider">
+        <span class="stat-num">5KB</span>
+        <span class="stat-label">Hard Mode Limit</span>
+      </div>
+      <div class="stat-item stat-divider">
+        <span class="stat-num">🇦🇺</span>
+        <span class="stat-label">Ships From</span>
+      </div>
+    </div>
+  </div>
+
   <!-- ABOUT -->
-  <section class="about" id="about">
-    <div class="fade-up">
-      <p class="section-label">// what is this</p>
-      <h2>The internet got fat.<br />We're going on a diet.</h2>
-      <p style="margin-top:1.5rem">
-        This is a You Ship, We Ship challenge run by <strong>Sami</strong> from the
-        <span class="highlight">Hack Club Slack</span> community.
-        The premise is dead simple: build something real, keep it tiny,
-        ship it publicly, and we'll mail you something
-        from the far corners of <strong>Australia</strong>.
-      </p>
-      <p>
-        Raw potato? Customs won't allow it. But a flat packet of instant mashed potatoes
-        and a custom Orpheus-in-a-spud-suit sticker? That's legally mailable
-        to most countries on Earth. And for the truly deranged — those who keep
-        it under 5KB — we're adding a sealed packet of
-        <strong>Australian chicken salt</strong>. It will change your life.
-      </p>
+  <section class="about fade-up" id="about">
+    <p class="section-label">// what is this</p>
+    <h2 class="section-heading">The internet got fat.<br />We're going on a diet.</h2>
+
+    <div class="about-grid">
+      <div class="about-text">
+        <p>
+          This is a <span class="highlight">You Ship, We Ship</span> challenge run by
+          <strong>Sami</strong> from the Hack Club Slack community.
+          The premise is dead simple: build something real, keep it tiny,
+          ship it publicly, and we'll mail you something from the
+          far corners of <strong>Australia</strong>.
+        </p>
+        <p>
+          Raw potato? Customs won't allow it. But a flat packet of
+          instant mashed potatoes and a custom Orpheus-in-a-spud-suit
+          sticker? That's legally mailable to most countries on Earth.
+        </p>
+        <p>
+          And for the truly deranged — those who keep it under 5KB —
+          we're adding a sealed packet of <strong>Australian chicken salt</strong>.
+          It will change your life.
+        </p>
+      </div>
+
+      <div class="about-callout">
+        <span class="big-emoji">🥔</span>
+        <p class="callout-label">// the deal</p>
+        <p>
+          Build anything that lives in a browser. A game, a tool, a poem generator, a tribute page — anything.
+          Just keep every byte honest. <strong>No node_modules. No excuses.</strong>
+          Post it in <strong>#ship</strong>, tag <strong>@sami9889</strong>, and watch the mail queue grow.
+        </p>
+      </div>
     </div>
   </section>
 
@@ -552,7 +1009,7 @@
     <div class="rules-inner">
       <div class="fade-up">
         <p class="section-label">// constraints</p>
-        <h2>The Rules</h2>
+        <h2 class="section-heading">The Rules</h2>
 
         <div class="terminal">
           <div class="terminal-header">
@@ -562,39 +1019,43 @@
             <span class="term-title">spud-rules.sh</span>
           </div>
           <div class="term-line"><span class="prompt">$</span> cat rules.txt</div>
-          <div class="term-line"><br /></div>
-          <div class="term-line"><span class="comment"># Standard Mode</span></div>
-          <div class="term-line">max_total_size=<span class="value">"15KB"</span></div>
-          <div class="term-line">frameworks=<span class="warn">"NONE"</span> <span class="comment"># no React, Vue, Svelte, Angular</span></div>
-          <div class="term-line">css_frameworks=<span class="warn">"NONE"</span> <span class="comment"># no Tailwind, Bootstrap</span></div>
-          <div class="term-line">allowed=<span class="ok">"vanilla HTML, CSS, JS only"</span></div>
-          <div class="term-line">bonus=<span class="ok">"potato theme = bonus points"</span></div>
-          <div class="term-line"><br /></div>
-          <div class="term-line"><span class="comment"># Hard Mode (optional)</span></div>
-          <div class="term-line">max_total_size=<span class="value">"5KB"</span></div>
-          <div class="term-line">reward=<span class="ok">"+ australian chicken salt (life-changing)"</span></div>
-          <div class="term-line"><br /></div>
-          <div class="term-line"><span class="prompt">$</span> <span class="comment">&#x2588;</span></div>
+          <div class="term-line">&nbsp;</div>
+          <div class="term-line"><span class="comment"># ── Standard Mode ──────────────────────────</span></div>
+          <div class="term-line"><span class="key">max_total_size</span>=<span class="value">"15KB"</span></div>
+          <div class="term-line"><span class="key">frameworks</span>=<span class="warn">"NONE"</span>  <span class="comment"># React, Vue, Svelte, Angular — forbidden</span></div>
+          <div class="term-line"><span class="key">css_libs</span>=<span class="warn">"NONE"</span>  <span class="comment"># Tailwind, Bootstrap — forbidden</span></div>
+          <div class="term-line"><span class="key">allowed</span>=<span class="ok">"vanilla HTML + CSS + JS"</span></div>
+          <div class="term-line"><span class="key">potato_theme</span>=<span class="ok">"bonus points"</span></div>
+          <div class="term-line">&nbsp;</div>
+          <div class="term-line"><span class="comment"># ── Hard Mode (optional) ────────────────────</span></div>
+          <div class="term-line"><span class="key">max_total_size</span>=<span class="value">"5KB"</span></div>
+          <div class="term-line"><span class="key">bonus_reward</span>=<span class="ok">"australian chicken salt (life-changing)"</span></div>
+          <div class="term-line">&nbsp;</div>
+          <div class="term-line"><span class="prompt">$</span> <span class="cursor">█</span></div>
         </div>
 
         <div class="rules-grid">
           <div class="rule-card fade-up">
             <span class="num">01</span>
+            <span class="rule-icon">🛠️</span>
             <h3>Vanilla Only</h3>
-            <p>No frameworks. No build tools. No bundlers. Raw HTML, CSS, and JavaScript — the way Tim Berners-Lee intended.</p>
+            <p>No frameworks. No build tools. No bundlers. Raw HTML, CSS, and JS — the way Tim Berners-Lee intended.</p>
           </div>
           <div class="rule-card fade-up">
             <span class="num">02</span>
+            <span class="rule-icon">⚖️</span>
             <h3>Under 15KB Total</h3>
-            <p>Count every byte. HTML + CSS + JS + images combined must stay under 15KB. Use a file size checker before submitting.</p>
+            <p>Count every byte. HTML + CSS + JS + images combined must stay under 15KB. Use a checker before submitting.</p>
           </div>
           <div class="rule-card fade-up">
             <span class="num">03</span>
+            <span class="rule-icon">🌐</span>
             <h3>Must Be Live</h3>
-            <p>Deploy it somewhere publicly accessible. GitHub Pages, Netlify, Vercel, Hack Club's own Nest — just make it reachable.</p>
+            <p>Deploy somewhere publicly accessible — GitHub Pages, Netlify, Vercel, Hack Club Nest. Just make it reachable.</p>
           </div>
           <div class="rule-card fade-up">
             <span class="num">04</span>
+            <span class="rule-icon">📂</span>
             <h3>Share Source</h3>
             <p>Link your repo alongside your live site when you post in #ship. Open source is the vibe.</p>
           </div>
@@ -607,28 +1068,31 @@
   <section class="prizes" id="prizes">
     <div class="fade-up">
       <p class="section-label">// rewards</p>
-      <h2>What You Win</h2>
-      <p class="prizes-subtitle">physically mailed to you. from australia. yes, really.</p>
+      <h2 class="section-heading">What You Win</h2>
+      <p class="prizes-subtitle">physically mailed to you. from australia. yes, for real.</p>
 
       <div class="prize-cards">
         <div class="prize-card standard fade-up">
+          <span class="prize-mode-bg">🥔</span>
           <div class="prize-tag">Standard Mode</div>
           <div class="prize-size">&lt;15KB</div>
           <div class="prize-size-label">total file size</div>
           <ul class="prize-items">
             <li>A flat packet of instant mashed potatoes</li>
-            <li>A custom sticker of Orpheus (Hack Club's dinosaur) dressed as a spud</li>
+            <li>Custom sticker — Orpheus dressed as a spud</li>
             <li>Eternal glory in #ship</li>
           </ul>
         </div>
 
         <div class="prize-card hard fade-up">
+          <span class="prize-mode-bg">🧂</span>
+          <div class="hard-badge">🔥 ELITE</div>
           <div class="prize-tag">Hard Mode</div>
           <div class="prize-size">&lt;5KB</div>
           <div class="prize-size-label">total file size</div>
           <ul class="prize-items">
             <li>Everything from Standard Mode</li>
-            <li>A sealed packet of Australian chicken salt</li>
+            <li>Sealed packet of Australian chicken salt</li>
             <li>Sami's personal awe and respect</li>
             <li>Life. Forever changed.</li>
           </ul>
@@ -641,38 +1105,38 @@
   <section class="howto" id="submit">
     <div class="howto-inner fade-up">
       <p class="section-label">// how to submit</p>
-      <h2>Ship It</h2>
+      <h2 class="section-heading">Ship It</h2>
 
       <div class="steps">
         <div class="step">
           <div class="step-num">STEP 01</div>
+          <span class="step-icon">⌨️</span>
           <h3>Build Your Spud</h3>
           <p>Make a site, game, or tool. Keep it under 15KB. Potato theme earns bonus points.</p>
-          <span class="connector">→</span>
         </div>
         <div class="step">
           <div class="step-num">STEP 02</div>
+          <span class="step-icon">🚀</span>
           <h3>Deploy It</h3>
-          <p>Put it live somewhere. GitHub Pages, Netlify, Hack Club Nest — anywhere with a public URL.</p>
-          <span class="connector">→</span>
+          <p>Put it live. GitHub Pages, Netlify, Hack Club Nest — anywhere with a public URL.</p>
         </div>
         <div class="step">
           <div class="step-num">STEP 03</div>
+          <span class="step-icon">💬</span>
           <h3>Drop in #ship</h3>
-          <p>Post your live link + repo in the #ship channel on Hack Club Slack. Tag @sami.</p>
-          <span class="connector">→</span>
+          <p>Post your live URL + repo in the #ship channel on Hack Club Slack. Tag <strong style="color:var(--gold-light)">@sami9889</strong>.</p>
         </div>
         <div class="step">
           <div class="step-num">STEP 04</div>
+          <span class="step-icon">📦</span>
           <h3>Get Your Spud</h3>
           <p>Sami verifies your submission and mails you your reward. From Australia. With love.</p>
-          <span class="connector"></span>
         </div>
       </div>
 
       <div class="submit-cta">
-        <p>Ready to ship? Jump into Hack Club Slack and drop your link in <strong>#ship</strong>. Tag <strong>@sami</strong> and you're done.</p>
-        <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="btn-primary">OPEN SLACK →</a>
+        <p>Ready to ship? Jump into Hack Club Slack, drop your link in <strong>#ship</strong>, and tag <strong>@sami9889</strong>. That's it — you're in the queue.</p>
+        <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="btn-ship">OPEN SLACK →</a>
       </div>
     </div>
   </section>
@@ -681,36 +1145,36 @@
   <section class="faq" id="faq">
     <div class="fade-up">
       <p class="section-label">// faq</p>
-      <h2>Questions?</h2>
+      <h2 class="section-heading">Questions?</h2>
 
       <details>
-        <summary>What counts toward the 15KB?</summary>
-        <p>Everything: your HTML file, any linked CSS files, any JS files, and any images. External fonts and external CDN scripts technically don't count toward the byte total, but keep it in the spirit of the challenge — minimal is the vibe.</p>
+        <summary>What counts toward the 15KB? <span class="details-icon"></span></summary>
+        <p>Everything: your HTML, any linked CSS files, JS files, and embedded images. External fonts and CDN scripts technically don't count toward the byte total — but keep it in the spirit of the challenge. Minimal is the vibe.</p>
       </details>
 
       <details>
-        <summary>Can I use external fonts or icons?</summary>
-        <p>Yes — external resources loaded from CDNs don't count toward the file size limit. But keep the spirit of the challenge in mind. The point is to prove you don't need 200MB of node_modules to ship something great.</p>
+        <summary>Can I use external fonts or icons? <span class="details-icon"></span></summary>
+        <p>Yes — external resources loaded from CDNs don't count toward the file size limit. The point is to prove you don't need 200MB of node_modules to ship something great.</p>
       </details>
 
       <details>
-        <summary>Does it have to be a website?</summary>
-        <p>It has to be deliverable as a web thing — a site, game, tool, or interactive experience that runs in a browser. No native apps. But beyond that, the format is up to you.</p>
+        <summary>Does it have to be a website? <span class="details-icon"></span></summary>
+        <p>It has to be deliverable as a web thing — a site, game, tool, or interactive experience that runs in a browser. No native apps. Beyond that, the format is totally up to you.</p>
       </details>
 
       <details>
-        <summary>Can it be potato themed?</summary>
-        <p>It doesn't have to be, but it earns bonus points. Sami loves potatoes. The more potato energy, the better your odds of receiving extra appreciation (and possibly extra chicken salt).</p>
+        <summary>Can it be potato themed? <span class="details-icon"></span></summary>
+        <p>It doesn't have to be, but it earns bonus points. Sami loves potatoes. The more potato energy, the better your odds of receiving extra appreciation — and possibly extra chicken salt.</p>
       </details>
 
       <details>
-        <summary>How long does shipping take?</summary>
+        <summary>How long does shipping take? <span class="details-icon"></span></summary>
         <p>It's coming from Australia, so international shipping times vary. Expect a few weeks. But it will arrive, and it will be worth it.</p>
       </details>
 
       <details>
-        <summary>What is Hack Club?</summary>
-        <p>Hack Club is a global nonprofit network of student-run coding clubs and a Slack community for teenage hackers. Free to join. Full of people shipping cool things. hackclub.com is the place.</p>
+        <summary>What is Hack Club? <span class="details-icon"></span></summary>
+        <p>Hack Club is a global nonprofit network of student-run coding clubs and a Slack community for teenage hackers. Free to join. Full of people shipping cool things. <a href="https://hackclub.com" target="_blank" rel="noopener" style="color:var(--gold);font-weight:600">hackclub.com</a> is the place.</p>
       </details>
     </div>
   </section>
@@ -718,37 +1182,95 @@
   <!-- FOOTER -->
   <footer>
     <div class="footer-inner">
-      <p class="footer-big">🥔 YOU SPUD, WE SPUD // A HACK CLUB YSWS // ORGANISED BY SAMI</p>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="footer-logo">🥔 You Spud, We Spud</div>
+          <p>A Hack Club YSWS challenge.<br />Organised by Sami (@sami9889).<br />Mailed from Australia with love.</p>
+        </div>
 
-      <div class="hackclub-credit">
-        <p>A Hack Club YSWS — built for hackers, by hackers</p>
-        <a href="https://hackclub.com" target="_blank" rel="noopener" aria-label="Hack Club">
-          <!-- Hack Club logo (official red SVG) -->
-          <svg fill="none" height="184" viewBox="0 0 526 184" width="526" xmlns="http://www.w3.org/2000/svg" aria-label="Hack Club"><path d="m55.8921 11.7637c.0707-.1618.164-.2888.3102-.388 3.6278-2.46232 56.3447-35.6439 181.2237 24.2345 117.958 56.5607 236.902-9.6296 258.275-22.8628.709-.4385 1.896.6899 1.516 1.4308l-21.482 41.816c-.339.6589.125 1.4434.865 1.4536 5.587.0776 25.068.3014 46.883.0118.905-.012 1.419 1.0178.761 1.6389-14.653 13.8257-118.058 108.5995-199.244 108.5995-87.574 0-135-20.455-191-35.924-55.1431-15.232-81.6821-20.342-115.4217-14.74-.7277.121-1.3436-.555-1.1416-1.264l13.0633-45.8711z" fill="#ec3750"/><g fill="#fff" stroke="#fff" stroke-miterlimit="10" stroke-width=".25"><path d="m83.681 33.1134c-1.3288 7.5138-3.8793 20.4209-9.2407 37.1005-11.136 26.6026 7.856 22.2635 13.2943 11.2109 3.2234-6.1032 6.5386-12.726 6.5386-12.726l17.0678 6.5435s-1.374 7.7724-2.779 14.2029c-5.362 16.6798 10.269 14.6768 14.592 2.355 1.924-6.3367 10.891-32.7944 13.364-46.7858 3.728-8.9535-9.032-17.1278-14.805-2.6602-3.086 5.3259-8.097 16.9897-8.097 16.9897s-14.0882-5.2053-14.2559-5.7702c-.5501-1.4346 1.1759-5.1346 1.2519-8.596-.8581-23.9457-15.1445-21.9696-16.931-11.8643z"/><path d="m158.883 51.7621c4.344-8.648 9.332-10.0984 13.041-9.7043 1.6.1324 3.776 3.3868 5.44 6.5129 5.448 20.5877-4.315 58.4523-6.041 60.9953-5.942 9.598-16.368 7.783-12.408-2.586 1.85-6.299 3.831-12.0251 3.831-12.0251l-13.496-1.507c-10.605 20.6021-20.14 11.9761-14.645 3.076 5.878-10.4263 18.401-33.2526 24.278-44.7618zm-4.461 26.48 13.304 2.2707s3.695-23.4265-.46-20.9551z"/><path d="m227.586 72.5188c1.761-4.9617-1.9-16.1816-14.69-14.3105-18.525.1335-24.934 32.5917-24.934 32.5917s-3.079 15.72 1.78 26.434c4.416 10.33 15.128 10.363 17.208 10.625 12.159-3.656 7.995-11.757 5.916-12.018-2.647-.135-6.238.299-9.138-2.066-4.917-3.963-4.041-14.0223-2.973-19.4326 2.515-9.0989 8.05-27.1676 16.875-22.7463 5.296 6.7676 9.012 3.6588 9.956.9227z"/><path d="m239.769 71.6846c-3.257 9.9471.827 20.4238-7.318 39.3594-1.942 4.625-6.705 13.107-7.269 14.311-4.512 8.548 4.65 13.586 14.742-1.349 2.445-3.418 5.138-12.161 5.138-12.161l4.391-.493s3.836 16.881 4.719 24.113c.944 6.979 13.306 10.949 13.486-2.748-.441-4.695-2.077-11.042-5.155-19.105 0 0-2.011-5.905-3.956-6.672 0 0 13.794-13.7181 15.109-19.0421 1.377-5.576-1.135-9.4525-11.921-.3541-10.785 9.0995-12.038 12.0124-12.038 12.0124s2.565-11.4711 2.309-20.1601c.937-9.192-9.419-15.8836-12.237-7.7115z"/><path d="m309.24 88.9685c-4.628 4.5878-7.54 13.2005-7.215 26.2315.645 19.451 8.704 30.626 22.464 28.401 13.76-2.226 10.52-12.154 9.252-12.483-1.014-.263-1.269-1.43-6.911.692-5.644 2.121-9.893-.356-13.45-8.989-2.35-5.842-3.624-17.191.621-23.53 1.268-1.8764 2.472-2.3917 3.106-2.7788 2.536-1.547 5.136-.0478 5.581.3425 7.106 5.1433 8.497-.5566 5.957-5.6217-5.013-7.0817-11.672-8.5286-19.405-2.2645z"/><path d="m340 89.2622c-.067-7.3833 7.556-13.075 10.236 3.4348 3.31 10.668 2.468 31.296 4.056 33.206s13.41-.756 16.611-1.833c3.2-1.077 9.098.337 7.765 3.543-1.079 3.271-4.13 3.582-4.765 3.966-.636.383-27.356 8.304-28.348 3.031-.992-5.274-1.055-7.701-2.055-16.682-1-8.982-3.432-21.2814-3.5-28.6658z"/><path d="m372.043 82.6536c-.58-5.3377 4.863-8.5989 8.069-2.8677 2.435 4.4428 5.264 23.7381 9.24 31.8511 2.18 3.285 6.663 3.877 8.776.863 2.495-4.557.695-15.9411-.847-25.0747-1.092-4.375-2.35-7.7192-2.287-10.1622.956-8.2259 7.554-6.2767 10.633 2.1541 2.566 9.3945 5.24 24.5718 3.899 29.9678-1.278 5.138-2.62 11.627-9.28 13.214-1.729.381-16.138 2.457-21.206-13.309-4.878-16.5368-6.417-21.2987-6.997-26.6364z"/><path d="m417.228 65.0324c8.861-5.3565 15.509-7.1942 20.702-5.3188 3.04 1.8678 5.006 7.0007 4.186 11.42-.947 3.8422-2.529 6.9772-2.529 6.9772 5.256.5298 9.105 5.7759 10.105 12.6419 1 6.8661-5.468 13.3283-17.496 17.3283-4.052 1.141-8.357 1.127-8.548-.283-.129-2.757-10.341-35.6004-10.341-35.6004-.319-1.9882-1.396-4.1699 3.921-7.1652zm3.675 5.8433 4.439 10.3958s10.762-4.3247 9.492-10.097c-1.269-5.7713-8.042-2.3322-13.931-.2988zm5.963 18.4112s3.046 12.7621 2.92 12.1851c-.065-.833 15.69-3.971 12.33-12.1851-3.362-8.2131-15.25 0-15.25 0z"/></g><path d="m56.2741 6.96607s1.0366-1.19259 2.9957-.94409 1.4758 2.50907.7379 3.98192c-.7379 1.4729-19.3248 39.5841-32.7765 82.5725-13.4516 42.9886-12.4231 88.9236-12.4231 91.4236h-14.79826305c-.20170095-4.5 2.60182305-47.749 17.41156305-91.4236 14.8098-43.675 36.89-84.09239 38.8527-85.61033z" fill="#d98b51"/></svg>
+        <div class="footer-links-col">
+          <h4>Navigate</h4>
+          <a href="#about">About</a>
+          <a href="#rules">Rules</a>
+          <a href="#prizes">Prizes</a>
+          <a href="#submit">Submit</a>
+          <a href="#faq">FAQ</a>
+        </div>
+
+        <div class="footer-links-col">
+          <h4>Links</h4>
+          <a href="https://hackclub.com/slack" target="_blank" rel="noopener">Join Slack</a>
+          <a href="https://ysws.hackclub.com" target="_blank" rel="noopener">All YSWSs</a>
+          <a href="https://hackclub.com" target="_blank" rel="noopener">Hack Club</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>🥔 YOU SPUD, WE SPUD — A HACK CLUB YSWS</span>
+        <a href="https://hackclub.com" target="_blank" rel="noopener" class="hackclub-logo-link">
+          <svg viewBox="0 0 100 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3.48 20V8.4H6.52V13h4.68V8.4h3.04V20h-3.04v-4.56H6.52V20H3.48zm18.15.24c-1.04 0-1.96-.22-2.76-.66a4.74 4.74 0 01-1.88-1.86c-.45-.8-.67-1.73-.67-2.79 0-1.05.22-1.98.67-2.78a4.78 4.78 0 011.88-1.87c.8-.44 1.72-.66 2.76-.66 1.05 0 1.97.22 2.77.66.8.44 1.43 1.07 1.88 1.87.45.8.67 1.73.67 2.78 0 1.06-.22 1.99-.67 2.79a4.78 4.78 0 01-1.88 1.86c-.8.44-1.72.66-2.77.66zm0-2.52c.64 0 1.18-.24 1.63-.73.44-.49.66-1.16.66-2.06 0-.89-.22-1.56-.66-2.04a2.1 2.1 0 00-1.63-.72c-.64 0-1.18.24-1.62.72-.44.48-.66 1.15-.66 2.04 0 .9.22 1.57.66 2.06.44.49.98.73 1.62.73zm14.67 2.28l-3.36-5.1V20h-2.96V8.4h2.96v5.8l3.18-4.6h3.46l-3.86 5.16L39.58 20h-3.28zm9.51 0V11.6h-3.14V9.2h9.27v2.4h-3.13V20h-3.01zM55.84 20V8.4h7.7v2.42h-4.7v2.16h4.18v2.34h-4.18v2.26h4.86V20h-7.86zm10.15 0V8.4h2.96v9.08h4.78V20h-7.74zm10.07 0V8.4h2.96v9.08H83.8V20h-7.74zm8.63 0l4.27-11.6h3.4L96.63 20h-3.2l-.77-2.3H88.9L88.13 20h-3.44zm4.1-4.7h2.8l-1.4-4.18-1.4 4.18z" fill="rgba(255,255,255,0.5)"/>
+          </svg>
         </a>
       </div>
-
-      <div class="footer-links">
-        <a href="https://hackclub.com" target="_blank" rel="noopener">hackclub.com</a>
-        <a href="https://hackclub.com/slack" target="_blank" rel="noopener">Join Slack</a>
-        <a href="https://github.com/hackclub" target="_blank" rel="noopener">GitHub</a>
-      </div>
-
-      <p class="footer-bottom">organised with love by sami · ships from australia · potatoes are not legally potato</p>
     </div>
   </footer>
 
   <script>
-    // Scroll-reveal
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+    // ── Scroll-triggered fade-up ──────────────────────────────────
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-    // Stagger rule cards
-    document.querySelectorAll('.rule-card, .step, .prize-card').forEach((el, i) => {
-      el.style.transitionDelay = (i * 0.1) + 's';
+    document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+
+    // ── Confetti on CTA click ─────────────────────────────────────
+    const emojis = ['🥔','🍟','🧂','🥗','🌽','🍠','✨','⭐'];
+    function spawnConfetti(x, y) {
+      for (let i = 0; i < 22; i++) {
+        const el = document.createElement('div');
+        el.style.cssText = `
+          position:fixed;left:${x}px;top:${y}px;font-size:${1.2 + Math.random()}rem;
+          pointer-events:none;z-index:9999;transform-origin:center;
+          transition:none;will-change:transform,opacity;
+        `;
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        document.body.appendChild(el);
+        const angle = (Math.random() * 360) * (Math.PI / 180);
+        const dist = 60 + Math.random() * 140;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist - 60;
+        let start = null;
+        const dur = 900 + Math.random() * 400;
+        function step(ts) {
+          if (!start) start = ts;
+          const p = Math.min((ts - start) / dur, 1);
+          const ease = 1 - Math.pow(1 - p, 3);
+          el.style.transform = `translate(${dx * ease}px, ${dy * ease + 60 * p * p}px) rotate(${360 * p}deg) scale(${1 - p * 0.5})`;
+          el.style.opacity = p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3;
+          if (p < 1) requestAnimationFrame(step);
+          else el.remove();
+        }
+        requestAnimationFrame(step);
+      }
+    }
+
+    document.querySelectorAll('.btn-primary, .btn-ship').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        spawnConfetti(e.clientX, e.clientY);
+      });
+    });
+
+    // ── Staggered rule-card animation ────────────────────────────
+    document.querySelectorAll('.rule-card.fade-up, .prize-card.fade-up').forEach((card, i) => {
+      card.style.transitionDelay = (i * 0.1) + 's';
     });
   </script>
+
 </body>
 </html>
