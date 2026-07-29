@@ -3,32 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>You Spud, We Spud — Hack Club YSWS</title>
-  <meta name="description" content="Build something under 15KB — no frameworks, no React, no Tailwind. Ship it and get a potato mailed from Australia." />
+  <title>You Spud, We Spud: Hack Club YSWS</title>
+  <meta name="description" content="Build something under 15KB, no frameworks, no React, no Tailwind. Ship it and get a parcel mailed from Australia." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥔</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Archivo:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f7f4ef;
-      --text: #1a1a1a;
-      --muted: #555;
+      --paper: #e4d4ae;
+      --paper-dark: #d9c496;
+      --ink: #2a1c10;
+      --muted: #5c4b34;
       --brown: #3b1f0c;
-      --gold: #c8860a;
-      --green: #2d6a1f;
-      --border: #d4c9b8;
-      --card: #fff;
+      --gold: #b8791a;
+      --green: #365c25;
+      --red: #a13324;
+      --border: #b39a68;
+      --card: #f1e6c8;
+      --stamp: #8a6d3f;
     }
 
     html { scroll-behavior: smooth; }
 
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
+      background-color: var(--paper);
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(58,31,12,0.06) 1px, transparent 0);
+      background-size: 22px 22px;
+      color: var(--ink);
+      font-family: 'Archivo', sans-serif;
       line-height: 1.6;
+      position: relative;
+    }
+
+    /* airmail stripe strip along the very top */
+    .airmail-strip {
+      height: 10px;
+      width: 100%;
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--red), var(--red) 14px,
+        var(--paper) 14px, var(--paper) 20px,
+        var(--green) 20px, var(--green) 34px,
+        var(--paper) 34px, var(--paper) 40px
+      );
     }
 
     a { color: var(--gold); }
@@ -39,111 +60,201 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
+      border-bottom: 2px dashed var(--border);
+      background: var(--paper);
       position: sticky;
       top: 0;
       z-index: 10;
     }
     .nav-logo {
-      font-family: 'Space Mono', monospace;
-      font-weight: 700;
-      font-size: 0.95rem;
+      font-family: 'Special Elite', monospace;
+      font-weight: 400;
+      font-size: 1.05rem;
       color: var(--brown);
       text-decoration: none;
+      letter-spacing: 0.02em;
+      transform: rotate(-1deg);
+      display: inline-block;
     }
-    .nav-links { display: flex; gap: 1.5rem; }
-    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; }
-    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .nav-links a:hover { color: var(--ink); text-decoration: none; }
     .nav-cta {
       background: var(--brown);
-      color: #f5e8d0;
+      color: var(--paper);
       padding: 0.45rem 1.1rem;
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       text-decoration: none;
-      border-radius: 4px;
+      border-radius: 2px;
+      border: 1px solid var(--brown);
     }
-    .nav-cta:hover { background: #2a1408; text-decoration: none; }
+    .nav-cta:hover { background: var(--paper); color: var(--brown); text-decoration: none; }
+    .nav-cta-mobile { display: none; }
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .nav-toggle span {
+      display: block;
+      height: 2px;
+      margin: 0 6px;
+      background: var(--brown);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
     .hero {
-      max-width: 760px;
+      max-width: 780px;
       margin: 0 auto;
-      padding: 5rem 2rem 4rem;
+      padding: 4.5rem 2rem 3.5rem;
+      position: relative;
+      animation: rise 0.7s ease both;
+    }
+    .postmark {
+      position: absolute;
+      top: 2.5rem;
+      right: 2rem;
+      width: 108px;
+      height: 108px;
+      border: 3px solid var(--stamp);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(11deg);
+      opacity: 0.75;
+      font-family: 'Special Elite', monospace;
+    }
+    .postmark::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border: 1px solid var(--stamp);
+      border-radius: 50%;
+    }
+    .postmark-text {
+      font-size: 0.62rem;
+      text-align: center;
+      color: var(--stamp);
+      line-height: 1.3;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
     .hero-label {
-      font-family: 'Space Mono', monospace;
+      font-family: 'Special Elite', monospace;
       font-size: 0.75rem;
       color: var(--green);
-      font-weight: 700;
       margin-bottom: 1.25rem;
       letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
     .hero h1 {
-      font-size: clamp(2.5rem, 7vw, 5rem);
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -0.03em;
+      font-family: 'Special Elite', monospace;
+      font-size: clamp(2.4rem, 6.6vw, 4.4rem);
+      font-weight: 400;
+      line-height: 1.08;
+      letter-spacing: -0.01em;
       color: var(--brown);
       margin-bottom: 1.5rem;
-    }
-    .hero h1 span { color: var(--gold); }
-    .hero p {
-      font-size: 1.1rem;
-      color: var(--muted);
       max-width: 560px;
+    }
+    .hero h1 span { color: var(--red); }
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 540px;
       margin-bottom: 2rem;
       line-height: 1.7;
     }
     .hero-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
     .btn {
       padding: 0.7rem 1.6rem;
-      font-size: 0.875rem;
-      font-weight: 600;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       text-decoration: none;
-      border-radius: 4px;
+      border-radius: 2px;
       display: inline-block;
+      border: 1px solid var(--brown);
     }
-    .btn-dark { background: var(--brown); color: #f5e8d0; }
-    .btn-dark:hover { background: #2a1408; text-decoration: none; }
-    .btn-outline { border: 2px solid var(--brown); color: var(--brown); background: transparent; }
-    .btn-outline:hover { background: var(--brown); color: #f5e8d0; text-decoration: none; }
+    .btn-dark { background: var(--brown); color: var(--paper); }
+    .btn-dark:hover { background: #241206; text-decoration: none; }
+    .btn-outline { color: var(--brown); background: transparent; }
+    .btn-outline:hover { background: var(--brown); color: var(--paper); text-decoration: none; }
 
-    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+    .divider {
+      border: none;
+      height: 0;
+      border-top: 2px dashed var(--border);
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: '\2702';
+      position: absolute;
+      top: -0.65rem;
+      font-size: 0.8rem;
+      color: var(--border);
+    }
+    .divider::before { left: 1.5rem; }
+    .divider::after { right: 1.5rem; }
 
     .section {
-      max-width: 760px;
+      max-width: 780px;
       margin: 0 auto;
-      padding: 4rem 2rem;
+      padding: 3.5rem 2rem;
     }
     .section h2 {
-      font-size: 1.6rem;
-      font-weight: 700;
+      font-family: 'Special Elite', monospace;
+      font-weight: 400;
+      font-size: 1.5rem;
       color: var(--brown);
       margin-bottom: 1rem;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
     }
     .section p { color: var(--muted); margin-bottom: 0.9rem; }
     .section p:last-child { margin-bottom: 0; }
-    strong { color: var(--text); font-weight: 600; }
+    strong { color: var(--ink); font-weight: 700; }
 
-    .highlight { background: #f5e0a0; padding: 0.1em 0.25em; border-radius: 2px; }
+    .highlight {
+      background: transparent;
+      padding: 0 0.15em;
+      border-bottom: 3px solid var(--gold);
+      font-weight: 700;
+      color: var(--ink);
+    }
 
     .rules-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 1.5rem;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      border: 2px solid var(--brown);
     }
     .rules-table th {
       text-align: left;
       padding: 0.6rem 0.75rem;
       background: var(--brown);
-      color: #f5e8d0;
-      font-weight: 600;
+      color: var(--paper);
+      font-weight: 700;
       font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.05em;
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
     .rules-table td {
       padding: 0.65rem 0.75rem;
@@ -152,26 +263,44 @@
       vertical-align: top;
     }
     .rules-table tr:last-child td { border-bottom: none; }
-    .rules-table tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
-    .rules-table .ok  { color: #2d6a1f; font-weight: 600; }
-    .rules-table .no  { color: #b84040; font-weight: 600; }
+    .rules-table tr:nth-child(even) td { background: rgba(58,31,12,0.04); }
+    .rules-table .ok  { color: var(--green); font-weight: 700; font-family: 'Space Mono', monospace; }
+    .rules-table .no  { color: var(--red); font-weight: 700; font-family: 'Space Mono', monospace; }
 
     .prize-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-top: 1.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2rem;
     }
     .prize-box {
-      border: 1px solid var(--border);
+      border: 2px solid var(--brown);
       background: var(--card);
       padding: 1.5rem;
-      border-radius: 6px;
+      position: relative;
+      box-shadow: 4px 4px 0 rgba(58,31,12,0.18);
+    }
+    .prize-box { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .prize-box:nth-child(1) { transform: rotate(-1.2deg); }
+    .prize-box:nth-child(2) { transform: rotate(0.8deg); }
+    .prize-box:nth-child(3) { transform: rotate(-0.6deg); }
+    .prize-box:hover { transform: rotate(0deg) translateY(-4px); box-shadow: 6px 8px 0 rgba(58,31,12,0.22); }
+    .prize-box::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-3deg);
+      width: 46px;
+      height: 18px;
+      background: rgba(184,121,26,0.35);
+      border: 1px solid rgba(184,121,26,0.6);
     }
     .prize-box.hard { border-color: var(--gold); }
+    .prize-box.ultra { border-color: var(--green); }
     .prize-box .prize-label {
       font-family: 'Space Mono', monospace;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -179,55 +308,58 @@
       margin-bottom: 0.5rem;
     }
     .prize-box.hard .prize-label { color: var(--gold); }
+    .prize-box.ultra .prize-label { color: var(--green); }
     .prize-box .prize-size {
-      font-family: 'Space Mono', monospace;
-      font-size: 2rem;
-      font-weight: 700;
+      font-family: 'Special Elite', monospace;
+      font-size: 1.9rem;
       color: var(--brown);
       line-height: 1;
       margin-bottom: 1rem;
     }
     .prize-box.hard .prize-size { color: var(--gold); }
+    .prize-box.ultra .prize-size { color: var(--green); }
     .prize-box ul { list-style: none; }
     .prize-box ul li {
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       color: var(--muted);
-      padding: 0.3rem 0;
-      border-bottom: 1px solid var(--border);
-      padding-left: 1rem;
+      padding: 0.35rem 0;
+      border-bottom: 1px dotted var(--border);
+      padding-left: 1.1rem;
       position: relative;
     }
     .prize-box ul li:last-child { border-bottom: none; }
-    .prize-box ul li::before { content: '–'; position: absolute; left: 0; color: var(--gold); }
+    .prize-box ul li::before { content: '\2713'; position: absolute; left: 0; color: var(--gold); font-family: 'Space Mono', monospace; font-weight: 700; }
+    .prize-box.ultra ul li::before { color: var(--green); }
 
     .steps-list { list-style: none; margin-top: 1.5rem; }
     .steps-list li {
       display: flex;
       gap: 1.25rem;
       padding: 1.25rem 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px dashed var(--border);
       align-items: flex-start;
+      transition: padding-left 0.2s ease;
     }
+    .steps-list li:hover { padding-left: 0.4rem; }
     .steps-list li:first-child { padding-top: 0; }
     .steps-list li:last-child { border-bottom: none; }
     .step-n {
       font-family: 'Space Mono', monospace;
       font-size: 0.7rem;
       font-weight: 700;
-      color: var(--gold);
-      background: #fef3dc;
-      border: 1px solid #e8d090;
+      color: var(--paper);
+      background: var(--brown);
       padding: 0.2rem 0.5rem;
-      border-radius: 3px;
+      border-radius: 2px;
       flex-shrink: 0;
       margin-top: 0.15rem;
     }
-    .step-text strong { display: block; font-size: 0.95rem; color: var(--text); margin-bottom: 0.2rem; }
+    .step-text strong { display: block; font-size: 0.95rem; color: var(--ink); margin-bottom: 0.2rem; }
     .step-text p { font-size: 0.875rem; color: var(--muted); margin: 0; }
 
     .cta-box {
       background: var(--brown);
-      border-radius: 6px;
+      border-radius: 2px;
       padding: 2rem;
       display: flex;
       align-items: center;
@@ -235,79 +367,137 @@
       flex-wrap: wrap;
       gap: 1.5rem;
       margin-top: 2rem;
+      border: 2px dashed var(--gold);
     }
-    .cta-box p { color: rgba(255,255,255,0.8); font-size: 0.95rem; margin: 0; max-width: 440px; }
-    .cta-box strong { color: #f5e8d0; }
+    .cta-box p { color: rgba(228,212,174,0.85); font-size: 0.95rem; margin: 0; max-width: 440px; }
+    .cta-box strong { color: var(--paper); }
     .btn-cta {
       background: var(--gold);
       color: var(--brown);
       padding: 0.7rem 1.5rem;
-      font-size: 0.875rem;
+      font-size: 0.8rem;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       text-decoration: none;
-      border-radius: 4px;
+      border-radius: 2px;
       flex-shrink: 0;
     }
-    .btn-cta:hover { background: #e09a10; text-decoration: none; }
+    .btn-cta:hover { background: #d69a2f; text-decoration: none; }
 
     .faq-list { margin-top: 1.25rem; }
-    details { border-bottom: 1px solid var(--border); }
-    details:first-child { border-top: 1px solid var(--border); }
+    details { border-bottom: 1px dashed var(--border); }
+    details:first-child { border-top: 1px dashed var(--border); }
     summary {
       padding: 1rem 0;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.95rem;
       list-style: none;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: var(--text);
+      color: var(--ink);
       user-select: none;
     }
     summary::-webkit-details-marker { display: none; }
     summary::after { content: '+'; font-family: 'Space Mono', monospace; color: var(--gold); font-size: 1.1rem; }
-    details[open] summary::after { content: '−'; }
+    details[open] summary::after { content: '\2212'; }
     details p { padding: 0 0 1rem; color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
 
     footer {
-      border-top: 1px solid var(--border);
+      border-top: 2px dashed var(--border);
       padding: 2rem;
       text-align: center;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--muted);
       font-family: 'Space Mono', monospace;
     }
     footer a { color: var(--muted); }
+    .hc-badge {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 0.9rem;
+      text-decoration: none;
+    }
+    .hc-badge:hover { opacity: 0.8; }
+    .hc-logo { height: 32px; width: auto; border: 0; display: block; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal { opacity: 0; transition: opacity 0.6s ease; }
+    .reveal-in { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transition: none; }
+      .hero { animation: none; }
+    }
+
+    @media (max-width: 700px) {
+      .prize-grid { grid-template-columns: 1fr; }
+      .postmark { display: none; }
+    }
 
     @media (max-width: 600px) {
-      .prize-grid { grid-template-columns: 1fr; }
-      .nav-links { display: none; }
+      .nav-toggle { display: flex; }
+      .nav-cta-desktop { display: none; }
+      .nav-cta-mobile { display: inline-block; margin-top: 0.5rem; }
+      .nav-links {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        background: var(--paper);
+        border-bottom: 2px dashed var(--border);
+        padding: 1.25rem 2rem;
+        max-height: 0;
+        overflow: hidden;
+        padding-top: 0;
+        padding-bottom: 0;
+        transition: max-height 0.25s ease, padding 0.25s ease;
+      }
+      .nav-links.open {
+        max-height: 320px;
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+      }
       .cta-box { text-align: center; justify-content: center; }
     }
   </style>
 </head>
 <body>
 
+  <div class="airmail-strip"></div>
+
   <nav>
     <a href="#" class="nav-logo">you spud, we spud</a>
-    <div class="nav-links">
+    <div class="nav-links" id="navLinks">
       <a href="#about">About</a>
       <a href="#rules">Rules</a>
       <a href="#prizes">Prizes</a>
       <a href="#submit">Submit</a>
       <a href="#faq">FAQ</a>
+      <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="nav-cta nav-cta-mobile">Join Slack</a>
     </div>
-    <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="nav-cta">Join Slack</a>
+    <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="nav-cta nav-cta-desktop">Join Slack</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
 
   <div class="hero">
+    <div class="postmark"><span class="postmark-text">Posted<br />Melbourne<br />AU</span></div>
     <p class="hero-label">// A Hack Club YSWS by sami9889</p>
     <h1>You Spud,<br /><span>We Spud.</span></h1>
     <p>
       Everyone's shipping 500KB of JavaScript just to show some text on a page.
-      Build something under 15KB — no frameworks, no React, no Tailwind —
-      and Sami will mail you a potato from Australia.
+      Build something under 15KB (no frameworks, no React, no Tailwind)
+      and Sami will mail you a parcel from Australia.
     </p>
     <div class="hero-btns">
       <a href="https://hackclub.com/slack" target="_blank" rel="noopener" class="btn btn-dark">Ship your spud →</a>
@@ -321,16 +511,15 @@
     <h2>What is this?</h2>
     <p>
       This is a <span class="highlight">You Ship, We Ship</span> challenge run by
-      <strong>Sami</strong> from Hack Club Slack. The idea is simple — build something
-      small, ship it publicly, and get something mailed to you from Australia.
+      <strong>Sami</strong> from Hack Club Slack. The idea is simple, build something
+      small, ship it publicly, and get a parcel mailed to you from Australia.
     </p>
     <p>
-      Can't send a raw potato through customs but a flat packet of instant mashed potatoes
-      plus a custom sticker is totally fine. And if you somehow fit your project under 5KB,
-      there's Australian chicken salt in it for you too. Once you try it you'll understand why it's worth it.
+      Can't send a raw potato through customs, but stickers, snacks, and a proper airmail
+      postcard all clear just fine. Hit the smaller size tiers and the parcel gets fatter.
     </p>
     <p>
-      No gimmicks. You build it, Sami ships it.
+      No gimmicks. You build it, Sami packs it, Australia Post does the rest.
     </p>
   </div>
 
@@ -346,6 +535,7 @@
           <th>Rule</th>
           <th>Standard (&lt;15KB)</th>
           <th>Hard Mode (&lt;5KB)</th>
+          <th>Ultra Hard (&lt;2KB)</th>
         </tr>
       </thead>
       <tbody>
@@ -353,9 +543,11 @@
           <td>Frameworks (React, Vue, etc.)</td>
           <td class="no">Not allowed</td>
           <td class="no">Not allowed</td>
+          <td class="no">Not allowed</td>
         </tr>
         <tr>
           <td>CSS libraries (Tailwind, Bootstrap)</td>
+          <td class="no">Not allowed</td>
           <td class="no">Not allowed</td>
           <td class="no">Not allowed</td>
         </tr>
@@ -363,9 +555,11 @@
           <td>Build tools / bundlers</td>
           <td class="no">Not allowed</td>
           <td class="no">Not allowed</td>
+          <td class="no">Not allowed</td>
         </tr>
         <tr>
           <td>Vanilla HTML + CSS + JS</td>
+          <td class="ok">Allowed</td>
           <td class="ok">Allowed</td>
           <td class="ok">Allowed</td>
         </tr>
@@ -373,9 +567,11 @@
           <td>External fonts &amp; CDN scripts</td>
           <td class="ok">Allowed (don't count)</td>
           <td class="ok">Allowed (don't count)</td>
+          <td class="ok">Allowed (don't count)</td>
         </tr>
         <tr>
           <td>Must be live with a public URL</td>
+          <td class="ok">Required</td>
           <td class="ok">Required</td>
           <td class="ok">Required</td>
         </tr>
@@ -383,9 +579,11 @@
           <td>Source code must be public</td>
           <td class="ok">Required</td>
           <td class="ok">Required</td>
+          <td class="ok">Required</td>
         </tr>
         <tr>
           <td>Potato theme</td>
+          <td class="ok">Bonus points</td>
           <td class="ok">Bonus points</td>
           <td class="ok">Bonus points</td>
         </tr>
@@ -397,15 +595,17 @@
 
   <div class="section" id="prizes">
     <h2>What you win</h2>
-    <p>Physically mailed to you. From Australia. Yes, really.</p>
+    <p>Physically mailed to you, from Australia, and it's more than just spuds. Three tiers, each one stacks on the last.</p>
 
     <div class="prize-grid">
       <div class="prize-box">
         <p class="prize-label">Standard Mode</p>
         <p class="prize-size">&lt;15KB</p>
         <ul>
-          <li>Flat packet of instant mashed potatoes</li>
           <li>Custom Orpheus-as-a-spud sticker</li>
+          <li>Handwritten airmail postcard from Sami</li>
+          <li>Random Aussie trading card, whatever's in the drawer</li>
+          <li>A temporary potato tattoo</li>
           <li>Your link in the ship channel forever</li>
         </ul>
       </div>
@@ -415,6 +615,18 @@
         <ul>
           <li>Everything from Standard Mode</li>
           <li>Sealed packet of Australian chicken salt</li>
+          <li>Surprise Aussie snack pack</li>
+          <li>A "Coding Down Under" playlist made for you</li>
+        </ul>
+      </div>
+      <div class="prize-box ultra">
+        <p class="prize-label">Ultra Hard Mode</p>
+        <p class="prize-size">&lt;2KB</p>
+        <ul>
+          <li>Everything from Hard Mode</li>
+          <li>Flat packet of instant mashed potatoes</li>
+          <li>A hand-drawn potato portrait of you, badly</li>
+          <li>Featured on sami-s.dev's hall of fame</li>
           <li>Sami's genuine respect</li>
         </ul>
       </div>
@@ -430,14 +642,14 @@
         <span class="step-n">01</span>
         <div class="step-text">
           <strong>Build something</strong>
-          <p>Site, game, tool — anything that runs in a browser. Under 15KB. Potato theme earns bonus points.</p>
+          <p>Site, game, tool, anything that runs in a browser. Under 15KB. Potato theme earns bonus points.</p>
         </div>
       </li>
       <li>
         <span class="step-n">02</span>
         <div class="step-text">
           <strong>Put it online</strong>
-          <p>GitHub Pages, Netlify, Vercel, Hack Club Nest — anywhere with a public URL.</p>
+          <p>GitHub Pages, Netlify, Vercel, Hack Club Nest, anywhere with a public URL.</p>
         </div>
       </li>
       <li>
@@ -450,8 +662,8 @@
       <li>
         <span class="step-n">04</span>
         <div class="step-text">
-          <strong>Get your potato</strong>
-          <p>Sami checks it and mails your reward from Australia.</p>
+          <strong>Get your parcel</strong>
+          <p>Sami checks it and posts your reward from Australia.</p>
         </div>
       </li>
     </ul>
@@ -469,15 +681,19 @@
     <div class="faq-list">
       <details>
         <summary>What counts toward the 15KB?</summary>
-        <p>All your files — HTML, CSS, JS, images. External stuff loaded from CDNs (like Google Fonts) doesn't count, but keep the spirit of it. The point is to prove you don't need a million dependencies.</p>
+        <p>All your files: HTML, CSS, JS, images. External stuff loaded from CDNs (like Google Fonts) doesn't count, but keep the spirit of it. The point is to prove you don't need a million dependencies.</p>
       </details>
       <details>
         <summary>Does it have to be a website?</summary>
-        <p>It needs to run in a browser — a site, game, tool, interactive thing. No native apps. Beyond that, build whatever you want.</p>
+        <p>It needs to run in a browser: a site, game, tool, interactive thing. No native apps. Beyond that, build whatever you want.</p>
       </details>
       <details>
         <summary>Does it have to be potato themed?</summary>
         <p>No, but it earns bonus points. Sami likes potatoes.</p>
+      </details>
+      <details>
+        <summary>Is the parcel really more than potatoes?</summary>
+        <p>Yes. Potatoes only show up in Ultra Hard Mode. Everyone else gets stickers, a postcard, snacks, and whatever else fits in the envelope that week.</p>
       </details>
       <details>
         <summary>How long does shipping take?</summary>
@@ -491,13 +707,40 @@
   </div>
 
   <footer>
-    <p>You Spud, We Spud — a Hack Club YSWS by <a href="https://sami-s.dev" target="_blank" rel="noopener">sami9889</a></p>
-    <a href="https://hackclub.com" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:0.75rem;text-decoration:none;color:inherit;font-size:0.75rem;">
-      Made with
-      <img src="https://assets.hackclub.com/flag-orpheus-top.svg" alt="Hack Club" style="height:28px;width:auto;" />
-      Hack Club
+    <p>You Spud, We Spud, a Hack Club YSWS by <a href="https://sami-s.dev" target="_blank" rel="noopener">sami9889</a></p>
+    <a href="https://hackclub.com" target="_blank" rel="noopener" class="hc-badge">
+      <img src="https://assets.hackclub.com/flag-orpheus-top.svg" alt="Hack Club" class="hc-logo" />
     </a>
   </footer>
+
+  <script>
+    // mobile nav toggle
+    var toggle = document.getElementById('navToggle');
+    var links = document.getElementById('navLinks');
+    toggle.addEventListener('click', function () {
+      var open = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    links.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', function () {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // gentle reveal on scroll
+    var revealTargets = document.querySelectorAll('.section, .prize-box, .cta-box');
+    revealTargets.forEach(function (el) { el.classList.add('reveal'); });
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal-in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealTargets.forEach(function (el) { observer.observe(el); });
+  </script>
 
 </body>
 </html>
