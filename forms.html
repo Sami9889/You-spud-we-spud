@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -32,14 +32,12 @@
       padding: 2rem 1rem 3rem;
     }
 
-    /* ── header ── */
     header { text-align: center; margin-bottom: 2.25rem; }
     header .spud { font-size: 3rem; display: block; margin-bottom: .4rem; line-height: 1; }
     header h1 { font-size: 1.75rem; letter-spacing: -.4px; }
     header p { color: var(--muted); margin-top: .4rem; font-size: .9rem; }
     header a { color: var(--accent); }
 
-    /* ── card ── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -49,11 +47,10 @@
       max-width: 600px;
     }
 
-    /* ── screens ── */
     .screen { display: none; }
     .screen.active { display: block; }
 
-    /* ── loading ── */
+    /* loading */
     #s-loading { text-align: center; padding: 3rem 1rem; }
     .spin {
       display: inline-block; width: 2rem; height: 2rem;
@@ -62,7 +59,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── sign-in ── */
+    /* sign-in */
     #s-signin { text-align: center; }
     #s-signin h2 { font-size: 1.25rem; margin-bottom: .6rem; }
     #s-signin p { color: var(--muted); font-size: .88rem; line-height: 1.55; margin-bottom: 1.5rem; }
@@ -71,13 +68,12 @@
       background: #e0102b; color: #fff;
       border: none; border-radius: var(--r);
       padding: .75rem 1.5rem; font-size: .95rem; font-family: var(--font);
-      cursor: pointer; text-decoration: none;
-      transition: background .15s;
+      cursor: pointer; transition: background .15s;
     }
     .btn-hc:hover { background: #c00e26; }
     .btn-hc svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
 
-    /* ── user bar ── */
+    /* user bar */
     .ubar {
       display: flex; align-items: center; gap: .75rem;
       background: #f0f7f4; border: 1px solid #b7d9c9;
@@ -88,7 +84,7 @@
       background: var(--border); display: flex; align-items: center;
       justify-content: center; font-size: 1.1rem; flex-shrink: 0;
     }
-    .ubar-name { font-weight: bold; font-size: .92rem; }
+    .ubar-name  { font-weight: bold; font-size: .92rem; }
     .ubar-email { font-size: .78rem; color: var(--muted); }
     .ubar-badge {
       margin-left: auto; font-size: .68rem;
@@ -96,7 +92,7 @@
       padding: .18rem .5rem; border-radius: 99px; white-space: nowrap;
     }
 
-    /* ── form sections ── */
+    /* form sections */
     .sec {
       font-size: .68rem; text-transform: uppercase; letter-spacing: .1em;
       color: var(--muted); font-family: monospace;
@@ -111,7 +107,7 @@
 
     input[type="text"], input[type="url"],
     input[type="number"], input[type="tel"],
-    select, textarea {
+    textarea {
       width: 100%; padding: .58rem .72rem;
       border: 1px solid var(--border); border-radius: var(--r);
       background: var(--bg); color: var(--text);
@@ -119,13 +115,13 @@
       margin-bottom: .9rem; appearance: none;
       transition: border-color .15s;
     }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input:focus, textarea:focus { outline: none; border-color: var(--accent); }
     textarea { resize: vertical; min-height: 85px; }
 
     .row { display: flex; gap: .7rem; }
     .row > * { flex: 1; min-width: 0; }
 
-    /* ── tier grid ── */
+    /* tiers */
     .tiers { display: grid; grid-template-columns: repeat(3,1fr); gap: .55rem; margin-bottom: .9rem; }
     .tier-opt { position: relative; }
     .tier-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
@@ -139,7 +135,6 @@
     .tier-opt label .tr { font-size: .72rem; color: var(--accent); display: block; margin-top: .25rem; }
     .tier-opt input:checked + label { border-color: var(--accent); background: #fdf0e8; }
 
-    /* ── error / submit ── */
     #form-err {
       display: none; color: #c0392b;
       background: #fde8e8; border: 1px solid #f5c6cb;
@@ -155,13 +150,13 @@
     .btn-submit:hover:not(:disabled) { background: var(--accent2); }
     .btn-submit:disabled { opacity: .55; cursor: not-allowed; }
 
-    /* ── success ── */
+    /* success */
     #s-success { text-align: center; }
     #s-success .big { font-size: 3.5rem; margin-bottom: .9rem; }
     #s-success h2 { font-size: 1.35rem; margin-bottom: .55rem; }
     #s-success p { color: var(--muted); font-size: .88rem; line-height: 1.6; }
 
-    /* ── error screen ── */
+    /* error screen */
     #s-error { text-align: center; }
     #s-error .big { font-size: 3rem; margin-bottom: .9rem; }
     #s-error h2 { font-size: 1.25rem; margin-bottom: .45rem; }
@@ -196,16 +191,14 @@
      <a href="https://youspudwespud.sami-s.dev/#rules" target="_blank">Read the rules ↗</a></p>
 </header>
 
-<!-- LOADING -->
 <div id="s-loading" class="screen active">
   <div class="spin"></div>
   <p style="color:var(--muted);font-size:.88rem">One sec…</p>
 </div>
 
-<!-- SIGN IN -->
 <div id="s-signin" class="screen card">
   <h2>Sign in with Hack Club</h2>
-  <p>We use your Hack Club account to verify you're part of the community and to link your submission to your Slack profile. No passwords needed.</p>
+  <p>We use your Hack Club account to verify you're in the community and to link your submission to your Slack profile.</p>
   <button class="btn-hc" id="btn-signin">
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M6.5 12a5.5 5.5 0 1 0 11 0 5.5 5.5 0 0 0-11 0Zm5.5-8C7.358 4 4 7.358 4 11.5a7.5 7.5 0 0 0 15 0C19 7.358 15.642 4 12 4Z"/>
@@ -214,10 +207,9 @@
   </button>
 </div>
 
-<!-- FORM -->
 <div id="s-form" class="screen card">
   <div class="ubar">
-    <div class="ubar-av" id="u-av">🥔</div>
+    <div class="ubar-av">🥔</div>
     <div>
       <div class="ubar-name" id="u-name">…</div>
       <div class="ubar-email" id="u-email"></div>
@@ -244,7 +236,7 @@
 
     <label for="f-size">Total file size (KB) <span class="req">*</span></label>
     <input type="number" id="f-size" placeholder="e.g. 8.4" min="0.01" step="0.01" required />
-    <p class="note">Combined size of your own files — not gzipped/minified-then-measured.</p>
+    <p class="note">Combined size of your own files — not gzipped or minified-then-measured.</p>
 
     <label for="f-desc">What does it do? <span class="req">*</span></label>
     <textarea id="f-desc" placeholder="A brief description of your project…" required></textarea>
@@ -286,7 +278,7 @@
 
     <label for="f-phone">Phone number <span class="req">*</span></label>
     <input type="tel" id="f-phone" placeholder="+1 555 000 0000 (include country code)" required />
-    <p class="note">Needed by Australia Post for international parcels.</p>
+    <p class="note">Required by Australia Post for international parcels.</p>
 
     <label for="f-l1">Address line 1 <span class="req">*</span></label>
     <input type="text" id="f-l1" placeholder="Street address" required />
@@ -320,7 +312,6 @@
   </form>
 </div>
 
-<!-- SUCCESS -->
 <div id="s-success" class="screen card">
   <div class="big">📦</div>
   <h2>Spud submitted!</h2>
@@ -329,7 +320,6 @@
      Keep an eye on your Hack Club Slack DMs.</p>
 </div>
 
-<!-- ERROR -->
 <div id="s-error" class="screen card">
   <div class="big">🥴</div>
   <h2>Something went wrong</h2>
@@ -345,19 +335,18 @@
 </footer>
 
 <script>
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   CONFIG  ← injected at build time by GitHub Actions
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const CLIENT_ID    = "__HACKCLUB_CLIENT_ID__";   // GitHub var:    HACKCLUB_CLIENT_ID
-const CLIENT_SEC   = "__API_HC__";               // GitHub secret: API_HC
-const GH_TOKEN     = "__GH_DISPATCH_TOKEN__";    // GitHub secret: GH_DISPATCH_TOKEN
-const REPO_OWNER   = "__REPO_OWNER__";           // GitHub var:    REPO_OWNER
-const REPO_NAME    = "__REPO_NAME__";            // GitHub var:    REPO_NAME
-const REDIRECT_URI = "https://forms.ysws.sami-s.dev";
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CONFIG — injected by GitHub Actions
+   Only one secret required: API_HC
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
+const CLIENT_SEC     = "__API_HC__";          // GitHub Secret: API_HC
+const APPS_SCRIPT    = "__APPS_SCRIPT_URL__"; // GitHub Variable: APPS_SCRIPT_URL (not a secret)
+const REDIRECT_URI   = "https://forms.ysws.sami-s.dev";
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -372,9 +361,9 @@ function showErr(msg, detail) {
   }
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    STEP 1 — redirect to HackClub OAuth
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 document.getElementById("btn-signin").addEventListener("click", () => {
   const state = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(12))))
     .replace(/[+/=]/g, c => ({"+":"-","/":"_","=":""})[c]);
@@ -390,16 +379,14 @@ document.getElementById("btn-signin").addEventListener("click", () => {
   window.location.href = "https://id.hackclub.com/oauth/authorize?" + p;
 });
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 2 — exchange code for token (server-assisted)
-   Uses client_secret (injected by GitHub Actions)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 2 — exchange code → token (uses API_HC)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 async function exchangeCode(code, state) {
   if (state !== sessionStorage.getItem("oauth_state")) {
     showErr("OAuth state mismatch — possible CSRF. Please try again.");
     return;
   }
-
   let tok;
   try {
     const r = await fetch("https://id.hackclub.com/oauth/token", {
@@ -416,11 +403,9 @@ async function exchangeCode(code, state) {
     tok = await r.json();
     if (!r.ok) throw new Error(tok.error_description || tok.error || "Token exchange failed");
   } catch (e) {
-    showErr("Couldn't exchange your login code.", e.message);
+    showErr("Couldn't complete sign-in.", e.message);
     return;
   }
-
-  sessionStorage.setItem("hc_token", tok.access_token);
 
   let user;
   try {
@@ -439,9 +424,9 @@ async function exchangeCode(code, state) {
   fillForm(user);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 3 — show form pre-filled with OAuth data
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 3 — fill form with OAuth data
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function fillForm(user) {
   document.getElementById("u-name").textContent  = user.name || user.username || "Hack Clubber";
   document.getElementById("u-email").textContent = user.email || "";
@@ -453,10 +438,10 @@ function fillForm(user) {
   show("s-form");
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 4 — submit form → GitHub Actions workflow_dispatch
-   The workflow writes the data to Google Sheets
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 4 — submit form → Google Apps Script
+   Apps Script appends the row to Google Sheets
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 document.getElementById("the-form").addEventListener("submit", async e => {
   e.preventDefault();
   const errEl = document.getElementById("form-err");
@@ -471,10 +456,10 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   }
 
   const required = [
-    ["f-pname","project name"], ["f-purl","live URL"], ["f-surl","source URL"],
+    ["f-pname","project name"], ["f-purl","live URL"],   ["f-surl","source URL"],
     ["f-size","file size"],     ["f-desc","description"],
-    ["f-sname","shipping name"],["f-phone","phone number"],
-    ["f-l1","address"],         ["f-city","city"],
+    ["f-sname","full name"],    ["f-phone","phone number"],
+    ["f-l1","address line 1"],  ["f-city","city"],
     ["f-country","country"],    ["f-postal","postal code"],
   ];
   for (const [id, label] of required) {
@@ -491,11 +476,11 @@ document.getElementById("the-form").addEventListener("submit", async e => {
 
   const payload = {
     timestamp:    new Date().toISOString(),
-    hc_name:      user.name              || "",
-    hc_email:     user.email             || "",
-    hc_slack_id:  user.slack_id || user.id || "",
-    hc_verified:  user.verification_status || "",
-    hc_username:  user.username          || "",
+    hc_name:      user.name                  || "",
+    hc_email:     user.email                 || "",
+    hc_slack_id:  user.slack_id || user.id   || "",
+    hc_verified:  user.verification_status   || "",
+    hc_username:  user.username              || "",
     project_name: document.getElementById("f-pname").value.trim(),
     project_url:  document.getElementById("f-purl").value.trim(),
     source_url:   document.getElementById("f-surl").value.trim(),
@@ -517,30 +502,16 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   btn.textContent = "Submitting…";
 
   try {
-    const r = await fetch(
-      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/deploy.yml/dispatches`,
-      {
-        method:  "POST",
-        headers: {
-          "Authorization":        `Bearer ${GH_TOKEN}`,
-          "Content-Type":         "application/json",
-          "X-GitHub-Api-Version": "2022-11-28",
-          "Accept":               "application/vnd.github+json",
-        },
-        body: JSON.stringify({
-          ref: "main",
-          inputs: { form_json: JSON.stringify(payload) },
-        }),
-      }
-    );
-
-    if (r.status === 204) {
-      show("s-success");
-      sessionStorage.clear();
-    } else {
-      const body = await r.text();
-      throw new Error(`GitHub API returned ${r.status}: ${body}`);
-    }
+    /* Apps Script requires text/plain + no-cors to avoid preflight issues */
+    await fetch(APPS_SCRIPT, {
+      method:  "POST",
+      headers: { "Content-Type": "text/plain" },
+      body:    JSON.stringify(payload),
+      mode:    "no-cors",
+    });
+    /* no-cors gives an opaque response — if fetch didn't throw, treat as success */
+    show("s-success");
+    sessionStorage.clear();
   } catch (err) {
     btn.disabled = false;
     btn.textContent = "🥔 Ship My Spud";
@@ -549,23 +520,16 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   }
 });
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    INIT
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 (async function init() {
-  const p     = new URLSearchParams(window.location.search);
-  const code  = p.get("code");
-  const state = p.get("state");
-  const err   = p.get("error");
+  const p    = new URLSearchParams(window.location.search);
+  const code = p.get("code");
+  const err  = p.get("error");
 
-  if (err) {
-    showErr("HackClub OAuth error: " + (p.get("error_description") || err));
-    return;
-  }
-  if (code && state) {
-    await exchangeCode(code, state);
-    return;
-  }
+  if (err) { showErr("HackClub OAuth error: " + (p.get("error_description") || err)); return; }
+  if (code) { await exchangeCode(code, p.get("state")); return; }
 
   const cached = sessionStorage.getItem("hc_user");
   if (cached) { fillForm(JSON.parse(cached)); return; }
@@ -573,4 +537,72 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   show("s-signin");
 })();
 </script>
+
+<!--
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  GOOGLE APPS SCRIPT  (one-time setup — takes ~2 minutes)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Go to https://script.google.com  →  New project
+2. Replace the entire editor contents with the code below
+3. Click Deploy → New deployment
+      Type:             Web app
+      Execute as:       Me
+      Who has access:   Anyone
+4. Copy the Web App URL
+5. Add it as a GitHub Variable named APPS_SCRIPT_URL
+   (Settings → Secrets and variables → Actions → Variables → New)
+
+─────────────────────────────────────────────────────────
+
+const SHEET_ID = "1-DkgM90zY6p0cZqn8sGTi26H7v0opp2xxBFsDhjv2Lk";
+
+const HEADERS = [
+  "Timestamp","HC Name","Email","Slack ID","Verified","Username",
+  "Project Name","Live URL","Source URL","File Size (KB)","Description","Tier",
+  "Phone","Ship Name","Address 1","Address 2","City","State","Country","Postal Code"
+];
+
+function doPost(e) {
+  try {
+    var data  = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+
+    if (sheet.getLastRow() === 0) sheet.appendRow(HEADERS);
+
+    sheet.appendRow([
+      data.timestamp    || "",
+      data.hc_name      || "",
+      data.hc_email     || "",
+      data.hc_slack_id  || "",
+      data.hc_verified  || "",
+      data.hc_username  || "",
+      data.project_name || "",
+      data.project_url  || "",
+      data.source_url   || "",
+      data.file_size_kb || "",
+      data.description  || "",
+      data.tier         || "",
+      data.phone        || "",
+      data.ship_name    || "",
+      data.ship_line1   || "",
+      data.ship_line2   || "",
+      data.ship_city    || "",
+      data.ship_state   || "",
+      data.ship_country || "",
+      data.ship_postal  || "",
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+─────────────────────────────────────────────────────────
+-->
 </html>
