@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit Your Spud — You Spud, We Spud</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥔</text></svg>" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #f7f3ed;
+      --surface: #ffffff;
+      --border:  #ddd4c8;
+      --text:    #2b2118;
+      --muted:   #7a6a5a;
+      --accent:  #b85c1e;
+      --accent2: #7d3f0e;
+      --green:   #2d6a4f;
+      --r:       8px;
+      --font:    Georgia, 'Times New Roman', serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 3rem;
+    }
+
+    /* ── header ── */
+    header { text-align: center; margin-bottom: 2.25rem; }
+    header .spud { font-size: 3rem; display: block; margin-bottom: .4rem; line-height: 1; }
+    header h1 { font-size: 1.75rem; letter-spacing: -.4px; }
+    header p { color: var(--muted); margin-top: .4rem; font-size: .9rem; }
+    header a { color: var(--accent); }
+
+    /* ── card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    /* ── screens ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── loading ── */
+    #s-loading { text-align: center; padding: 3rem 1rem; }
+    .spin {
+      display: inline-block; width: 2rem; height: 2rem;
+      border: 3px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── sign-in ── */
+    #s-signin { text-align: center; }
+    #s-signin h2 { font-size: 1.25rem; margin-bottom: .6rem; }
+    #s-signin p { color: var(--muted); font-size: .88rem; line-height: 1.55; margin-bottom: 1.5rem; }
+    .btn-hc {
+      display: inline-flex; align-items: center; gap: .55rem;
+      background: #e0102b; color: #fff;
+      border: none; border-radius: var(--r);
+      padding: .75rem 1.5rem; font-size: .95rem; font-family: var(--font);
+      cursor: pointer; text-decoration: none;
+      transition: background .15s;
+    }
+    .btn-hc:hover { background: #c00e26; }
+    .btn-hc svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
+
+    /* ── user bar ── */
+    .ubar {
+      display: flex; align-items: center; gap: .75rem;
+      background: #f0f7f4; border: 1px solid #b7d9c9;
+      border-radius: var(--r); padding: .7rem 1rem; margin-bottom: 1.75rem;
+    }
+    .ubar-av {
+      width: 2.4rem; height: 2.4rem; border-radius: 50%;
+      background: var(--border); display: flex; align-items: center;
+      justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .ubar-name { font-weight: bold; font-size: .92rem; }
+    .ubar-email { font-size: .78rem; color: var(--muted); }
+    .ubar-badge {
+      margin-left: auto; font-size: .68rem;
+      background: var(--green); color: #fff;
+      padding: .18rem .5rem; border-radius: 99px; white-space: nowrap;
+    }
+
+    /* ── form sections ── */
+    .sec {
+      font-size: .68rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted); font-family: monospace;
+      margin: 1.5rem 0 .8rem;
+      padding-bottom: .3rem; border-bottom: 1px solid var(--border);
+    }
+    .sec:first-of-type { margin-top: 0; }
+
+    label { display: block; font-size: .86rem; margin-bottom: .28rem; }
+    label .req { color: var(--accent); }
+    .note { font-size: .78rem; color: var(--muted); margin-top: -.7rem; margin-bottom: .9rem; line-height: 1.45; }
+
+    input[type="text"], input[type="url"],
+    input[type="number"], input[type="tel"],
+    select, textarea {
+      width: 100%; padding: .58rem .72rem;
+      border: 1px solid var(--border); border-radius: var(--r);
+      background: var(--bg); color: var(--text);
+      font-family: var(--font); font-size: .91rem;
+      margin-bottom: .9rem; appearance: none;
+      transition: border-color .15s;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 85px; }
+
+    .row { display: flex; gap: .7rem; }
+    .row > * { flex: 1; min-width: 0; }
+
+    /* ── tier grid ── */
+    .tiers { display: grid; grid-template-columns: repeat(3,1fr); gap: .55rem; margin-bottom: .9rem; }
+    .tier-opt { position: relative; }
+    .tier-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .tier-opt label {
+      display: block; border: 2px solid var(--border); border-radius: var(--r);
+      padding: .7rem .4rem; text-align: center; cursor: pointer; margin: 0;
+      transition: border-color .15s, background .15s;
+    }
+    .tier-opt label .tn { font-size: .83rem; font-weight: bold; display: block; }
+    .tier-opt label .tl { font-size: .72rem; color: var(--muted); font-family: monospace; display: block; margin-top: .18rem; }
+    .tier-opt label .tr { font-size: .72rem; color: var(--accent); display: block; margin-top: .25rem; }
+    .tier-opt input:checked + label { border-color: var(--accent); background: #fdf0e8; }
+
+    /* ── error / submit ── */
+    #form-err {
+      display: none; color: #c0392b;
+      background: #fde8e8; border: 1px solid #f5c6cb;
+      border-radius: var(--r); padding: .55rem .85rem;
+      font-size: .83rem; margin-bottom: .9rem;
+    }
+    .btn-submit {
+      width: 100%; padding: .82rem; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r);
+      font-size: .97rem; font-family: var(--font);
+      cursor: pointer; margin-top: .3rem; transition: background .15s;
+    }
+    .btn-submit:hover:not(:disabled) { background: var(--accent2); }
+    .btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ── success ── */
+    #s-success { text-align: center; }
+    #s-success .big { font-size: 3.5rem; margin-bottom: .9rem; }
+    #s-success h2 { font-size: 1.35rem; margin-bottom: .55rem; }
+    #s-success p { color: var(--muted); font-size: .88rem; line-height: 1.6; }
+
+    /* ── error screen ── */
+    #s-error { text-align: center; }
+    #s-error .big { font-size: 3rem; margin-bottom: .9rem; }
+    #s-error h2 { font-size: 1.25rem; margin-bottom: .45rem; }
+    #s-error p { color: var(--muted); font-size: .86rem; margin-bottom: .75rem; line-height: 1.5; }
+    #s-error pre {
+      background: #f0f0f0; border-radius: var(--r); padding: .65rem;
+      font-size: .72rem; text-align: left; overflow: auto;
+      white-space: pre-wrap; word-break: break-all; max-height: 160px; color: var(--muted);
+    }
+    .btn-retry {
+      display: inline-block; margin-top: 1rem;
+      padding: .55rem 1.1rem; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r); font-family: var(--font);
+      font-size: .88rem; cursor: pointer; text-decoration: none;
+    }
+
+    footer { margin-top: 2rem; color: var(--muted); font-size: .78rem; text-align: center; }
+    footer a { color: var(--muted); }
+
+    @media (max-width: 480px) {
+      .tiers { grid-template-columns: 1fr; }
+      .row { flex-direction: column; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="spud">🥔</span>
+  <h1>You Spud, We Spud</h1>
+  <p>Built something tiny? Submit it and get a parcel from Australia.<br>
+     <a href="https://youspudwespud.sami-s.dev/#rules" target="_blank">Read the rules ↗</a></p>
+</header>
+
+<!-- LOADING -->
+<div id="s-loading" class="screen active">
+  <div class="spin"></div>
+  <p style="color:var(--muted);font-size:.88rem">One sec…</p>
+</div>
+
+<!-- SIGN IN -->
+<div id="s-signin" class="screen card">
+  <h2>Sign in with Hack Club</h2>
+  <p>We use your Hack Club account to verify you're part of the community and to link your submission to your Slack profile. No passwords needed.</p>
+  <button class="btn-hc" id="btn-signin">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M6.5 12a5.5 5.5 0 1 0 11 0 5.5 5.5 0 0 0-11 0Zm5.5-8C7.358 4 4 7.358 4 11.5a7.5 7.5 0 0 0 15 0C19 7.358 15.642 4 12 4Z"/>
+    </svg>
+    Sign in with Hack Club
+  </button>
+</div>
+
+<!-- FORM -->
+<div id="s-form" class="screen card">
+  <div class="ubar">
+    <div class="ubar-av" id="u-av">🥔</div>
+    <div>
+      <div class="ubar-name" id="u-name">…</div>
+      <div class="ubar-email" id="u-email"></div>
+    </div>
+    <span class="ubar-badge" id="u-badge" style="display:none">✓ Verified</span>
+  </div>
+
+  <div id="form-err"></div>
+
+  <form id="the-form" novalidate>
+
+    <div class="sec">Your project</div>
+
+    <label for="f-pname">Project name <span class="req">*</span></label>
+    <input type="text" id="f-pname" placeholder="e.g. Tiny Weather Widget" required />
+
+    <label for="f-purl">Live URL <span class="req">*</span></label>
+    <input type="url" id="f-purl" placeholder="https://yourname.github.io/project" required />
+    <p class="note">Must be publicly accessible.</p>
+
+    <label for="f-surl">Source code URL <span class="req">*</span></label>
+    <input type="url" id="f-surl" placeholder="https://github.com/you/project" required />
+    <p class="note">Must be a public repository.</p>
+
+    <label for="f-size">Total file size (KB) <span class="req">*</span></label>
+    <input type="number" id="f-size" placeholder="e.g. 8.4" min="0.01" step="0.01" required />
+    <p class="note">Combined size of your own files — not gzipped/minified-then-measured.</p>
+
+    <label for="f-desc">What does it do? <span class="req">*</span></label>
+    <textarea id="f-desc" placeholder="A brief description of your project…" required></textarea>
+
+    <div class="sec">Tier</div>
+
+    <div class="tiers">
+      <div class="tier-opt">
+        <input type="radio" name="tier" id="t1" value="Standard (<15KB)" required />
+        <label for="t1">
+          <span class="tn">Standard</span>
+          <span class="tl">&lt;15 KB</span>
+          <span class="tr">Stickers + postcard</span>
+        </label>
+      </div>
+      <div class="tier-opt">
+        <input type="radio" name="tier" id="t2" value="Hard Mode (<5KB)" />
+        <label for="t2">
+          <span class="tn">Hard Mode</span>
+          <span class="tl">&lt;5 KB</span>
+          <span class="tr">Bigger parcel</span>
+        </label>
+      </div>
+      <div class="tier-opt">
+        <input type="radio" name="tier" id="t3" value="Ultra Hard (<2KB)" />
+        <label for="t3">
+          <span class="tn">Ultra Hard</span>
+          <span class="tl">&lt;2 KB</span>
+          <span class="tr">Maximum spud</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sec">Shipping address</div>
+    <p class="note" style="margin-top:-.4rem;margin-bottom:.75rem">Australia Post ships internationally — double-check everything!</p>
+
+    <label for="f-sname">Full name (on parcel) <span class="req">*</span></label>
+    <input type="text" id="f-sname" placeholder="Your full name" required />
+
+    <label for="f-phone">Phone number <span class="req">*</span></label>
+    <input type="tel" id="f-phone" placeholder="+1 555 000 0000 (include country code)" required />
+    <p class="note">Needed by Australia Post for international parcels.</p>
+
+    <label for="f-l1">Address line 1 <span class="req">*</span></label>
+    <input type="text" id="f-l1" placeholder="Street address" required />
+
+    <label for="f-l2">Address line 2</label>
+    <input type="text" id="f-l2" placeholder="Apartment, unit, suite (optional)" />
+
+    <div class="row">
+      <div>
+        <label for="f-city">City <span class="req">*</span></label>
+        <input type="text" id="f-city" placeholder="City" required />
+      </div>
+      <div>
+        <label for="f-state">State / Province</label>
+        <input type="text" id="f-state" placeholder="State or province" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="f-country">Country <span class="req">*</span></label>
+        <input type="text" id="f-country" placeholder="Country" required />
+      </div>
+      <div>
+        <label for="f-postal">Postal / ZIP code <span class="req">*</span></label>
+        <input type="text" id="f-postal" placeholder="Postal code" required />
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit" id="btn-sub">🥔 Ship My Spud</button>
+  </form>
+</div>
+
+<!-- SUCCESS -->
+<div id="s-success" class="screen card">
+  <div class="big">📦</div>
+  <h2>Spud submitted!</h2>
+  <p>Thanks for shipping something tiny and real.<br>
+     Sami will review your project and, if it qualifies, pack up a parcel and send it from Melbourne.<br><br>
+     Keep an eye on your Hack Club Slack DMs.</p>
+</div>
+
+<!-- ERROR -->
+<div id="s-error" class="screen card">
+  <div class="big">🥴</div>
+  <h2>Something went wrong</h2>
+  <p id="err-msg">There was a problem with sign-in.</p>
+  <pre id="err-detail" style="display:none"></pre>
+  <a href="/" class="btn-retry">Try again</a>
+</div>
+
+<footer>
+  <p>A <a href="https://hackclub.com" target="_blank">Hack Club</a> YSWS by
+     <a href="https://sami-s.dev" target="_blank">sami9889</a> ·
+     <a href="https://youspudwespud.sami-s.dev" target="_blank">youspudwespud.sami-s.dev</a></p>
+</footer>
+
+<script>
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CONFIG  ← injected at build time by GitHub Actions
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const CLIENT_ID    = "__HACKCLUB_CLIENT_ID__";   // GitHub var:    HACKCLUB_CLIENT_ID
+const CLIENT_SEC   = "__API_HC__";               // GitHub secret: API_HC
+const GH_TOKEN     = "__GH_DISPATCH_TOKEN__";    // GitHub secret: GH_DISPATCH_TOKEN
+const REPO_OWNER   = "__REPO_OWNER__";           // GitHub var:    REPO_OWNER
+const REPO_NAME    = "__REPO_NAME__";            // GitHub var:    REPO_NAME
+const REDIRECT_URI = "https://forms.ysws.sami-s.dev";
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   UTILITIES
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function showErr(msg, detail) {
+  show("s-error");
+  document.getElementById("err-msg").textContent = msg;
+  if (detail) {
+    const el = document.getElementById("err-detail");
+    el.textContent = typeof detail === "string" ? detail : JSON.stringify(detail, null, 2);
+    el.style.display = "block";
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 1 — redirect to HackClub OAuth
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+document.getElementById("btn-signin").addEventListener("click", () => {
+  const state = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(12))))
+    .replace(/[+/=]/g, c => ({"+":"-","/":"_","=":""})[c]);
+  sessionStorage.setItem("oauth_state", state);
+
+  const p = new URLSearchParams({
+    client_id:     CLIENT_ID,
+    redirect_uri:  REDIRECT_URI,
+    response_type: "code",
+    scope:         "email name profile verification_status slack_id",
+    state,
+  });
+  window.location.href = "https://id.hackclub.com/oauth/authorize?" + p;
+});
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 2 — exchange code for token (server-assisted)
+   Uses client_secret (injected by GitHub Actions)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function exchangeCode(code, state) {
+  if (state !== sessionStorage.getItem("oauth_state")) {
+    showErr("OAuth state mismatch — possible CSRF. Please try again.");
+    return;
+  }
+
+  let tok;
+  try {
+    const r = await fetch("https://id.hackclub.com/oauth/token", {
+      method:  "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type:    "authorization_code",
+        client_id:     CLIENT_ID,
+        client_secret: CLIENT_SEC,
+        redirect_uri:  REDIRECT_URI,
+        code,
+      }),
+    });
+    tok = await r.json();
+    if (!r.ok) throw new Error(tok.error_description || tok.error || "Token exchange failed");
+  } catch (e) {
+    showErr("Couldn't exchange your login code.", e.message);
+    return;
+  }
+
+  sessionStorage.setItem("hc_token", tok.access_token);
+
+  let user;
+  try {
+    const r = await fetch("https://id.hackclub.com/oauth/userinfo", {
+      headers: { Authorization: "Bearer " + tok.access_token },
+    });
+    user = await r.json();
+    if (!r.ok) throw new Error(JSON.stringify(user));
+  } catch (e) {
+    showErr("Signed in but couldn't load your profile.", e.message);
+    return;
+  }
+
+  sessionStorage.setItem("hc_user", JSON.stringify(user));
+  history.replaceState({}, "", window.location.pathname);
+  fillForm(user);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 3 — show form pre-filled with OAuth data
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function fillForm(user) {
+  document.getElementById("u-name").textContent  = user.name || user.username || "Hack Clubber";
+  document.getElementById("u-email").textContent = user.email || "";
+  if (user.verification_status === "verified") {
+    document.getElementById("u-badge").style.display = "inline-block";
+  }
+  const sname = document.getElementById("f-sname");
+  if (!sname.value && user.name) sname.value = user.name;
+  show("s-form");
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 4 — submit form → GitHub Actions workflow_dispatch
+   The workflow writes the data to Google Sheets
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+document.getElementById("the-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const errEl = document.getElementById("form-err");
+  errEl.style.display = "none";
+
+  const tier = document.querySelector('input[name="tier"]:checked');
+  if (!tier) {
+    errEl.textContent = "Please select a tier.";
+    errEl.style.display = "block";
+    errEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+
+  const required = [
+    ["f-pname","project name"], ["f-purl","live URL"], ["f-surl","source URL"],
+    ["f-size","file size"],     ["f-desc","description"],
+    ["f-sname","shipping name"],["f-phone","phone number"],
+    ["f-l1","address"],         ["f-city","city"],
+    ["f-country","country"],    ["f-postal","postal code"],
+  ];
+  for (const [id, label] of required) {
+    if (!document.getElementById(id).value.trim()) {
+      document.getElementById(id).focus();
+      errEl.textContent = "Please fill in: " + label + ".";
+      errEl.style.display = "block";
+      errEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+  }
+
+  const user = JSON.parse(sessionStorage.getItem("hc_user") || "{}");
+
+  const payload = {
+    timestamp:    new Date().toISOString(),
+    hc_name:      user.name              || "",
+    hc_email:     user.email             || "",
+    hc_slack_id:  user.slack_id || user.id || "",
+    hc_verified:  user.verification_status || "",
+    hc_username:  user.username          || "",
+    project_name: document.getElementById("f-pname").value.trim(),
+    project_url:  document.getElementById("f-purl").value.trim(),
+    source_url:   document.getElementById("f-surl").value.trim(),
+    file_size_kb: document.getElementById("f-size").value.trim(),
+    description:  document.getElementById("f-desc").value.trim(),
+    tier:         tier.value,
+    phone:        document.getElementById("f-phone").value.trim(),
+    ship_name:    document.getElementById("f-sname").value.trim(),
+    ship_line1:   document.getElementById("f-l1").value.trim(),
+    ship_line2:   document.getElementById("f-l2").value.trim(),
+    ship_city:    document.getElementById("f-city").value.trim(),
+    ship_state:   document.getElementById("f-state").value.trim(),
+    ship_country: document.getElementById("f-country").value.trim(),
+    ship_postal:  document.getElementById("f-postal").value.trim(),
+  };
+
+  const btn = document.getElementById("btn-sub");
+  btn.disabled = true;
+  btn.textContent = "Submitting…";
+
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/deploy.yml/dispatches`,
+      {
+        method:  "POST",
+        headers: {
+          "Authorization":        `Bearer ${GH_TOKEN}`,
+          "Content-Type":         "application/json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "Accept":               "application/vnd.github+json",
+        },
+        body: JSON.stringify({
+          ref: "main",
+          inputs: { form_json: JSON.stringify(payload) },
+        }),
+      }
+    );
+
+    if (r.status === 204) {
+      show("s-success");
+      sessionStorage.clear();
+    } else {
+      const body = await r.text();
+      throw new Error(`GitHub API returned ${r.status}: ${body}`);
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = "🥔 Ship My Spud";
+    errEl.textContent = "Submission failed — " + err.message + ". Please try again.";
+    errEl.style.display = "block";
+  }
+});
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   INIT
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+(async function init() {
+  const p     = new URLSearchParams(window.location.search);
+  const code  = p.get("code");
+  const state = p.get("state");
+  const err   = p.get("error");
+
+  if (err) {
+    showErr("HackClub OAuth error: " + (p.get("error_description") || err));
+    return;
+  }
+  if (code && state) {
+    await exchangeCode(code, state);
+    return;
+  }
+
+  const cached = sessionStorage.getItem("hc_user");
+  if (cached) { fillForm(JSON.parse(cached)); return; }
+
+  show("s-signin");
+})();
+</script>
+</html>
