@@ -1,0 +1,53 @@
+# You Spud, We Spud — Form 
+name: Deploy Form
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "form/forms.html"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:   # allow manual redeploy from the Actions tab
+
+permissions:
+  contents: read
+  pages:    write
+  id-token: write
+
+concurrency:
+  group:              pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url:  ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject secrets & config into HTML
+        env:
+          API_HC:          ${{ secrets.API_HC }}
+          APPS_SCRIPT_URL: ${{ vars.APPS_SCRIPT_URL }}
+        run: |
+          mkdir -p _site
+          cp form/forms.html _site/index.html
+          sed -i "s|__API_HC__|${API_HC}|g"                       _site/index.html
+          sed -i "s|__APPS_SCRIPT_URL__|${APPS_SCRIPT_URL}|g"     _site/index.html
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id:   deploy
+        uses: actions/deploy-pages@v4
