@@ -4,10 +4,6 @@ name: Deploy Form
 on:
   push:
     branches: [main]
-    paths:
-      - "form/forms.html"
-      - ".github/workflows/deploy.yaml"
-      - "index.html"
   workflow_dispatch:
 
 permissions:
