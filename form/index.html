@@ -433,11 +433,12 @@
 <script>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    CONFIG — injected by GitHub Actions
+   API_HC is used server-side in api/token.js
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
-const APPS_SCRIPT    = "__APPS_SCRIPT_URL__"; // GitHub Variable: APPS_SCRIPT_URL
+const APPS_SCRIPT    = "__APPS_SCRIPT_URL__";
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
-const AUTH_BASE      = "https://auth.hackclub.com";
+const TOKEN_PROXY    = "/api/token";
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -457,38 +458,24 @@ function showErr(msg, detail) {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 1 — redirect to HackClub OAuth (PKCE)
+   STEP 1 — redirect to HackClub OAuth
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-async function base64UrlEncode(buf) {
-  return btoa(String.fromCharCode(...new Uint8Array(buf))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""));
-}
-
-document.getElementById("btn-signin").addEventListener("click", async () => {
-  // Generate PKCE code verifier and challenge
-  const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
-  const challenge = base64UrlEncode(
-    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))
-  );
-
+document.getElementById("btn-signin").addEventListener("click", () => {
   const state = crypto.randomUUID();
   sessionStorage.setItem("oauth_state", state);
-  sessionStorage.setItem("pkce_verifier", verifier);
 
   const p = new URLSearchParams({
-    client_id:             CLIENT_ID,
-    redirect_uri:          REDIRECT_URI,
-    response_type:         "code",
-    scope: "profile email name verification_status slack_id",
+    client_id:     CLIENT_ID,
+    redirect_uri:  REDIRECT_URI,
+    response_type: "code",
+    scope:         "profile email name verification_status slack_id",
     state,
-    code_challenge:        challenge,
-    code_challenge_method: "S256",
   });
-  window.location.href = AUTH_BASE + "/oauth/authorize?" + p;
+  window.location.href = "https://auth.hackclub.com/oauth/authorize?" + p;
 });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 2 — exchange code → token (PKCE, no client_secret)
+   STEP 2 — exchange code → token (uses API_HC)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 async function exchangeCode(code, state) {
   if (state !== sessionStorage.getItem("oauth_state")) {
@@ -496,39 +483,21 @@ async function exchangeCode(code, state) {
     return;
   }
 
-  const verifier = sessionStorage.getItem("pkce_verifier");
-  if (!verifier) {
-    showErr("Missing PKCE verifier. Please try again.");
-    return;
-  }
-
-  const params = new URLSearchParams({
-    grant_type:            "authorization_code",
-    client_id:             CLIENT_ID,
-    redirect_uri:          REDIRECT_URI,
-    code,
-    code_verifier:         verifier,
-  });
-
   try {
-    const r = await fetch(AUTH_BASE + "/oauth/token", {
+    const r = await fetch(TOKEN_PROXY, {
       method:  "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body:    params.toString(),
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        code,
+        redirect_uri: REDIRECT_URI,
+      }),
     });
 
-    const tok = await r.json();
-    if (!r.ok) throw new Error(tok.error_description || tok.error || "Token exchange failed");
+    const result = await r.json();
+    if (!r.ok) throw new Error(result.error_description || result.error || "Token exchange failed");
 
-    // Fetch user info
-    const meRes = await fetch(AUTH_BASE + "/oauth/userinfo", {
-      headers: { Authorization: "Bearer " + tok.access_token },
-    });
+    const user = result.user;
 
-    const user = await meRes.json();
-    if (!meRes.ok) throw new Error(user.error || "Failed to fetch user info");
-
-    sessionStorage.removeItem("pkce_verifier");
     sessionStorage.setItem("hc_user", JSON.stringify(user));
     history.replaceState({}, "", window.location.pathname);
     fillForm(user);
@@ -541,14 +510,13 @@ async function exchangeCode(code, state) {
    STEP 3 — fill form with OAuth data
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function fillForm(user) {
-  const displayName = user.name || "Hack Clubber";
-  document.getElementById("u-name").textContent  = displayName;
+  document.getElementById("u-name").textContent  = user.name || "Hack Clubber";
   document.getElementById("u-email").textContent = user.email || "";
   if (user.verification_status === "verified") {
     document.getElementById("u-badge").style.display = "inline-block";
   }
   const sname = document.getElementById("f-sname");
-  if (!sname.value && displayName) sname.value = displayName;
+  if (!sname.value && user.name) sname.value = user.name;
   show("s-form");
 }
 
