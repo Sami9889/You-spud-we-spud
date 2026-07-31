@@ -493,8 +493,12 @@ async function exchangeCode(code, state) {
       }),
     });
 
-    const result = await r.json();
-    if (!r.ok) throw new Error(result.error_description || result.error || "Token exchange failed");
+    const text = await r.text();
+    let result;
+    try { result = JSON.parse(text); } catch (_) { result = text; }
+
+    console.debug("[OAuth] status:", r.status, "body:", result);
+    if (!r.ok) throw new Error((result && (result.error_description || result.error)) || "Token exchange failed");
 
     const user = result.user;
 
