@@ -21,10 +21,6 @@ jobs:
         run: |
           sed -i "s|__APPS_SCRIPT_URL__|https://script.google.com/macros/s/${APP_SCRIPT_ID}/exec|g" form/index.html
 
-      - name: Pack artifact
-        run: |
-          zip -r deploy.zip . -x "deploy.zip" ".git/*" ".devcontainer/*"
-
       - name: Deploy to Cloudflare Pages via Wrangler
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
@@ -33,4 +29,4 @@ jobs:
           npm install -g wrangler
           wrangler pages project create youspudwespud --production-branch main || true
           wrangler pages secret put API_HC --project-name youspudwespud <<< "${{ secrets.API_HC }}"
-          wrangler pages deploy . --project-name youspudwespud
+          wrangler pages deploy . --project-name youspudwespud --commit-dirty=true
