@@ -23,9 +23,7 @@ jobs:
 
       - name: Pack artifact
         run: |
-          mkdir -p deploy-artifact
-          cp -r ./* deploy-artifact/
-          cd deploy-artifact && zip -r ../deploy.zip .
+          zip -r deploy.zip . -x "deploy.zip" ".git/*" ".devcontainer/*"
 
       - name: Create Cloudflare Pages project
         env:
@@ -45,4 +43,4 @@ jobs:
           curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/youspudwespud/deployments" \
             -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
             -F "manifest={\"version\":1,\"include\":[\"/*\"],\"headers\":{}}" \
-            -F "file=@deploy.zip"
+            -F "file=@./deploy.zip"
