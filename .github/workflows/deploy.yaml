@@ -31,3 +31,13 @@ jobs:
           wrangler pages project create youspudwespud --production-branch main || true
           printf '%s' "$API_HC" | wrangler pages secret put API_HC --project-name youspudwespud
           wrangler pages deploy . --project-name youspudwespud --commit-dirty=true
+
+      - name: Attach custom domain to Pages project
+        env:
+          CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/youspudwespud/domains" \
+            -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"name":"youspudwespud.sami-s.dev"}' || true
