@@ -66,16 +66,6 @@ async function handleToken(request, env) {
     return json(502, { error: "Token endpoint unreachable" });
   }
 
-  console.log("TOKEN_PROXY redirect_uri=" + (redirect_uri || REDIRECT_URI) + " hasAPI_HC=" + !!env.API_HC);
-
-  const params = new URLSearchParams({
-    grant_type: "authorization_code",
-    client_id: "e63922a40cd5f15e2d772276dcba8404",
-    client_secret: env.API_HC,
-    redirect_uri: redirect_uri || REDIRECT_URI,
-    code,
-  });
-
   const hcStatus = hcRes.status;
   let hcBody;
   try {
@@ -90,8 +80,11 @@ async function handleToken(request, env) {
     return json(hcRes.status, { error: hcBody.error_description || hcBody.error || "Token exchange failed" });
   }
 
-  if (!tok.access_token) {
-    return json(502, { error: "Malformed token response" });
+  let tok;
+  try {
+    tok = await hcRes.json();
+  } catch {
+    tok = {};
   }
 
   let meRes;
