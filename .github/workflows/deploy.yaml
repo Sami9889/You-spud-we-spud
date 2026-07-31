@@ -25,42 +25,11 @@ jobs:
         run: |
           zip -r deploy.zip . -x "deploy.zip" ".git/*" ".devcontainer/*"
 
-      - name: Recreate Cloudflare Pages project
+      - name: Deploy to Cloudflare Pages via Wrangler
         env:
-          CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          set -e
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
-            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/youspudwespud")
-
-          if [ "$STATUS" = "200" ]; then
-            echo "Project exists, deleting first"
-            curl -s -X DELETE \
-              -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
-              "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/youspudwespud" || true
-          fi
-
-          curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects" \
-            -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
-            -H "Content-Type: application/json" \
-            --data '{
-              "name": "youspudwespud",
-              "production_branch": "main",
-              "build_config": {
-                "build_command": "echo no-op",
-                "destination_dir": ".",
-                "root_dir": "/"
-              }
-            }'
-
-      - name: Deploy to Cloudflare Pages
-        env:
-          CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/youspudwespud/deployments" \
-            -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
-            -F "manifest={\"version\":1,\"include\":[\"/*\"],\"headers\":{}}" \
-            -F "file=@./deploy.zip"
+          npm install -g wrangler
+          wrangler pages project create youspudwespud --production-branch main || true
+          wrangler pages deploy . --project-name youspudwespud
