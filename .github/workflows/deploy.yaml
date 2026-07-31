@@ -25,8 +25,9 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          API_HC: ${{ secrets.API_HC }}
         run: |
           npm install -g wrangler
           wrangler pages project create youspudwespud --production-branch main || true
-          wrangler pages secret put API_HC --project-name youspudwespud <<< "${{ secrets.API_HC }}"
+          printf '%s' "$API_HC" | wrangler pages secret put API_HC --project-name youspudwespud
           wrangler pages deploy . --project-name youspudwespud --commit-dirty=true
