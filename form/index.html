@@ -136,6 +136,7 @@
       cursor: pointer; transition: background .15s;
     }
     .btn-hc:hover { background: #c00e26; }
+    .btn-hc img { height: 20px; width: auto; }
 
     /* user bar */
     .ubar {
@@ -293,12 +294,10 @@
   <div class="big">🥔</div>
   <h2>Sign in with Hack Club</h2>
   <p>We use your Hack Club account to verify you're in the community and to link your submission to your Slack profile.</p>
-  <button class="btn-hc" id="btn-signin">
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="20" height="20">
-      <path d="M6.5 12a5.5 5.5 0 1 0 11 0 5.5 5.5 0 0 0-11 0Zm5.5-8C7.358 4 4 7.358 4 11.5a7.5 7.5 0 0 0 15 0C19 7.358 15.642 4 12 4Z"/>
-    </svg>
-    Sign in with Hack Club
-  </button>
+    <button class="btn-hc" id="btn-signin">
+      <img src="https://assets.hackclub.com/flag-orpheus-top.svg" alt="Hack Club" />
+      Sign in with Hack Club
+    </button>
 </div>
 
 <div id="s-form" class="screen">
@@ -462,8 +461,7 @@ function showErr(msg, detail) {
    STEP 1 — redirect to HackClub OAuth
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 document.getElementById("btn-signin").addEventListener("click", () => {
-  const state = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(12))))
-    .replace(/[+/=]/g, c => ({"+":"-","/":"_","=":""})[c]);
+  const state = crypto.randomUUID();
   sessionStorage.setItem("oauth_state", state);
 
   const p = new URLSearchParams({
