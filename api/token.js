@@ -1,12 +1,28 @@
-module.exports = async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+exports.handler = async (event, context) => {
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: "Method not allowed" }),
+    };
   }
 
-  const { code, redirect_uri } = req.body || {};
+  let body;
+  try {
+    body = JSON.parse(event.body || "{}");
+  } catch (e) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Invalid JSON body" }),
+    };
+  }
+
+  const { code, redirect_uri } = body;
 
   if (!code) {
-    return res.status(400).json({ error: "Missing authorization code" });
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Missing authorization code" }),
+    };
   }
 
   const params = new URLSearchParams({
@@ -27,7 +43,10 @@ module.exports = async (req, res) => {
     const tok = await hcRes.json();
 
     if (!hcRes.ok) {
-      return res.status(hcRes.status).json(tok);
+      return {
+        statusCode: hcRes.status,
+        body: JSON.stringify(tok),
+      };
     }
 
     const meRes = await fetch("https://auth.hackclub.com/api/v1/me", {
@@ -37,11 +56,20 @@ module.exports = async (req, res) => {
     const user = await meRes.json();
 
     if (!meRes.ok) {
-      return res.status(meRes.status).json(user);
+      return {
+        statusCode: meRes.status,
+        body: JSON.stringify(user),
+      };
     }
 
-    return res.status(200).json({ token: tok, user: user });
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ token: tok, user: user }),
+    };
   } catch (err) {
-    return res.status(500).json({ error: "Token exchange failed", detail: err.message });
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Token exchange failed", detail: err.message }),
+    };
   }
 };

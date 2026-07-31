@@ -1,0 +1,6 @@
+[functions]
+  directory = "api"
+
+[[routes]]
+  pattern = "/api/token"
+  function = "token"

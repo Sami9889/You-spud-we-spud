@@ -1,7 +1,4 @@
 {
   "name": "you-spud-we-spud",
-  "version": "1.0.0",
-  "dependencies": {
-    "googleapis": "^163.0.0"
-  }
+  "version": "1.0.0"
 }

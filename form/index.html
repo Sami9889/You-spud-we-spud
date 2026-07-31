@@ -433,12 +433,12 @@
 <script>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    CONFIG — injected by GitHub Actions
-   API_HC is used server-side in api/token.js (Vercel serverless function)
+   API_HC is used server-side in the Netlify token proxy
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
 const APPS_SCRIPT    = "__APPS_SCRIPT_URL__"; // GitHub Variable: APPS_SCRIPT_URL
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
-const TOKEN_PROXY    = "/api/token";          // Serverless function — injects API_HC server-side
+const TOKEN_PROXY    = "__TOKEN_PROXY_URL__";          // Serverless function — injects API_HC server-side
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
