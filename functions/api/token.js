@@ -19,7 +19,11 @@ function json(status, body, headers = {}) {
 }
 
 export async function onRequestPost(context) {
-  const { request } = context;
+  const { env, request } = context;
+
+  if (!env.API_HC) {
+    return json(500, { error: "Server misconfigured" });
+  }
 
   let body;
   try {
@@ -41,6 +45,7 @@ export async function onRequestPost(context) {
   const params = new URLSearchParams({
     grant_type:    "authorization_code",
     client_id:     "e63922a40cd5f15e2d772276dcba8404",
+    client_secret: env.API_HC,
     redirect_uri:  redirect_uri || REDIRECT_URI,
     code,
   });
