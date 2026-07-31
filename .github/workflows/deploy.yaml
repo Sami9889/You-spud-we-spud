@@ -7,20 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  # JOB 1: Deploy static site to GitHub Pages
-  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  deploy-static:
-    name: Deploy to GitHub Pages
+  deploy:
+    name: Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
-    environment: github-pages
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    concurrency:
-      group: github-pages
-      cancel-in-progress: false
+    environment: cloudflare-pages
 
     steps:
       - name: Checkout
@@ -32,14 +22,11 @@ jobs:
         run: |
           sed -i "s|__APPS_SCRIPT_URL__|https://script.google.com/macros/s/${APP_SCRIPT_ID}/exec|g" form/index.html
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
         with:
-          path: .
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CF_ACCOUNT_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: youspudwespud
+          directory: .
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
