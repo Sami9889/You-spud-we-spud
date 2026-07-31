@@ -433,12 +433,11 @@
 <script>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    CONFIG — injected by GitHub Actions
-   API_HC is used server-side in api/token.js
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
 const APPS_SCRIPT    = "__APPS_SCRIPT_URL__";
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
-const TOKEN_PROXY    = "/api/token";
+const AUTH_BASE      = "https://auth.hackclub.com";
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -446,6 +445,93 @@ const TOKEN_PROXY    = "/api/token";
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
+}
+function showErr(msg, detail) {
+  show("s-error");
+  document.getElementById("err-msg").textContent = msg;
+  if (detail) {
+    const el = document.getElementById("err-detail");
+    el.textContent = typeof detail === "string" ? detail : JSON.stringify(detail, null, 2);
+    el.style.display = "block";
+  }
+}
+async function base64UrlEncode(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""));
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 1 — redirect to HackClub OAuth (PKCE)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+document.getElementById("btn-signin").addEventListener("click", async () => {
+  const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
+  const challenge = base64UrlEncode(
+    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))
+  );
+
+  const state = crypto.randomUUID();
+  sessionStorage.setItem("oauth_state", state);
+  sessionStorage.setItem("pkce_verifier", verifier);
+
+  const p = new URLSearchParams({
+    client_id:             CLIENT_ID,
+    redirect_uri:          REDIRECT_URI,
+    response_type:         "code",
+    scope:                 "profile email name verification_status slack_id",
+    state,
+    code_challenge:        challenge,
+    code_challenge_method: "S256",
+  });
+  window.location.href = AUTH_BASE + "/oauth/authorize?" + p;
+});
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STEP 2 — exchange code → token (PKCE, no client_secret)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+async function exchangeCode(code, state) {
+  if (state !== sessionStorage.getItem("oauth_state")) {
+    showErr("OAuth state mismatch — possible CSRF. Please try again.");
+    return;
+  }
+
+  const verifier = sessionStorage.getItem("pkce_verifier");
+  if (!verifier) {
+    showErr("Missing PKCE verifier. Please try again.");
+    return;
+  }
+
+  const params = new URLSearchParams({
+    grant_type:            "authorization_code",
+    client_id:             CLIENT_ID,
+    redirect_uri:          REDIRECT_URI,
+    code,
+    code_verifier:         verifier,
+  });
+
+  try {
+    const r = await fetch(AUTH_BASE + "/oauth/token", {
+      method:  "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body:    params.toString(),
+    });
+
+    const tok = await r.json();
+    if (!r.ok) throw new Error(tok.error_description || tok.error || "Token exchange failed");
+
+    const meRes = await fetch(AUTH_BASE + "/oauth/userinfo", {
+      headers: { Authorization: "Bearer " + tok.access_token },
+    });
+
+    const user = await meRes.json();
+    if (!meRes.ok) throw new Error(user.error || "Failed to fetch user info");
+
+    sessionStorage.removeItem("pkce_verifier");
+    sessionStorage.setItem("hc_user", JSON.stringify(user));
+    history.replaceState({}, "", window.location.pathname);
+    fillForm(user);
+  } catch (e) {
+    showErr("Couldn't complete sign-in.", e.message);
+  }
 }
 function showErr(msg, detail) {
   show("s-error");
@@ -509,6 +595,10 @@ function fillForm(user) {
   if (user.verification_status === "verified") {
     document.getElementById("u-badge").style.display = "inline-block";
   }
+  const sname = document.getElementById("f-sname");
+  if (!sname.value && user.name) sname.value = user.name;
+  show("s-form");
+}
   const sname = document.getElementById("f-sname");
   if (!sname.value && user.name) sname.value = user.name;
   show("s-form");
