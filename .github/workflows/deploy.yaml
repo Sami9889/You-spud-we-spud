@@ -1,55 +1,33 @@
-# You Spud, We Spud — Form
-name: Deploy Form
+# You Spud, We Spud — Deploy to Vercel
+name: Deploy to Vercel
 
 on:
   push:
     branches: [main]
-    paths:
-      - "form/forms.html"
-      - ".github/workflows/deploy.yaml"
-      - "index.html"
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages:    write
-  id-token: write
-
-concurrency:
-  group:              pages
-  cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Build & deploy to GitHub Pages
+    name: Deploy to Vercel
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url:  ${{ steps.deploy.outputs.page_url }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject secrets & config into HTML
+      - name: Inject APPS_SCRIPT_URL into HTML
         env:
-          API_HC:          ${{ secrets.API_HC }}
           APPS_SCRIPT_URL: ${{ vars.APPS_SCRIPT_URL }}
         run: |
-          mkdir -p _site/form
-          cp index.html _site/index.html
-          cp form/forms.html _site/form/index.html
-          sed -i "s|__API_HC__|${API_HC}|g"                       _site/form/index.html
-          sed -i "s|__APPS_SCRIPT_URL__|${APPS_SCRIPT_URL}|g"     _site/form/index.html
+          sed -i "s|__APPS_SCRIPT_URL__|${APPS_SCRIPT_URL}|g" form/index.html
 
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
         with:
-          path: _site
-
-      - name: Deploy to GitHub Pages
-        id:   deploy
-        uses: actions/deploy-pages@v4
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: .
+          vercel-args: '--prod'
+          alias: 'youspudwespud.sami-s.dev'
+          github-token: ${{ secrets.GITHUB_TOKEN }}

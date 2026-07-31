@@ -437,9 +437,9 @@
    Only one secret required: API_HC
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
-const CLIENT_SEC     = "__API_HC__";          // GitHub Secret: API_HC
 const APPS_SCRIPT    = "__APPS_SCRIPT_URL__"; // GitHub Variable: APPS_SCRIPT_URL (not a secret)
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
+const TOKEN_PROXY    = "/api/token";          // Serverless function — injects API_HC server-side
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -484,37 +484,24 @@ async function exchangeCode(code, state) {
     showErr("OAuth state mismatch — possible CSRF. Please try again.");
     return;
   }
-  let tok;
+  let result;
   try {
-    const r = await fetch("https://auth.hackclub.com/oauth/token", {
+    const r = await fetch(TOKEN_PROXY, {
       method:  "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type:    "authorization_code",
-        client_id:     CLIENT_ID,
-        client_secret: CLIENT_SEC,
-        redirect_uri:  REDIRECT_URI,
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
         code,
+        redirect_uri: REDIRECT_URI,
       }),
     });
-    tok = await r.json();
-    if (!r.ok) throw new Error(tok.error_description || tok.error || "Token exchange failed");
+    result = await r.json();
+    if (!r.ok) throw new Error(result.error_description || result.error || "Token exchange failed");
   } catch (e) {
     showErr("Couldn't complete sign-in.", e.message);
     return;
   }
 
-  let user;
-  try {
-    const r = await fetch("https://auth.hackclub.com/api/v1/me", {
-      headers: { Authorization: "Bearer " + tok.access_token },
-    });
-    user = await r.json();
-    if (!r.ok) throw new Error(JSON.stringify(user));
-  } catch (e) {
-    showErr("Signed in but couldn't load your profile.", e.message);
-    return;
-  }
+  const user = result.user;
 
   sessionStorage.setItem("hc_user", JSON.stringify(user));
   history.replaceState({}, "", window.location.pathname);
