@@ -28,5 +28,4 @@ jobs:
         run: |
           npm install -g wrangler
           wrangler pages project create youspudwespud --production-branch main || true
-          wrangler pages secret put API_HC --project-name youspudwespud <<< "${{ secrets.API_HC }}"
           wrangler pages deploy . --project-name youspudwespud --commit-dirty=true
