@@ -27,4 +27,3 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           env:
             API_HC: ${{ secrets.API_HC }}
-            GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
