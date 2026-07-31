@@ -15,12 +15,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject APPS_SCRIPT_URL into HTML
-        env:
-          APPS_SCRIPT_URL: ${{ vars.APPS_SCRIPT_URL }}
-        run: |
-          sed -i "s|__APPS_SCRIPT_URL__|${APPS_SCRIPT_URL}|g" form/index.html
-
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
@@ -31,3 +25,6 @@ jobs:
           vercel-args: '--prod'
           alias: 'youspudwespud.sami-s.dev'
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          env:
+            API_HC: ${{ secrets.API_HC }}
+            GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
