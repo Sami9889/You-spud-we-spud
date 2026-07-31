@@ -10,7 +10,6 @@ jobs:
   deploy:
     name: Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
-    environment: cloudflare-pages
 
     steps:
       - name: Checkout
@@ -22,25 +21,28 @@ jobs:
         run: |
           sed -i "s|__APPS_SCRIPT_URL__|https://script.google.com/macros/s/${APP_SCRIPT_ID}/exec|g" form/index.html
 
-      - name: Pack build artifact
+      - name: Pack artifact
         run: |
           mkdir -p deploy-artifact
           cp -r ./* deploy-artifact/
           cd deploy-artifact && zip -r ../deploy.zip .
 
-      - name: Deploy to Cloudflare Pages via API
+      - name: Create Cloudflare Pages project
         env:
           CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          PROJECT="youspudwespud"
-
           curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects" \
             -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
             -H "Content-Type: application/json" \
-            --data "{\"name\":\"${PROJECT}\",\"production_branch\":\"main\"}" || true
+            --data '{"name":"youspudwespud","production_branch":"main"}' || true
 
-          curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/${PROJECT}/deployments" \
+      - name: Deploy to Cloudflare Pages
+        env:
+          CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/youspudwespud/deployments" \
             -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
             -F "manifest={\"version\":1,\"include\":[\"/*\"],\"headers\":{}}" \
             -F "file=@deploy.zip"
