@@ -1,4 +1,4 @@
-# You Spud, We Spud — Form 
+# You Spud, We Spud — Form
 name: Deploy Form
 
 on:
@@ -6,8 +6,9 @@ on:
     branches: [main]
     paths:
       - "form/forms.html"
-      - ".github/workflows/deploy.yml"
-  workflow_dispatch:   # allow manual redeploy from the Actions tab
+      - ".github/workflows/deploy.yaml"
+      - "index.html"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -35,10 +36,11 @@ jobs:
           API_HC:          ${{ secrets.API_HC }}
           APPS_SCRIPT_URL: ${{ vars.APPS_SCRIPT_URL }}
         run: |
-          mkdir -p _site
-          cp form/forms.html _site/index.html
-          sed -i "s|__API_HC__|${API_HC}|g"                       _site/index.html
-          sed -i "s|__APPS_SCRIPT_URL__|${APPS_SCRIPT_URL}|g"     _site/index.html
+          mkdir -p _site/form
+          cp index.html _site/index.html
+          cp form/forms.html _site/form/index.html
+          sed -i "s|__API_HC__|${API_HC}|g"                       _site/form/index.html
+          sed -i "s|__APPS_SCRIPT_URL__|${APPS_SCRIPT_URL}|g"     _site/form/index.html
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5

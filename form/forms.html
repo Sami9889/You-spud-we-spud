@@ -1,50 +1,111 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Submit Your Spud — You Spud, We Spud</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥔</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Archivo:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #f7f3ed;
-      --surface: #ffffff;
-      --border:  #ddd4c8;
-      --text:    #2b2118;
-      --muted:   #7a6a5a;
-      --accent:  #b85c1e;
-      --accent2: #7d3f0e;
-      --green:   #2d6a4f;
-      --r:       8px;
-      --font:    Georgia, 'Times New Roman', serif;
+      --paper: #e4d4ae;
+      --paper-dark: #d9c496;
+      --ink: #2a1c10;
+      --muted: #5c4b34;
+      --brown: #3b1f0c;
+      --gold: #b8791e;
+      --green: #365c25;
+      --red: #a13324;
+      --border: #b39a68;
+      --card: #f1e6c8;
+      --stamp: #8a6d3f;
     }
+
+    html { scroll-behavior: smooth; }
 
     body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem 1rem 3rem;
+      background-color: var(--paper);
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(58,31,12,0.06) 1px, transparent 0);
+      background-size: 22px 22px;
+      color: var(--ink);
+      font-family: 'Archivo', sans-serif;
+      line-height: 1.6;
+      position: relative;
     }
 
-    header { text-align: center; margin-bottom: 2.25rem; }
-    header .spud { font-size: 3rem; display: block; margin-bottom: .4rem; line-height: 1; }
-    header h1 { font-size: 1.75rem; letter-spacing: -.4px; }
-    header p { color: var(--muted); margin-top: .4rem; font-size: .9rem; }
-    header a { color: var(--accent); }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.45;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");
+    }
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 2rem;
+    .airmail-strip {
+      height: 10px;
       width: 100%;
-      max-width: 600px;
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--red), var(--red) 14px,
+        var(--paper) 14px, var(--paper) 20px,
+        var(--green) 20px, var(--green) 34px,
+        var(--paper) 34px, var(--paper) 40px
+      );
+    }
+
+    a { color: var(--gold); }
+    a:hover { text-decoration: underline; }
+
+    nav {
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px dashed var(--border);
+      background: var(--paper);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav-logo {
+      font-family: 'Special Elite', monospace;
+      font-weight: 400;
+      font-size: 1.05rem;
+      color: var(--brown);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      transform: rotate(-1deg);
+      display: inline-block;
+    }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .nav-links a:hover { color: var(--ink); text-decoration: none; }
+    .nav-cta {
+      background: var(--brown);
+      color: var(--paper);
+      padding: 0.45rem 1.1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      border-radius: 2px;
+      border: 1px solid var(--brown);
+    }
+    .nav-cta:hover { background: var(--paper); color: var(--brown); text-decoration: none; }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 3rem;
     }
 
     .screen { display: none; }
@@ -54,30 +115,33 @@
     #s-loading { text-align: center; padding: 3rem 1rem; }
     .spin {
       display: inline-block; width: 2rem; height: 2rem;
-      border: 3px solid var(--border); border-top-color: var(--accent);
+      border: 3px solid var(--border); border-top-color: var(--gold);
       border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 1rem;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* sign-in */
     #s-signin { text-align: center; }
-    #s-signin h2 { font-size: 1.25rem; margin-bottom: .6rem; }
-    #s-signin p { color: var(--muted); font-size: .88rem; line-height: 1.55; margin-bottom: 1.5rem; }
+    #s-signin .big { font-size: 3rem; margin-bottom: 1rem; }
+    #s-signin h2 {
+      font-family: 'Special Elite', monospace;
+      font-size: 1.3rem; color: var(--brown); margin-bottom: .6rem;
+    }
+    #s-signin p { color: var(--muted); font-size: .9rem; line-height: 1.6; margin-bottom: 1.5rem; }
     .btn-hc {
       display: inline-flex; align-items: center; gap: .55rem;
       background: #e0102b; color: #fff;
-      border: none; border-radius: var(--r);
-      padding: .75rem 1.5rem; font-size: .95rem; font-family: var(--font);
+      border: none; border-radius: 6px;
+      padding: .75rem 1.5rem; font-size: .95rem; font-family: 'Archivo', sans-serif;
       cursor: pointer; transition: background .15s;
     }
     .btn-hc:hover { background: #c00e26; }
-    .btn-hc svg { width: 1.15rem; height: 1.15rem; flex-shrink: 0; }
 
     /* user bar */
     .ubar {
       display: flex; align-items: center; gap: .75rem;
       background: #f0f7f4; border: 1px solid #b7d9c9;
-      border-radius: var(--r); padding: .7rem 1rem; margin-bottom: 1.75rem;
+      border-radius: 6px; padding: .7rem 1rem; margin-bottom: 1.75rem;
     }
     .ubar-av {
       width: 2.4rem; height: 2.4rem; border-radius: 50%;
@@ -94,28 +158,28 @@
 
     /* form sections */
     .sec {
-      font-size: .68rem; text-transform: uppercase; letter-spacing: .1em;
-      color: var(--muted); font-family: monospace;
+      font-size: .7rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted); font-family: 'Space Mono', monospace;
       margin: 1.5rem 0 .8rem;
       padding-bottom: .3rem; border-bottom: 1px solid var(--border);
     }
     .sec:first-of-type { margin-top: 0; }
 
     label { display: block; font-size: .86rem; margin-bottom: .28rem; }
-    label .req { color: var(--accent); }
+    label .req { color: var(--red); }
     .note { font-size: .78rem; color: var(--muted); margin-top: -.7rem; margin-bottom: .9rem; line-height: 1.45; }
 
     input[type="text"], input[type="url"],
     input[type="number"], input[type="tel"],
     textarea {
       width: 100%; padding: .58rem .72rem;
-      border: 1px solid var(--border); border-radius: var(--r);
-      background: var(--bg); color: var(--text);
-      font-family: var(--font); font-size: .91rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--paper); color: var(--ink);
+      font-family: 'Archivo', sans-serif; font-size: .91rem;
       margin-bottom: .9rem; appearance: none;
       transition: border-color .15s;
     }
-    input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    input:focus, textarea:focus { outline: none; border-color: var(--gold); }
     textarea { resize: vertical; min-height: 85px; }
 
     .row { display: flex; gap: .7rem; }
@@ -126,88 +190,118 @@
     .tier-opt { position: relative; }
     .tier-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
     .tier-opt label {
-      display: block; border: 2px solid var(--border); border-radius: var(--r);
+      display: block; border: 2px solid var(--border); border-radius: 6px;
       padding: .7rem .4rem; text-align: center; cursor: pointer; margin: 0;
       transition: border-color .15s, background .15s;
+      font-family: 'Archivo', sans-serif;
     }
-    .tier-opt label .tn { font-size: .83rem; font-weight: bold; display: block; }
-    .tier-opt label .tl { font-size: .72rem; color: var(--muted); font-family: monospace; display: block; margin-top: .18rem; }
-    .tier-opt label .tr { font-size: .72rem; color: var(--accent); display: block; margin-top: .25rem; }
-    .tier-opt input:checked + label { border-color: var(--accent); background: #fdf0e8; }
+    .tier-opt label .tn { font-size: .83rem; font-weight: bold; display: block; color: var(--brown); }
+    .tier-opt label .tl { font-size: .72rem; color: var(--muted); font-family: 'Space Mono', monospace; display: block; margin-top: .18rem; }
+    .tier-opt label .tr { font-size: .72rem; color: var(--gold); display: block; margin-top: .25rem; }
+    .tier-opt input:checked + label { border-color: var(--gold); background: #fdf8ee; }
 
     #form-err {
-      display: none; color: #c0392b;
+      display: none; color: var(--red);
       background: #fde8e8; border: 1px solid #f5c6cb;
-      border-radius: var(--r); padding: .55rem .85rem;
+      border-radius: 6px; padding: .55rem .85rem;
       font-size: .83rem; margin-bottom: .9rem;
     }
+
     .btn-submit {
-      width: 100%; padding: .82rem; background: var(--accent); color: #fff;
-      border: none; border-radius: var(--r);
-      font-size: .97rem; font-family: var(--font);
+      width: 100%; padding: .82rem; background: var(--gold); color: var(--brown);
+      border: none; border-radius: 6px;
+      font-size: .97rem; font-family: 'Archivo', sans-serif; font-weight: 700;
       cursor: pointer; margin-top: .3rem; transition: background .15s;
     }
-    .btn-submit:hover:not(:disabled) { background: var(--accent2); }
+    .btn-submit:hover:not(:disabled) { background: #a76515; }
     .btn-submit:disabled { opacity: .55; cursor: not-allowed; }
 
     /* success */
     #s-success { text-align: center; }
     #s-success .big { font-size: 3.5rem; margin-bottom: .9rem; }
-    #s-success h2 { font-size: 1.35rem; margin-bottom: .55rem; }
-    #s-success p { color: var(--muted); font-size: .88rem; line-height: 1.6; }
+    #s-success h2 {
+      font-family: 'Special Elite', monospace;
+      font-size: 1.35rem; color: var(--brown); margin-bottom: .55rem;
+    }
+    #s-success p { color: var(--muted); font-size: .9rem; line-height: 1.6; }
 
     /* error screen */
     #s-error { text-align: center; }
     #s-error .big { font-size: 3rem; margin-bottom: .9rem; }
-    #s-error h2 { font-size: 1.25rem; margin-bottom: .45rem; }
+    #s-error h2 {
+      font-family: 'Special Elite', monospace;
+      font-size: 1.25rem; color: var(--brown); margin-bottom: .45rem;
+    }
     #s-error p { color: var(--muted); font-size: .86rem; margin-bottom: .75rem; line-height: 1.5; }
     #s-error pre {
-      background: #f0f0f0; border-radius: var(--r); padding: .65rem;
+      background: #f0f0f0; border-radius: 6px; padding: .65rem;
       font-size: .72rem; text-align: left; overflow: auto;
       white-space: pre-wrap; word-break: break-all; max-height: 160px; color: var(--muted);
+      font-family: 'Space Mono', monospace;
     }
     .btn-retry {
       display: inline-block; margin-top: 1rem;
-      padding: .55rem 1.1rem; background: var(--accent); color: #fff;
-      border: none; border-radius: var(--r); font-family: var(--font);
+      padding: .55rem 1.1rem; background: var(--gold); color: var(--brown);
+      border: none; border-radius: 6px; font-family: 'Archivo', sans-serif;
       font-size: .88rem; cursor: pointer; text-decoration: none;
     }
 
-    footer { margin-top: 2rem; color: var(--muted); font-size: .78rem; text-align: center; }
+    footer {
+      border-top: 2px dashed var(--border);
+      padding: 2rem;
+      text-align: center;
+      font-size: .78rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
     footer a { color: var(--muted); }
+    .hc-badge {
+      display: inline-flex;
+      align-items: center;
+      margin-top: .9rem;
+      text-decoration: none;
+    }
+    .hc-badge:hover { opacity: .8; }
+    .hc-logo { height: 32px; width: 120px; object-fit: contain; border: 0; display: block; }
 
     @media (max-width: 480px) {
       .tiers { grid-template-columns: 1fr; }
       .row { flex-direction: column; gap: 0; }
+      nav { padding: .75rem 1rem; }
+      .nav-links { display: none; }
+      .container { padding: 1.5rem .75rem 3rem; }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <span class="spud">🥔</span>
-  <h1>You Spud, We Spud</h1>
-  <p>Built something tiny? Submit it and get a parcel from Australia.<br>
-     <a href="https://youspudwespud.sami-s.dev/#rules" target="_blank">Read the rules ↗</a></p>
-</header>
+<div class="airmail-strip"></div>
+
+<nav>
+  <a href="https://youspudwespud.sami-s.dev" class="nav-logo">you spud, we spud</a>
+  <a href="https://youspudwespud.sami-s.dev" class="nav-cta">← Back to Apps</a>
+</nav>
+
+<div class="container">
 
 <div id="s-loading" class="screen active">
   <div class="spin"></div>
   <p style="color:var(--muted);font-size:.88rem">One sec…</p>
 </div>
 
-<div id="s-signin" class="screen card">
+<div id="s-signin" class="screen">
+  <div class="big">🥔</div>
   <h2>Sign in with Hack Club</h2>
   <p>We use your Hack Club account to verify you're in the community and to link your submission to your Slack profile.</p>
   <button class="btn-hc" id="btn-signin">
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="20" height="20">
       <path d="M6.5 12a5.5 5.5 0 1 0 11 0 5.5 5.5 0 0 0-11 0Zm5.5-8C7.358 4 4 7.358 4 11.5a7.5 7.5 0 0 0 15 0C19 7.358 15.642 4 12 4Z"/>
     </svg>
     Sign in with Hack Club
   </button>
 </div>
 
-<div id="s-form" class="screen card">
+<div id="s-form" class="screen">
   <div class="ubar">
     <div class="ubar-av">🥔</div>
     <div>
@@ -312,7 +406,7 @@
   </form>
 </div>
 
-<div id="s-success" class="screen card">
+<div id="s-success" class="screen">
   <div class="big">📦</div>
   <h2>Spud submitted!</h2>
   <p>Thanks for shipping something tiny and real.<br>
@@ -320,7 +414,7 @@
      Keep an eye on your Hack Club Slack DMs.</p>
 </div>
 
-<div id="s-error" class="screen card">
+<div id="s-error" class="screen">
   <div class="big">🥴</div>
   <h2>Something went wrong</h2>
   <p id="err-msg">There was a problem with sign-in.</p>
@@ -328,10 +422,13 @@
   <a href="/" class="btn-retry">Try again</a>
 </div>
 
+</div>
+
 <footer>
-  <p>A <a href="https://hackclub.com" target="_blank">Hack Club</a> YSWS by
-     <a href="https://sami-s.dev" target="_blank">sami9889</a> ·
-     <a href="https://youspudwespud.sami-s.dev" target="_blank">youspudwespud.sami-s.dev</a></p>
+  <p>You Spud, We Spud, a Hack Club YSWS by <a href="https://sami-s.dev" target="_blank" rel="noopener">sami9889</a></p>
+  <a href="https://hackclub.com" target="_blank" rel="noopener" class="hc-badge">
+    <img src="https://assets.hackclub.com/flag-orpheus-top.svg" alt="Hack Club" class="hc-logo" />
+  </a>
 </footer>
 
 <script>
@@ -342,7 +439,7 @@
 const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
 const CLIENT_SEC     = "__API_HC__";          // GitHub Secret: API_HC
 const APPS_SCRIPT    = "__APPS_SCRIPT_URL__"; // GitHub Variable: APPS_SCRIPT_URL (not a secret)
-const REDIRECT_URI   = "https://forms.ysws.sami-s.dev";
+const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -376,7 +473,7 @@ document.getElementById("btn-signin").addEventListener("click", () => {
     scope:         "email name profile verification_status slack_id",
     state,
   });
-  window.location.href = "https://id.hackclub.com/oauth/authorize?" + p;
+  window.location.href = "https://auth.hackclub.com/oauth/authorize?" + p;
 });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -389,7 +486,7 @@ async function exchangeCode(code, state) {
   }
   let tok;
   try {
-    const r = await fetch("https://id.hackclub.com/oauth/token", {
+    const r = await fetch("https://auth.hackclub.com/oauth/token", {
       method:  "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
@@ -409,7 +506,7 @@ async function exchangeCode(code, state) {
 
   let user;
   try {
-    const r = await fetch("https://id.hackclub.com/oauth/userinfo", {
+    const r = await fetch("https://auth.hackclub.com/api/v1/me", {
       headers: { Authorization: "Bearer " + tok.access_token },
     });
     user = await r.json();
@@ -428,13 +525,15 @@ async function exchangeCode(code, state) {
    STEP 3 — fill form with OAuth data
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function fillForm(user) {
-  document.getElementById("u-name").textContent  = user.name || user.username || "Hack Clubber";
-  document.getElementById("u-email").textContent = user.email || "";
-  if (user.verification_status === "verified") {
+  const id = user.identity || {};
+  const displayName = (id.first_name + " " + id.last_name).trim() || "Hack Clubber";
+  document.getElementById("u-name").textContent  = displayName;
+  document.getElementById("u-email").textContent = id.primary_email || "";
+  if (id.verification_status === "verified") {
     document.getElementById("u-badge").style.display = "inline-block";
   }
   const sname = document.getElementById("f-sname");
-  if (!sname.value && user.name) sname.value = user.name;
+  if (!sname.value && displayName) sname.value = displayName;
   show("s-form");
 }
 
@@ -473,14 +572,15 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   }
 
   const user = JSON.parse(sessionStorage.getItem("hc_user") || "{}");
+  const id   = user.identity || {};
 
   const payload = {
     timestamp:    new Date().toISOString(),
-    hc_name:      user.name                  || "",
-    hc_email:     user.email                 || "",
-    hc_slack_id:  user.slack_id || user.id   || "",
-    hc_verified:  user.verification_status   || "",
-    hc_username:  user.username              || "",
+    hc_name:      (id.first_name + " " + id.last_name).trim() || "",
+    hc_email:     id.primary_email || "",
+    hc_slack_id:  id.slack_id || id.id || "",
+    hc_verified:  id.verification_status || "",
+    hc_username:  id.preferred_username || "",
     project_name: document.getElementById("f-pname").value.trim(),
     project_url:  document.getElementById("f-purl").value.trim(),
     source_url:   document.getElementById("f-surl").value.trim(),
@@ -502,14 +602,12 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   btn.textContent = "Submitting…";
 
   try {
-    /* Apps Script requires text/plain + no-cors to avoid preflight issues */
     await fetch(APPS_SCRIPT, {
       method:  "POST",
       headers: { "Content-Type": "text/plain" },
       body:    JSON.stringify(payload),
       mode:    "no-cors",
     });
-    /* no-cors gives an opaque response — if fetch didn't throw, treat as success */
     show("s-success");
     sessionStorage.clear();
   } catch (err) {
@@ -539,9 +637,9 @@ document.getElementById("the-form").addEventListener("submit", async e => {
 </script>
 
 <!--
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   GOOGLE APPS SCRIPT  (one-time setup — takes ~2 minutes)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 1. Go to https://script.google.com  →  New project
 2. Replace the entire editor contents with the code below
