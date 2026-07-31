@@ -1,0 +1,10 @@
+name = "youspudwespud-token"
+main = "src/token.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+CORS_ORIGIN = "*"
+
+[[routes]]
+pattern = "/api/token"
+zone_name = "youspudwespud.sami-s.dev"
