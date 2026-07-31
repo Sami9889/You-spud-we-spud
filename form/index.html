@@ -433,12 +433,11 @@
 <script>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    CONFIG — injected by GitHub Actions
-   API_HC is used server-side in the Netlify token proxy
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
 const APPS_SCRIPT    = "__APPS_SCRIPT_URL__"; // GitHub Variable: APPS_SCRIPT_URL
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
-const TOKEN_PROXY    = "__TOKEN_PROXY_URL__";          // Serverless function — injects API_HC server-side
+const AUTH_BASE      = "https://auth.hackclub.com";
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -458,63 +457,94 @@ function showErr(msg, detail) {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 1 — redirect to HackClub OAuth
+   STEP 1 — redirect to HackClub OAuth (PKCE)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-document.getElementById("btn-signin").addEventListener("click", () => {
+async function base64UrlEncode(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""));
+}
+
+document.getElementById("btn-signin").addEventListener("click", async () => {
+  // Generate PKCE code verifier and challenge
+  const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
+  const challenge = base64UrlEncode(
+    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))
+  );
+
   const state = crypto.randomUUID();
   sessionStorage.setItem("oauth_state", state);
+  sessionStorage.setItem("pkce_verifier", verifier);
 
   const p = new URLSearchParams({
-    client_id:     CLIENT_ID,
-    redirect_uri:  REDIRECT_URI,
-    response_type: "code",
-    scope:         "email name profile verification_status slack_id",
+    client_id:             CLIENT_ID,
+    redirect_uri:          REDIRECT_URI,
+    response_type:         "code",
+    scope:                 "openid profile email name verification_status slack_id",
     state,
+    code_challenge:        challenge,
+    code_challenge_method: "S256",
   });
-  window.location.href = "https://auth.hackclub.com/oauth/authorize?" + p;
+  window.location.href = AUTH_BASE + "/oauth/authorize?" + p;
 });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 2 — exchange code → token (uses API_HC)
+   STEP 2 — exchange code → token (PKCE, no client_secret)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 async function exchangeCode(code, state) {
   if (state !== sessionStorage.getItem("oauth_state")) {
     showErr("OAuth state mismatch — possible CSRF. Please try again.");
     return;
   }
-  let result;
-  try {
-    const r = await fetch(TOKEN_PROXY, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({
-        code,
-        redirect_uri: REDIRECT_URI,
-      }),
-    });
-    result = await r.json();
-    if (!r.ok) throw new Error(result.error_description || result.error || "Token exchange failed");
-  } catch (e) {
-    showErr("Couldn't complete sign-in.", e.message);
+
+  const verifier = sessionStorage.getItem("pkce_verifier");
+  if (!verifier) {
+    showErr("Missing PKCE verifier. Please try again.");
     return;
   }
 
-  const user = result.user;
+  const params = new URLSearchParams({
+    grant_type:            "authorization_code",
+    client_id:             CLIENT_ID,
+    redirect_uri:          REDIRECT_URI,
+    code,
+    code_verifier:         verifier,
+  });
 
-  sessionStorage.setItem("hc_user", JSON.stringify(user));
-  history.replaceState({}, "", window.location.pathname);
-  fillForm(user);
+  try {
+    const r = await fetch(AUTH_BASE + "/oauth/token", {
+      method:  "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body:    params.toString(),
+    });
+
+    const tok = await r.json();
+    if (!r.ok) throw new Error(tok.error_description || tok.error || "Token exchange failed");
+
+    // Fetch user info
+    const meRes = await fetch(AUTH_BASE + "/oauth/userinfo", {
+      headers: { Authorization: "Bearer " + tok.access_token },
+    });
+
+    const user = await meRes.json();
+    if (!meRes.ok) throw new Error(user.error || "Failed to fetch user info");
+
+    sessionStorage.removeItem("pkce_verifier");
+    sessionStorage.setItem("hc_user", JSON.stringify(user));
+    history.replaceState({}, "", window.location.pathname);
+    fillForm(user);
+  } catch (e) {
+    showErr("Couldn't complete sign-in.", e.message);
+  }
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    STEP 3 — fill form with OAuth data
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function fillForm(user) {
-  const id = user.identity || {};
-  const displayName = (id.first_name + " " + id.last_name).trim() || "Hack Clubber";
+  const displayName = user.name || "Hack Clubber";
   document.getElementById("u-name").textContent  = displayName;
-  document.getElementById("u-email").textContent = id.primary_email || "";
-  if (id.verification_status === "verified") {
+  document.getElementById("u-email").textContent = user.email || "";
+  if (user.verification_status === "verified") {
     document.getElementById("u-badge").style.display = "inline-block";
   }
   const sname = document.getElementById("f-sname");
@@ -557,15 +587,14 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   }
 
   const user = JSON.parse(sessionStorage.getItem("hc_user") || "{}");
-  const id   = user.identity || {};
 
   const payload = {
     timestamp:    new Date().toISOString(),
-    hc_name:      (id.first_name + " " + id.last_name).trim() || "",
-    hc_email:     id.primary_email || "",
-    hc_slack_id:  id.slack_id || id.id || "",
-    hc_verified:  id.verification_status || "",
-    hc_username:  id.preferred_username || "",
+    hc_name:      user.name || "",
+    hc_email:     user.email || "",
+    hc_slack_id:  user.slack_id || "",
+    hc_verified:  user.verification_status || "",
+    hc_username:  user.preferred_username || user.nickname || "",
     project_name: document.getElementById("f-pname").value.trim(),
     project_url:  document.getElementById("f-purl").value.trim(),
     source_url:   document.getElementById("f-surl").value.trim(),
