@@ -1,4 +1,4 @@
-export const corsHeaders = {
+const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
@@ -12,19 +12,13 @@ function json(status, body, headers = {}) {
     status,
     headers: {
       "Content-Type": "application/json",
-      ...corsHeaders,
+      ...CORS_HEADERS,
       ...headers,
     },
   });
 }
 
-export async function onRequestPost(context) {
-  const { env, request } = context;
-
-  if (!env.API_HC) {
-    return json(500, { error: "Server misconfigured" });
-  }
-
+async function handleToken(request, env) {
   let body;
   try {
     body = await request.json();
@@ -42,11 +36,15 @@ export async function onRequestPost(context) {
     return json(400, { error: "Missing or invalid authorization code" });
   }
 
+  if (!env.API_HC) {
+    return json(500, { error: "Server misconfigured" });
+  }
+
   const params = new URLSearchParams({
-    grant_type:    "authorization_code",
-    client_id:     "e63922a40cd5f15e2d772276dcba8404",
+    grant_type: "authorization_code",
+    client_id: "e63922a40cd5f15e2d772276dcba8404",
     client_secret: env.API_HC,
-    redirect_uri:  redirect_uri || REDIRECT_URI,
+    redirect_uri: redirect_uri || REDIRECT_URI,
     code,
   });
 
@@ -101,9 +99,19 @@ export async function onRequestPost(context) {
   return json(200, { token: tok, user });
 }
 
-export async function onRequestOptions() {
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders,
-  });
-}
+export default {
+  async fetch(request, env, ctx) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: CORS_HEADERS,
+      });
+    }
+
+    if (request.method !== "POST") {
+      return json(405, { error: "Method not allowed" });
+    }
+
+    return handleToken(request, env);
+  },
+};
