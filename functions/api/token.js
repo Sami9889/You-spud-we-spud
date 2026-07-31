@@ -4,80 +4,101 @@ export const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+const CODE_LENGTH_MAX = 2000;
+const REDIRECT_URI = "https://youspudwespud.sami-s.dev/form/";
+
+function json(status, body, headers = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders,
+      ...headers,
+    },
+  });
+}
+
 export async function onRequestPost(context) {
-  const { env } = context;
+  const { env, request } = context;
 
   if (!env.API_HC) {
-    return new Response(
-      JSON.stringify({ error: "Server misconfigured", detail: "API_HC missing" }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return json(500, { error: "Server misconfigured" });
   }
 
   let body;
   try {
-    body = await context.request.json();
+    body = await request.json();
   } catch {
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON body" }),
-      { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return json(400, { error: "Invalid JSON body" });
   }
 
-  const { code, redirect_uri } = body || {};
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return json(400, { error: "Invalid request body" });
+  }
 
-  if (!code) {
-    return new Response(
-      JSON.stringify({ error: "Missing authorization code" }),
-      { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+  const { code, redirect_uri } = body;
+
+  if (!code || typeof code !== "string" || code.length > CODE_LENGTH_MAX) {
+    return json(400, { error: "Missing or invalid authorization code" });
   }
 
   const params = new URLSearchParams({
-    grant_type:    "authorization_code",
-    client_id:     "e63922a40cd5f15e2d772276dcba8404",
+    grant_type: "authorization_code",
+    client_id: "e63922a40cd5f15e2d772276dcba8404",
     client_secret: env.API_HC,
-    redirect_uri:  redirect_uri || "https://youspudwespud.sami-s.dev/form/",
+    redirect_uri: redirect_uri || REDIRECT_URI,
     code,
   });
 
+  let hcRes;
   try {
-    const hcRes = await fetch("https://auth.hackclub.com/oauth/token", {
+    hcRes = await fetch("https://auth.hackclub.com/oauth/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params.toString(),
     });
+  } catch (err) {
+    return json(502, { error: "Token endpoint unreachable" });
+  }
 
-    const tok = await hcRes.json();
-    if (!hcRes.ok) {
-      return new Response(JSON.stringify(tok), {
-        status: hcRes.status,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
+  let tok;
+  try {
+    tok = await hcRes.json();
+  } catch {
+    tok = {};
+  }
 
-    const meRes = await fetch("https://auth.hackclub.com/oauth/userinfo", {
+  if (!hcRes.ok) {
+    const message = tok.error_description || tok.error || "Token exchange failed";
+    return json(hcRes.status, { error: message });
+  }
+
+  if (!tok.access_token) {
+    return json(502, { error: "Malformed token response" });
+  }
+
+  let meRes;
+  try {
+    meRes = await fetch("https://auth.hackclub.com/oauth/userinfo", {
       headers: { Authorization: `Bearer ${tok.access_token}` },
     });
-
-    const user = await meRes.json();
-    if (!meRes.ok) {
-      return new Response(JSON.stringify(user), {
-        status: meRes.status,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
-    return new Response(JSON.stringify({ token: tok, user }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ error: "Token exchange failed", detail: err.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+  } catch {
+    return json(502, { error: "User info endpoint unreachable" });
   }
+
+  let user;
+  try {
+    user = await meRes.json();
+  } catch {
+    user = {};
+  }
+
+  if (!meRes.ok) {
+    const message = user.error || "Failed to fetch user info";
+    return json(meRes.status, { error: message });
+  }
+
+  return json(200, { token: tok, user });
 }
 
 export async function onRequestOptions() {
