@@ -437,9 +437,9 @@
    API_HC is used server-side in api/token.js (Vercel serverless function)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
+const APPS_SCRIPT    = "__APPS_SCRIPT_URL__"; // GitHub Variable: APPS_SCRIPT_URL
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
-const TOKEN_PROXY    = "/api/token";
-const SUBMIT_PROXY   = "/api/submit";
+const TOKEN_PROXY    = "/api/token";          // Serverless function — injects API_HC server-side
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -525,7 +525,8 @@ function fillForm(user) {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 4 — submit form → serverless function
+   STEP 4 — submit form → Google Apps Script
+   Apps Script appends the row to Google Sheets
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 document.getElementById("the-form").addEventListener("submit", async e => {
   e.preventDefault();
@@ -588,13 +589,12 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   btn.textContent = "Submitting…";
 
   try {
-    const r = await fetch(SUBMIT_PROXY, {
+    await fetch(APPS_SCRIPT, {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
       body:    JSON.stringify(payload),
+      mode:    "no-cors",
     });
-    const resp = await r.json();
-    if (!r.ok) throw new Error(resp.error || "Submission failed");
     show("s-success");
     sessionStorage.clear();
   } catch (err) {
@@ -625,40 +625,68 @@ document.getElementById("the-form").addEventListener("submit", async e => {
 
 <!--
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  GOOGLE SERVICE ACCOUNT  (one-time setup — takes ~2 minutes)
+  GOOGLE APPS SCRIPT  (one-time setup — takes ~2 minutes)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-The serverless function (api/submit.js) writes to Google Sheets
-using the Google Sheets API v4 — no Apps Script needed.
-
-1. Go to https://console.cloud.google.com/
-2. Create a new project (or use existing)
-3. Enable the Google Sheets API:
-   APIs & Services → Library → "Google Sheets API" → Enable
-4. Create a service account:
-   IAM & Admin → Service Accounts → Create Service Account
-   - Name: "ysws-form"
-   - Role: Project → Editor
-5. Create a JSON key:
-   Keys tab → Add Key → Create New Key → JSON
-   Copy the entire JSON output
-6. Share your Google Sheet with the service account email:
-   - Open the spreadsheet: 1-DkgM90zY6p0cZqn8sGTi26H7v0opp2xxBFsDhjv2Lk
-   - Click "Share" in top-right
-   - Add the service account email (e.g. ysws-form@your-project.iam.gserviceaccount.com)
-   - Give "Editor" access
-7. Add the JSON key as a GitHub Secret:
-   Settings → Secrets and variables → Actions → New repository secret
-   Name: GOOGLE_SERVICE_ACCOUNT_JSON
-   Value: (paste the entire JSON key)
+1. Go to https://script.google.com  →  New project
+2. Replace the entire editor contents with the code below
+3. Click Deploy → New deployment
+      Type:             Web app
+      Execute as:       Me
+      Who has access:   Anyone
+4. Copy the Web App URL
+5. Add it as a GitHub Variable named APPS_SCRIPT_URL
+   (Settings → Secrets and variables → Actions → Variables → New)
 
 ─────────────────────────────────────────────────────────
 
-The sheet should have these headers in row 1:
+const SHEET_ID = "1-DkgM90zY6p0cZqn8sGTi26H7v0opp2xxBFsDhjv2Lk";
 
-  Timestamp | HC Name | Email | Slack ID | Verified |
-  Project Name | Live URL | Source URL | File Size (KB) | Description | Tier |
-  Phone | Ship Name | Address 1 | Address 2 | City | State | Country | Postal Code
+const HEADERS = [
+  "Timestamp","HC Name","Email","Slack ID","Verified","Username",
+  "Project Name","Live URL","Source URL","File Size (KB)","Description","Tier",
+  "Phone","Ship Name","Address 1","Address 2","City","State","Country","Postal Code"
+];
+
+function doPost(e) {
+  try {
+    var data  = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+
+    if (sheet.getLastRow() === 0) sheet.appendRow(HEADERS);
+
+    sheet.appendRow([
+      data.timestamp    || "",
+      data.hc_name      || "",
+      data.hc_email     || "",
+      data.hc_slack_id  || "",
+      data.hc_verified  || "",
+      data.hc_username  || "",
+      data.project_name || "",
+      data.project_url  || "",
+      data.source_url   || "",
+      data.file_size_kb || "",
+      data.description  || "",
+      data.tier         || "",
+      data.phone        || "",
+      data.ship_name    || "",
+      data.ship_line1   || "",
+      data.ship_line2   || "",
+      data.ship_city    || "",
+      data.ship_state   || "",
+      data.ship_country || "",
+      data.ship_postal  || "",
+    ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
 
 ─────────────────────────────────────────────────────────
 -->
