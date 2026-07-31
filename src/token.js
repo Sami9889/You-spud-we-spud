@@ -43,7 +43,7 @@ async function handleToken(request, env) {
 
   console.log("TOKEN_PROXY redirect_uri=" + (redirect_uri || REDIRECT_URI) + " hasAPI_HC=" + !!env.API_HC);
 
-  const params = new URLSearchParams({
+  const form = new URLSearchParams({
     grant_type: "authorization_code",
     client_id: "e63922a40cd5f15e2d772276dcba8404",
     redirect_uri: redirect_uri || REDIRECT_URI,
@@ -60,7 +60,7 @@ async function handleToken(request, env) {
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": "Basic " + basicAuth,
       },
-      body: params.toString(),
+      body: form.toString(),
     });
   } catch (err) {
     return json(502, { error: "Token endpoint unreachable" });
