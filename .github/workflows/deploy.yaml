@@ -22,6 +22,16 @@ jobs:
         run: |
           sed -i "s|__APPS_SCRIPT_URL__|https://script.google.com/macros/s/${APP_SCRIPT_ID}/exec|g" form/index.html
 
+      - name: Create Cloudflare Pages project
+        env:
+          CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects" \
+            -H "Authorization: Bearer ${CF_ACCOUNT_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"name":"youspudwespud","production_branch":"main"}' || true
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
