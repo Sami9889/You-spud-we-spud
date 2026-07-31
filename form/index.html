@@ -479,7 +479,7 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
     client_id:             CLIENT_ID,
     redirect_uri:          REDIRECT_URI,
     response_type:         "code",
-    scope:                 "openid profile email name verification_status slack_id",
+    scope: "profile email name verification_status slack_id",
     state,
     code_challenge:        challenge,
     code_challenge_method: "S256",
