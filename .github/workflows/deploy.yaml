@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Cloudflare Pages + Worker
+    name: Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
 
     steps:
@@ -25,28 +25,12 @@ jobs:
         run: |
           zip -r deploy.zip . -x "deploy.zip" ".git/*" ".devcontainer/*"
 
-      - name: Deploy token Worker to Cloudflare
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          API_HC: ${{ secrets.API_HC }}
-        run: |
-          npm install -g wrangler
-          printf '%s' "$API_HC" | wrangler secret put API_HC --name youspudwespud-token
-          wrangler deploy --name youspudwespud-token
-
-      - name: Inject Worker URL into HTML
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          WORKER_URL="https://youspudwespud-token.${CF_ACCOUNT_ID}.workers.dev"
-          sed -i "s|__TOKEN_PROXY_URL__|${WORKER_URL}|g" form/index.html
-
       - name: Deploy to Cloudflare Pages via Wrangler
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
+          npm install -g wrangler
           wrangler pages project create youspudwespud --production-branch main || true
           wrangler pages deploy . --project-name youspudwespud --commit-dirty=true
 
