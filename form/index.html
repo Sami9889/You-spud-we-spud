@@ -544,49 +544,6 @@ function showErr(msg, detail) {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 1 — redirect to HackClub OAuth
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-document.getElementById("btn-signin").addEventListener("click", () => {
-  const state = crypto.randomUUID();
-  sessionStorage.setItem("oauth_state", state);
-
-  const p = new URLSearchParams({
-    client_id:     CLIENT_ID,
-    redirect_uri:  REDIRECT_URI,
-    response_type: "code",
-    scope:         "profile email name verification_status slack_id",
-    state,
-  });
-  window.location.href = "https://auth.hackclub.com/oauth/authorize?" + p;
-});
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 2 — exchange code → token (uses API_HC)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-async function exchangeCode(code, state) {
-  if (state !== sessionStorage.getItem("oauth_state")) {
-    showErr("OAuth state mismatch — possible CSRF. Please try again.");
-    return;
-  }
-
-  try {
-    await fetch(APPS_SCRIPT, {
-      method:  "POST",
-      headers: { "Content-Type": "text/plain" },
-      body:    JSON.stringify(payload),
-      mode:    "no-cors",
-    });
-    show("s-success");
-    sessionStorage.clear();
-  } catch (err) {
-    btn.disabled = false;
-    btn.textContent = "🥔 Ship My Spud";
-    errEl.textContent = "Submission failed — " + err.message + ". Please try again.";
-    errEl.style.display = "block";
-  }
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    STEP 3 — fill form with OAuth data
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function fillForm(user) {
@@ -595,10 +552,6 @@ function fillForm(user) {
   if (user.verification_status === "verified") {
     document.getElementById("u-badge").style.display = "inline-block";
   }
-  const sname = document.getElementById("f-sname");
-  if (!sname.value && user.name) sname.value = user.name;
-  show("s-form");
-}
   const sname = document.getElementById("f-sname");
   if (!sname.value && user.name) sname.value = user.name;
   show("s-form");
