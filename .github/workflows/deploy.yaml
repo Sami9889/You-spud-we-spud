@@ -26,11 +26,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject APPS_SCRIPT_URL into HTML
+      - name: Inject Apps Script URL into HTML
         env:
-          APPS_SCRIPT_URL: ${{ vars.APPS_SCRIPT_URL }}
+          APP_SCRIPT_ID: ${{ secrets.APP_SCRIPT_ID }}
         run: |
-          sed -i "s|__APPS_SCRIPT_URL__|${APPS_SCRIPT_URL}|g" form/index.html
+          sed -i "s|__APPS_SCRIPT_URL__|https://script.google.com/macros/s/${APP_SCRIPT_ID}/exec|g" form/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
