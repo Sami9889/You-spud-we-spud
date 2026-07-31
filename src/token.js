@@ -46,6 +46,31 @@ async function handleToken(request, env) {
   const params = new URLSearchParams({
     grant_type: "authorization_code",
     client_id: "e63922a40cd5f15e2d772276dcba8404",
+    redirect_uri: redirect_uri || REDIRECT_URI,
+    code,
+  });
+
+  const basicAuth = btoa("e63922a40cd5f15e2d772276dcba8404:" + env.API_HC);
+
+  let hcRes;
+  try {
+    hcRes = await fetch("https://auth.hackclub.com/oauth/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Basic " + basicAuth,
+      },
+      body: params.toString(),
+    });
+  } catch (err) {
+    return json(502, { error: "Token endpoint unreachable" });
+  }
+
+  console.log("TOKEN_PROXY redirect_uri=" + (redirect_uri || REDIRECT_URI) + " hasAPI_HC=" + !!env.API_HC);
+
+  const params = new URLSearchParams({
+    grant_type: "authorization_code",
+    client_id: "e63922a40cd5f15e2d772276dcba8404",
     client_secret: env.API_HC,
     redirect_uri: redirect_uri || REDIRECT_URI,
     code,
@@ -53,9 +78,13 @@ async function handleToken(request, env) {
 
   const hcStatus = hcRes.status;
   let hcBody;
-  try { hcBody = await hcRes.clone().json(); } catch { hcBody = await hcRes.clone().text(); }
+  try {
+    hcBody = await hcRes.clone().json();
+  } catch {
+    hcBody = await hcRes.clone().text();
+  }
 
-  console.log("TOKEN_PROXY hcStatus=" + hcStatus + " body=" + JSON.stringify(hcBody).slice(0, 2000));
+  console.log("TOKEN_PROXY hasAPI_HC=" + !!env.API_HC + " hcStatus=" + hcStatus + " body=" + JSON.stringify(hcBody).slice(0, 2000));
 
   if (!hcRes.ok) {
     return json(hcRes.status, { error: hcBody.error_description || hcBody.error || "Token exchange failed" });
