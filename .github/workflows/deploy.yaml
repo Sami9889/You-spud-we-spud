@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir -p _site/form
           cp index.html _site/index.html
-          cp form/forms.html _site/form/index.html
+          cp form/index.html _site/form/index.html
           sed -i "s|__API_HC__|${API_HC}|g"                       _site/form/index.html
           sed -i "s|__APPS_SCRIPT_URL__|${APPS_SCRIPT_URL}|g"     _site/form/index.html
 
