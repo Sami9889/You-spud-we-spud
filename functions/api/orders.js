@@ -1,13 +1,5 @@
 const KV_PREFIX = "order:";
 const MAX_KEYS = 1000;
-<<<<<<< ours
-const ADMIN_TOKEN = "__ADMIN_ORDER_TOKEN__";
-
-if (!ADMIN_TOKEN || ADMIN_TOKEN === "__ADMIN_ORDER_TOKEN__") {
-  throw new Error("ADMIN_ORDER_TOKEN must be configured");
-}
-=======
->>>>>>> theirs
 
 function sanitizeString(value) {
   if (typeof value !== "string") return "";
@@ -72,31 +64,7 @@ async function listOrders(env) {
   return orders;
 }
 
-<<<<<<< ours
-function checkAdminAuth(request) {
-  const auth = request.headers.get("Authorization") || "";
-  if (!auth.startsWith("Bearer ")) return false;
-  const token = auth.slice(7).trim();
-  return token === ADMIN_TOKEN;
-}
-
 export async function onRequestGet(context) {
-  if (!checkAdminAuth(context.request)) {
-    return new Response(JSON.stringify({ error: "Unauthorized." }), {
-      status: 401,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
-    });
-  }
-
-=======
-export async function onRequestGet(context) {
->>>>>>> theirs
   const orders = await listOrders(context.env);
   return new Response(JSON.stringify(orders), {
     status: 200,

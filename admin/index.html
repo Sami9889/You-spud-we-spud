@@ -205,8 +205,6 @@
   <script>
     const API_BASE = '/api/admin';
 
-    const ADMIN_ORDER_TOKEN = '__ADMIN_ORDER_TOKEN__';
-
     function show(id) {
       document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -252,11 +250,7 @@
     }
     async function fetchOrders() {
       try {
-        const response = await fetch('/api/orders', {
-          headers: {
-            'Authorization': 'Bearer ' + ADMIN_ORDER_TOKEN,
-          },
-        });
+        const response = await fetch('/api/orders');
         if (!response.ok) throw new Error('Failed to fetch orders');
         return await response.json();
       } catch (err) {
