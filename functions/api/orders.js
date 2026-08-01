@@ -64,29 +64,7 @@ async function listOrders(env) {
   return orders;
 }
 
-function checkAdminAuth(request, expectedToken) {
-  if (!expectedToken) return false;
-  const auth = request.headers.get("Authorization") || "";
-  if (!auth.startsWith("Bearer ")) return false;
-  const token = auth.slice(7).trim();
-  return token === expectedToken;
-}
-
 export async function onRequestGet(context) {
-  const adminToken = context.env?.ADMIN_ORDER_TOKEN || "";
-  if (!checkAdminAuth(context.request, adminToken)) {
-    return new Response(JSON.stringify({ error: "Unauthorized." }), {
-      status: 401,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
-    });
-  }
-
   const orders = await listOrders(context.env);
   return new Response(JSON.stringify(orders), {
     status: 200,

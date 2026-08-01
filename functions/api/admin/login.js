@@ -72,7 +72,7 @@ export async function onRequestPost(context) {
     });
   }
 
-  return new Response(JSON.stringify({ ok: true, user: { name: username, email }, orderToken: context.env?.ADMIN_ORDER_TOKEN || "" }), {
+  return new Response(JSON.stringify({ ok: true, user: { name: username, email } }), {
     status: 200,
     headers: {
       "content-type": "application/json; charset=utf-8",

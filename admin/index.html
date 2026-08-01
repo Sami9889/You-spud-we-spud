@@ -205,6 +205,16 @@
   <script>
     const API_BASE = '/api/admin';
 
+    async function fetchOrders() {
+      try {
+        const response = await fetch('/api/orders');
+        if (!response.ok) throw new Error('Failed to fetch orders');
+        return await response.json();
+      } catch (err) {
+        console.error('Failed to load orders:', err);
+        return [];
+      }
+    }
     function escapeHtml(value) {
       return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
@@ -243,20 +253,6 @@
           </article>
         `;
       }).join('');
-    }
-    async function fetchOrders(token) {
-      try {
-        const response = await fetch('/api/orders', {
-          headers: {
-            'Authorization': 'Bearer ' + (token || ''),
-          },
-        });
-        if (!response.ok) throw new Error('Failed to fetch orders');
-        return await response.json();
-      } catch (err) {
-        console.error('Failed to load orders:', err);
-        return [];
-      }
     }
     function getAdminStore() {
       try { return window.localStorage; } catch (err) { return window.sessionStorage; }
@@ -305,10 +301,7 @@
         };
         clearAdminValues();
         writeAdminValue('admin_user', JSON.stringify(user));
-        if (body.orderToken) {
-          try { sessionStorage.setItem('admin_order_token', body.orderToken); } catch (err) {}
-        }
-        const orders = await fetchOrders(body.orderToken || '');
+        const orders = await fetchOrders();
         renderAdminBoard(user, orders);
         show('s-admin');
       } catch (err) {
@@ -321,9 +314,7 @@
       const cached = readAdminValue('admin_user');
       if (cached) {
         const user = JSON.parse(cached);
-        let token = '';
-        try { token = sessionStorage.getItem('admin_order_token') || ''; } catch (err) {}
-        const orders = await fetchOrders(token);
+        const orders = await fetchOrders();
         renderAdminBoard(user, orders);
         show('s-admin');
         return;
