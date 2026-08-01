@@ -252,7 +252,7 @@
     .note { font-size: .78rem; color: var(--muted); margin-top: -.7rem; margin-bottom: .9rem; line-height: 1.45; }
 
     input[type="text"], input[type="url"],
-    input[type="number"], input[type="tel"],
+    input[type="number"], input[type="tel"], input[type="email"],
     textarea {
       width: 100%; padding: .58rem .72rem;
       border: 1px solid var(--border); border-radius: 6px;
@@ -376,19 +376,24 @@
   <h2>Tell us who you are</h2>
   <p>We use these details to label your submission and keep it tied to your Hack Club profile.</p>
   <div style="max-width: 360px; margin: 0 auto; text-align: left;">
-    <label for="manual-name">Your name <span class="req">*</span></label>
-    <input type="text" id="manual-name" placeholder="Your full name" required />
-
-    <label for="manual-email">Email <span class="req">*</span></label>
-    <input type="email" id="manual-email" placeholder="you@example.com" required />
-
-    <label for="manual-slack">Slack username / ID (optional)</label>
-    <input type="text" id="manual-slack" placeholder="@yourname or ID" />
-
-    <label style="display:flex; align-items:center; gap:.4rem; margin-bottom:1rem;">
-      <input type="checkbox" id="manual-verified" checked />
-      <span>I’m part of Hack Club / verified</span>
-    </label>
+    <div class="field">
+      <label for="manual-name">Your name <span class="req">*</span></label>
+      <input type="text" id="manual-name" placeholder="Your full name" required />
+    </div>
+    <div class="field">
+      <label for="manual-email">Email <span class="req">*</span></label>
+      <input type="email" id="manual-email" placeholder="you@example.com" required />
+    </div>
+    <div class="field">
+      <label for="manual-slack">Slack username / ID (optional)</label>
+      <input type="text" id="manual-slack" placeholder="@yourname or ID" />
+    </div>
+    <div class="field">
+      <label style="display:flex; align-items:center; gap:.4rem; margin-bottom:0;">
+        <input type="checkbox" id="manual-verified" checked />
+        <span>I'm part of Hack Club / verified</span>
+      </label>
+    </div>
 
     <div id="signin-err" class="note" style="display:none; color:var(--red); margin-top:0; margin-bottom:.9rem;"></div>
 
@@ -637,15 +642,9 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
   const errEl = document.getElementById("signin-err");
   errEl.style.display = "none";
 
-  if (!OAUTH_ENABLED) {
-    const name = document.getElementById("manual-name").value.trim();
-    const email = document.getElementById("manual-email").value.trim();
-    if (!name || !email) {
-      errEl.textContent = "Please enter your name and email.";
-      errEl.style.display = "block";
-      return;
-    }
-
+  const name = document.getElementById("manual-name").value.trim();
+  const email = document.getElementById("manual-email").value.trim();
+  if (name && email) {
     const user = {
       name,
       email,
@@ -655,7 +654,14 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
       nickname: "",
     };
     writeOAuthValue("hc_user", JSON.stringify(user));
+    clearOAuthValues();
     fillForm(user);
+    return;
+  }
+
+  if (!OAUTH_ENABLED) {
+    errEl.textContent = "Please enter your name and email.";
+    errEl.style.display = "block";
     return;
   }
 
