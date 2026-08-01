@@ -315,13 +315,17 @@
     });
 
     (async function init() {
-      const cached = readAdminValue('admin_user');
-      if (cached) {
-        const user = JSON.parse(cached);
-        const orders = await fetchOrders();
-        renderAdminBoard(user, orders);
-        show('s-admin');
-        return;
+      try {
+        const cached = readAdminValue('admin_user');
+        if (cached) {
+          const user = JSON.parse(cached);
+          const orders = await fetchOrders();
+          renderAdminBoard(user, orders);
+          show('s-admin');
+          return;
+        }
+      } catch (err) {
+        console.error('Admin init failed:', err);
       }
       show('s-signin');
     })();
