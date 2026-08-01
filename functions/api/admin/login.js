@@ -48,6 +48,21 @@ export function matchesAdminCredential(rawValue, username, email, password) {
 }
 
 export async function onRequestPost(context) {
+  const origin = context.request.headers.get("Origin") || context.request.headers.get("Referer") || "";
+  const allowedOrigin = "https://youspudwespud.sami-s.dev";
+  if (!origin.startsWith(allowedOrigin)) {
+    return new Response(JSON.stringify({ ok: false, error: "Invalid origin." }), {
+      status: 403,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
   let payload = {};
   const bodyText = await context.request.text();
 

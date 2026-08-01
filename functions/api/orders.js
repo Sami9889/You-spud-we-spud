@@ -1,5 +1,8 @@
 const KV_PREFIX = "order:";
 const MAX_KEYS = 1000;
+const RATE_PREFIX = "rate:";
+const RATE_LIMIT = 10;
+const RATE_WINDOW_SEC = 60 * 60;
 
 function sanitizeString(value) {
   if (typeof value !== "string") return "";
@@ -64,6 +67,34 @@ async function listOrders(env) {
   return orders;
 }
 
+function clientIp(request) {
+  return (
+    request.headers.get("CF-Connecting-IP") ||
+    request.headers.get("X-Forwarded-For") ||
+    "unknown"
+  );
+}
+
+async function checkRateLimit(env, ip) {
+  if (!ip || ip === "unknown") return true;
+  const key = `${RATE_PREFIX}${ip}`;
+  const count = await env.ORDERS.get(key, "text");
+  if (count && Number(count) >= RATE_LIMIT) {
+    return false;
+  }
+  return true;
+}
+
+async function recordRateLimit(env, ip) {
+  if (!ip || ip === "unknown") return;
+  const key = `${RATE_PREFIX}${ip}`;
+  try {
+    await env.ORDERS.put(key, String(Number((await env.ORDERS.get(key, "text")) || 0) + 1), {
+      expirationTtl: RATE_WINDOW_SEC,
+    });
+  } catch (err) {}
+}
+
 export async function onRequestGet(context) {
   const orders = await listOrders(context.env);
   return new Response(JSON.stringify(orders), {
@@ -79,6 +110,22 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPost(context) {
+  const ip = clientIp(context.request);
+
+  if (!(await checkRateLimit(context.env, ip))) {
+    return new Response(JSON.stringify({ error: "Too many submissions. Please try again later." }), {
+      status: 429,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "retry-after": String(RATE_WINDOW_SEC),
+      },
+    });
+  }
+
   let payload = {};
   try {
     payload = await context.request.json();
@@ -114,6 +161,8 @@ export async function onRequestPost(context) {
   await context.env.ORDERS.put(key, JSON.stringify(order), {
     expirationTtl: 60 * 60 * 24 * 365,
   });
+
+  await recordRateLimit(context.env, ip);
 
   return new Response(JSON.stringify({ ok: true, id: order._id }), {
     status: 200,
