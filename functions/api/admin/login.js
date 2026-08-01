@@ -124,7 +124,22 @@ export async function onRequestPost(context) {
     });
   }
 
-  return new Response(JSON.stringify({ ok: true, user: { name: username, email } }), {
+  const entries = String(rawCredentials)
+    .replace(/\r/g, "")
+    .split(/[\n,;|]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  let adminApiToken = "";
+  for (const entry of entries) {
+    const parts = entry.split("=").map((part) => part.trim());
+    if (parts.length >= 3 && parts[0] === "admin") {
+      adminApiToken = parts.slice(2).join("=").trim();
+      break;
+    }
+  }
+
+  return new Response(JSON.stringify({ ok: true, user: { name: username, email }, adminApiToken }), {
     status: 200,
     headers: {
       "content-type": "application/json; charset=utf-8",

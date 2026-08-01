@@ -3,6 +3,7 @@ const MAX_KEYS = 1000;
 const RATE_PREFIX = "rate:";
 const RATE_LIMIT = 10;
 const RATE_WINDOW_SEC = 60 * 60;
+const MAX_BODY_BYTES = 1024 * 1024;
 
 function sanitizeString(value) {
   if (typeof value !== "string") return "";
@@ -110,17 +111,51 @@ async function recordRateLimit(env, ip) {
   } catch (err) {}
 }
 
+function isAdminRequest(context) {
+  const adminCredentials = context.env?.ADMIN_CREDENTIALS;
+  if (!adminCredentials) return false;
+
+  const auth = context.request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) return false;
+
+  const token = auth.slice(7).trim();
+  if (!token) return false;
+
+  const entries = String(adminCredentials)
+    .replace(/\r/g, "")
+    .split(/[\n,;|]+/)
+    .map(entry => entry.trim())
+    .filter(Boolean);
+
+  for (const entry of entries) {
+    const parts = entry.split("=").map(part => part.trim());
+    if (parts.length >= 3 && parts[0] === "admin") {
+      const password = parts.slice(2).join("=").trim();
+      if (password && password === token) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function securityHeaders(extra = {}) {
+  return {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer",
+    ...extra,
+  };
+}
+
 export async function onRequestGet(context) {
   const orders = await listOrders(context.env);
   return new Response(JSON.stringify(orders), {
     status: 200,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer",
-    },
+    headers: securityHeaders(),
   });
 }
 
@@ -130,14 +165,23 @@ export async function onRequestPost(context) {
   if (!(await checkRateLimit(context.env, ip))) {
     return new Response(JSON.stringify({ error: "Too many submissions. Please try again later." }), {
       status: 429,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-        "retry-after": String(RATE_WINDOW_SEC),
-      },
+      headers: securityHeaders({ "retry-after": String(RATE_WINDOW_SEC) }),
+    });
+  }
+
+  const contentType = context.request.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return new Response(JSON.stringify({ error: "Invalid content type." }), {
+      status: 415,
+      headers: securityHeaders(),
+    });
+  }
+
+  const contentLength = context.request.headers.get("content-length");
+  if (contentLength && Number(contentLength) > MAX_BODY_BYTES) {
+    return new Response(JSON.stringify({ error: "Request body too large." }), {
+      status: 413,
+      headers: securityHeaders(),
     });
   }
 
@@ -147,13 +191,14 @@ export async function onRequestPost(context) {
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON payload." }), {
       status: 400,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
+    });
+  }
+
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    return new Response(JSON.stringify({ error: "Invalid payload structure." }), {
+      status: 400,
+      headers: securityHeaders(),
     });
   }
 
@@ -161,13 +206,7 @@ export async function onRequestPost(context) {
   if (!validation.ok) {
     return new Response(JSON.stringify(validation), {
       status: 422,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
@@ -181,30 +220,57 @@ export async function onRequestPost(context) {
 
   return new Response(JSON.stringify({ ok: true, id: order._id }), {
     status: 200,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer",
-    },
+    headers: securityHeaders(),
   });
 }
 
 export async function onRequestPatch(context) {
+  if (!isAdminRequest(context)) {
+    return new Response(JSON.stringify({ error: "Unauthorized." }), {
+      status: 401,
+      headers: securityHeaders(),
+    });
+  }
+
+  const origin = context.request.headers.get("Origin") || context.request.headers.get("Referer") || "";
+  const allowedOrigin = "https://youspudwespud.sami-s.dev";
+  if (!origin.startsWith(allowedOrigin)) {
+    return new Response(JSON.stringify({ error: "Invalid origin." }), {
+      status: 403,
+      headers: securityHeaders(),
+    });
+  }
+
+  const contentType = context.request.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return new Response(JSON.stringify({ error: "Invalid content type." }), {
+      status: 415,
+      headers: securityHeaders(),
+    });
+  }
+
+  const contentLength = context.request.headers.get("content-length");
+  if (contentLength && Number(contentLength) > MAX_BODY_BYTES) {
+    return new Response(JSON.stringify({ error: "Request body too large." }), {
+      status: 413,
+      headers: securityHeaders(),
+    });
+  }
+
   let payload = {};
   try {
     payload = await context.request.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON payload." }), {
       status: 400,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
+    });
+  }
+
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    return new Response(JSON.stringify({ error: "Invalid payload structure." }), {
+      status: 400,
+      headers: securityHeaders(),
     });
   }
 
@@ -212,13 +278,7 @@ export async function onRequestPatch(context) {
   if (!orderId) {
     return new Response(JSON.stringify({ error: "Missing order id." }), {
       status: 400,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
@@ -226,13 +286,7 @@ export async function onRequestPatch(context) {
   if (!key) {
     return new Response(JSON.stringify({ error: "Order not found." }), {
       status: 404,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
@@ -240,13 +294,7 @@ export async function onRequestPatch(context) {
   if (!raw) {
     return new Response(JSON.stringify({ error: "Order not found." }), {
       status: 404,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
@@ -263,17 +311,27 @@ export async function onRequestPatch(context) {
 
   return new Response(JSON.stringify({ ok: true, order: updated }), {
     status: 200,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer",
-    },
+    headers: securityHeaders(),
   });
 }
 
 export async function onRequestDelete(context) {
+  if (!isAdminRequest(context)) {
+    return new Response(JSON.stringify({ error: "Unauthorized." }), {
+      status: 401,
+      headers: securityHeaders(),
+    });
+  }
+
+  const origin = context.request.headers.get("Origin") || context.request.headers.get("Referer") || "";
+  const allowedOrigin = "https://youspudwespud.sami-s.dev";
+  if (!origin.startsWith(allowedOrigin)) {
+    return new Response(JSON.stringify({ error: "Invalid origin." }), {
+      status: 403,
+      headers: securityHeaders(),
+    });
+  }
+
   let payload = {};
   try {
     payload = await context.request.json();
@@ -281,17 +339,18 @@ export async function onRequestDelete(context) {
     payload = {};
   }
 
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    return new Response(JSON.stringify({ error: "Invalid payload structure." }), {
+      status: 400,
+      headers: securityHeaders(),
+    });
+  }
+
   const orderId = sanitizeString(payload.id);
   if (!orderId) {
     return new Response(JSON.stringify({ error: "Missing order id." }), {
       status: 400,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
@@ -299,13 +358,7 @@ export async function onRequestDelete(context) {
   if (!key) {
     return new Response(JSON.stringify({ error: "Order not found." }), {
       status: 404,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
@@ -313,26 +366,14 @@ export async function onRequestDelete(context) {
   if (!raw) {
     return new Response(JSON.stringify({ error: "Order not found." }), {
       status: 404,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
   if (!raw.cancelled) {
     return new Response(JSON.stringify({ error: "Only cancelled orders can be deleted." }), {
       status: 400,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
@@ -340,12 +381,6 @@ export async function onRequestDelete(context) {
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer",
-    },
+    headers: securityHeaders(),
   });
 }

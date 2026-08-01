@@ -203,6 +203,7 @@
             <div class="ubar-email" id="admin-email">Authorized organizer</div>
           </div>
           <span class="ubar-badge">Verified</span>
+          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="adminLogout()">Log out</button>
         </div>
         <div class="sec">Review board</div>
         <div id="admin-orders" class="admin-list"></div>
@@ -304,6 +305,9 @@
         return [];
       }
     }
+    async function getAdminToken() {
+      try { return sessionStorage.getItem('admin_api_token') || ''; } catch (err) { return ''; }
+    }
     window.cancelOrder = async function(orderId) {
       if (!confirm('Cancel this order?')) return;
       await updateOrder(orderId, { cancelled: true });
@@ -319,7 +323,10 @@
       try {
         const response = await fetch('/api/orders', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (await getAdminToken()),
+          },
           body: JSON.stringify({ id: orderId }),
         });
         if (!response.ok) throw new Error('Failed to delete order');
@@ -334,7 +341,10 @@
       try {
         const response = await fetch('/api/orders', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (await getAdminToken()),
+          },
           body: JSON.stringify({ id: orderId, ...updates }),
         });
         if (!response.ok) throw new Error('Failed to update order');
@@ -359,11 +369,15 @@
     }
     function clearAdminValues() {
       const store = getAdminStore();
-      for (const key of ['admin_user']) {
+      for (const key of ['admin_user', 'admin_api_token']) {
         try { store.removeItem(key); } catch (err) {}
         try { window.sessionStorage.removeItem(key); } catch (err) {}
       }
     }
+    window.adminLogout = function() {
+      clearAdminValues();
+      show('s-signin');
+    };
 
     document.getElementById('admin-login-form').addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -393,6 +407,9 @@
         };
         clearAdminValues();
         writeAdminValue('admin_user', JSON.stringify(user));
+        if (body.adminApiToken) {
+          try { sessionStorage.setItem('admin_api_token', body.adminApiToken); } catch (err) {}
+        }
         const orders = await fetchOrders();
         renderAdminBoard(user, orders);
         show('s-admin');
