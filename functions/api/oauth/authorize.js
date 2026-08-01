@@ -11,6 +11,7 @@ export async function onRequestGet(context) {
   authUrl.searchParams.set('client_id', clientId || '');
   authUrl.searchParams.set('redirect_uri', redirectUri || '');
   authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('scope', 'profile email name verification_status slack_id');
   authUrl.searchParams.set('state', state || '');
   authUrl.searchParams.set('code_challenge', codeChallenge || '');
   authUrl.searchParams.set('code_challenge_method', codeChallengeMethod || 'S256');
