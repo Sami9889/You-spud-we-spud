@@ -21,6 +21,61 @@ jobs:
         run: |
           sed -i "s|__ADMIN_CREDENTIALS__|${ADMIN_CREDENTIALS}|g" functions/api/admin/login.js
 
+      - name: Provision KV namespace and bind to Pages
+        env:
+          CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+          
+          token = os.environ['CF_ACCOUNT_TOKEN']
+          account_id = os.environ['CF_ACCOUNT_ID']
+          project = 'youspudwespud'
+          
+          def cf(method, path, data=None):
+              url = f'https://api.cloudflare.com/client/v4/accounts/{account_id}{path}'
+              body = json.dumps(data).encode() if data else None
+              req = urllib.request.Request(url, data=body, method=method)
+              req.add_header('Authorization', f'Bearer {token}')
+              req.add_header('Content-Type', 'application/json')
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      return json.loads(resp.read())
+              except urllib.error.HTTPError as e:
+                  return json.loads(e.read())
+          
+          list_resp = cf('GET', '/storage/kv/namespaces')
+          kv_id = None
+          for ns in list_resp.get('result', []):
+              if ns.get('title') == 'ORDERS':
+                  kv_id = ns['id']
+                  break
+          
+          if not kv_id:
+              create_resp = cf('POST', '/storage/kv/namespaces', {'title': 'ORDERS'})
+              kv_id = create_resp.get('result', {}).get('id')
+              if not kv_id:
+                  raise SystemExit(f'Failed to create KV namespace: {create_resp}')
+              print(f'Created KV namespace ORDERS with id {kv_id}')
+          else:
+              print(f'Found existing KV namespace ORDERS with id {kv_id}')
+          
+          project_resp = cf('GET', f'/pages/projects/{project}')
+          project_data = project_resp.get('result', {})
+          existing = [ns for ns in project_data.get('kv_namespaces', []) if ns.get('binding') != 'ORDERS']
+          existing.append({'binding': 'ORDERS', 'id': kv_id})
+          project_data['kv_namespaces'] = existing
+          
+          update_resp = cf('PUT', f'/pages/projects/{project}', project_data)
+          if not update_resp.get('success'):
+              print(f'Warning: Pages project update response: {update_resp}')
+          else:
+              print('Bound KV namespace ORDERS to Pages project')
+          PY
+
       - name: Pack artifact
         run: |
           zip -r deploy.zip . -x "deploy.zip" ".git/*" ".devcontainer/*"
