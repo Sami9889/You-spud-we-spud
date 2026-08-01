@@ -205,12 +205,6 @@
   <script>
     const API_BASE = '/api/admin';
 
-    const ADMIN_ORDER_TOKEN = '__ADMIN_ORDER_TOKEN__';
-
-    function show(id) {
-      document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
     function escapeHtml(value) {
       return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
@@ -250,11 +244,11 @@
         `;
       }).join('');
     }
-    async function fetchOrders() {
+    async function fetchOrders(token) {
       try {
         const response = await fetch('/api/orders', {
           headers: {
-            'Authorization': 'Bearer ' + ADMIN_ORDER_TOKEN,
+            'Authorization': 'Bearer ' + (token || ''),
           },
         });
         if (!response.ok) throw new Error('Failed to fetch orders');
@@ -311,7 +305,10 @@
         };
         clearAdminValues();
         writeAdminValue('admin_user', JSON.stringify(user));
-        const orders = await fetchOrders();
+        if (body.orderToken) {
+          try { sessionStorage.setItem('admin_order_token', body.orderToken); } catch (err) {}
+        }
+        const orders = await fetchOrders(body.orderToken || '');
         renderAdminBoard(user, orders);
         show('s-admin');
       } catch (err) {
@@ -324,7 +321,9 @@
       const cached = readAdminValue('admin_user');
       if (cached) {
         const user = JSON.parse(cached);
-        const orders = await fetchOrders();
+        let token = '';
+        try { token = sessionStorage.getItem('admin_order_token') || ''; } catch (err) {}
+        const orders = await fetchOrders(token);
         renderAdminBoard(user, orders);
         show('s-admin');
         return;

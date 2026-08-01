@@ -1,10 +1,5 @@
 const KV_PREFIX = "order:";
 const MAX_KEYS = 1000;
-const ADMIN_TOKEN = "__ADMIN_ORDER_TOKEN__";
-
-if (!ADMIN_TOKEN || ADMIN_TOKEN === "__ADMIN_ORDER_TOKEN__") {
-  throw new Error("ADMIN_ORDER_TOKEN must be configured");
-}
 
 function sanitizeString(value) {
   if (typeof value !== "string") return "";
@@ -69,15 +64,17 @@ async function listOrders(env) {
   return orders;
 }
 
-function checkAdminAuth(request) {
+function checkAdminAuth(request, expectedToken) {
+  if (!expectedToken) return false;
   const auth = request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) return false;
   const token = auth.slice(7).trim();
-  return token === ADMIN_TOKEN;
+  return token === expectedToken;
 }
 
 export async function onRequestGet(context) {
-  if (!checkAdminAuth(context.request)) {
+  const adminToken = context.env?.ADMIN_ORDER_TOKEN || "";
+  if (!checkAdminAuth(context.request, adminToken)) {
     return new Response(JSON.stringify({ error: "Unauthorized." }), {
       status: 401,
       headers: {

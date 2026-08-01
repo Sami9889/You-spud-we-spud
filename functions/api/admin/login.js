@@ -1,9 +1,3 @@
-const DEFAULT_CREDENTIALS = "__ADMIN_CREDENTIALS__";
-
-if (DEFAULT_CREDENTIALS === "__ADMIN_CREDENTIALS__") {
-  throw new Error("ADMIN_CREDENTIALS must be injected at build time");
-}
-
 export function parseAdminCredentials(rawValue = "") {
   if (!rawValue) {
     return [];
@@ -62,7 +56,7 @@ export async function onRequestPost(context) {
   const email = String(payload.email || "").trim();
   const password = String(payload.password || "").trim();
 
-  const rawCredentials = context.env?.ADMIN_CREDENTIALS || DEFAULT_CREDENTIALS;
+  const rawCredentials = context.env?.ADMIN_CREDENTIALS || "";
   const isAuthorized = matchesAdminCredential(rawCredentials, username, email, password);
 
   if (!isAuthorized) {
@@ -78,7 +72,7 @@ export async function onRequestPost(context) {
     });
   }
 
-  return new Response(JSON.stringify({ ok: true, user: { name: username, email } }), {
+  return new Response(JSON.stringify({ ok: true, user: { name: username, email }, orderToken: context.env?.ADMIN_ORDER_TOKEN || "" }), {
     status: 200,
     headers: {
       "content-type": "application/json; charset=utf-8",
