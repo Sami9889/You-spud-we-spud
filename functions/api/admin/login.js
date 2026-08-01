@@ -139,6 +139,19 @@ export async function onRequestPost(context) {
     }
   }
 
+  if (!adminApiToken) {
+    return new Response(JSON.stringify({ ok: false, error: "Server is missing the admin API token entry." }), {
+      status: 500,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
   return new Response(JSON.stringify({ ok: true, user: { name: username, email }, adminApiToken }), {
     status: 200,
     headers: {

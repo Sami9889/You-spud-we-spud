@@ -140,6 +140,13 @@ function isAdminRequest(context) {
   return false;
 }
 
+function isSameOrigin(request) {
+  const origin = request.headers.get("Origin");
+  if (!origin) return true;
+  const url = new URL(request.url);
+  return origin === `${url.protocol}//${url.host}`;
+}
+
 function securityHeaders(extra = {}) {
   return {
     "content-type": "application/json; charset=utf-8",
@@ -232,9 +239,7 @@ export async function onRequestPatch(context) {
     });
   }
 
-  const origin = context.request.headers.get("Origin") || context.request.headers.get("Referer") || "";
-  const allowedOrigin = "https://youspudwespud.sami-s.dev";
-  if (!origin.startsWith(allowedOrigin)) {
+  if (!isSameOrigin(context.request)) {
     return new Response(JSON.stringify({ error: "Invalid origin." }), {
       status: 403,
       headers: securityHeaders(),
@@ -323,9 +328,7 @@ export async function onRequestDelete(context) {
     });
   }
 
-  const origin = context.request.headers.get("Origin") || context.request.headers.get("Referer") || "";
-  const allowedOrigin = "https://youspudwespud.sami-s.dev";
-  if (!origin.startsWith(allowedOrigin)) {
+  if (!isSameOrigin(context.request)) {
     return new Response(JSON.stringify({ error: "Invalid origin." }), {
       status: 403,
       headers: securityHeaders(),
