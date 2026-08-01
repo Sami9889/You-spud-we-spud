@@ -294,12 +294,31 @@
 
 <div id="s-signin" class="screen">
   <div class="big">🥔</div>
-  <h2>Sign in with Hack Club</h2>
-  <p>We use your Hack Club account to verify you're in the community and to link your submission to your Slack profile.</p>
-  <button class="btn-hc" id="btn-signin">
-    <img src="https://assets.hackclub.com/flag-orpheus-top.svg" alt="Hack Club" />
-    Continue with Hack Club
-  </button>
+  <h2>Tell us who you are</h2>
+  <p>We use these details to label your submission and keep it tied to your Hack Club profile.</p>
+  <div style="max-width: 360px; margin: 0 auto; text-align: left;">
+    <label for="manual-name">Your name <span class="req">*</span></label>
+    <input type="text" id="manual-name" placeholder="Your full name" required />
+
+    <label for="manual-email">Email <span class="req">*</span></label>
+    <input type="email" id="manual-email" placeholder="you@example.com" required />
+
+    <label for="manual-slack">Slack username / ID (optional)</label>
+    <input type="text" id="manual-slack" placeholder="@yourname or ID" />
+
+    <label style="display:flex; align-items:center; gap:.4rem; margin-bottom:1rem;">
+      <input type="checkbox" id="manual-verified" checked />
+      <span>I’m part of Hack Club / verified</span>
+    </label>
+
+    <div id="signin-err" class="note" style="display:none; color:var(--red); margin-top:0; margin-bottom:.9rem;"></div>
+
+    <button class="btn-hc" id="btn-signin" style="width:100%; justify-content:center;">
+      <img src="https://assets.hackclub.com/flag-orpheus-top.svg" alt="Hack Club" />
+      Continue to form
+    </button>
+    <p class="note" style="margin-top:.9rem;">Hack Club OAuth is currently unavailable for this deployment, so this form continues without it.</p>
+  </div>
 </div>
 
 <div id="s-form" class="screen">
@@ -440,7 +459,8 @@ const APPS_SCRIPT    = "__APPS_SCRIPT_URL__";
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
 const AUTH_BASE      = "https://auth.hackclub.com";
 const API_BASE       = "/api/oauth";
-const CLIENT_ID      = "e63922a40cd5f15e2d772276dcba8404";
+const CLIENT_ID      = "";
+const OAUTH_ENABLED  = Boolean(CLIENT_ID && CLIENT_ID !== "e63922a40cd5f15e2d772276dcba8404");
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -490,6 +510,31 @@ function clearOAuthValues() {
    STEP 1 — redirect to HackClub OAuth (PKCE)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 document.getElementById("btn-signin").addEventListener("click", async () => {
+  const errEl = document.getElementById("signin-err");
+  errEl.style.display = "none";
+
+  if (!OAUTH_ENABLED) {
+    const name = document.getElementById("manual-name").value.trim();
+    const email = document.getElementById("manual-email").value.trim();
+    if (!name || !email) {
+      errEl.textContent = "Please enter your name and email.";
+      errEl.style.display = "block";
+      return;
+    }
+
+    const user = {
+      name,
+      email,
+      slack_id: document.getElementById("manual-slack").value.trim(),
+      verification_status: document.getElementById("manual-verified").checked ? "verified" : "unverified",
+      preferred_username: "",
+      nickname: "",
+    };
+    writeOAuthValue("hc_user", JSON.stringify(user));
+    fillForm(user);
+    return;
+  }
+
   const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
   const challenge = base64UrlEncode(
     await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))
@@ -670,10 +715,15 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   const err  = p.get("error");
 
   if (err) {
-    showErr("Hack Club sign-in returned an error.", p.get("error_description") || err);
+    const errEl = document.getElementById("signin-err");
+    if (errEl) {
+      errEl.textContent = "Hack Club OAuth is unavailable right now, so please continue with your details manually.";
+      errEl.style.display = "block";
+    }
+    show("s-signin");
     return;
   }
-  if (code) { await exchangeCode(code, p.get("state")); return; }
+  if (code && OAUTH_ENABLED) { await exchangeCode(code, p.get("state")); return; }
 
   const cached = readOAuthValue("hc_user");
   if (cached) { fillForm(JSON.parse(cached)); return; }

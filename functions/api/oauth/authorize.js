@@ -5,7 +5,10 @@ export async function onRequestGet(context) {
   const state = params.get('state');
   const codeChallenge = params.get('code_challenge');
   const codeChallengeMethod = params.get('code_challenge_method');
-  const clientId = params.get('client_id') || context.env?.HACKCLUB_CLIENT_ID || 'e63922a40cd5f15e2d772276dcba8404';
+  const clientId = params.get('client_id') || context.env?.HACKCLUB_CLIENT_ID;
+  if (!clientId) {
+    return new Response('OAuth client is not configured', { status: 500 });
+  }
 
   const allowedRedirect = 'https://youspudwespud.sami-s.dev/form/';
   if (!redirectUri || redirectUri !== allowedRedirect) {
