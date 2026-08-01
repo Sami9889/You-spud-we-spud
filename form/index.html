@@ -533,7 +533,7 @@
       </div>
       <span class="ubar-badge" style="display:inline-block">Verified</span>
     </div>
-    <div class="sec">Recent orders</div>
+    <div class="sec">All orders</div>
     <div id="admin-orders" class="admin-list"></div>
   </div>
 </div>
@@ -610,7 +610,7 @@ function saveStoredOrders(orders) {
 function addStoredOrder(order) {
   const orders = getStoredOrders();
   orders.unshift(order);
-  saveStoredOrders(orders.slice(0, 50));
+  saveStoredOrders(orders.slice(0, 500));
 }
 function requestAdminAccess() {
   const email = document.getElementById("admin-email").value.trim();
@@ -645,25 +645,47 @@ function verifyAdminAccess() {
   status.style.display = "block";
 }
 function renderAdminBoard() {
-  const orders = getStoredOrders();
+  const orders = getStoredOrders().sort((a, b) => (b.timestamp || "").localeCompare(a.timestamp || ""));
   const container = document.getElementById("admin-orders");
   if (!orders.length) {
     container.innerHTML = '<div class="admin-item"><strong>No orders yet.</strong><div class="admin-meta">Submissions will appear here once someone completes the form.</div></div>';
     return;
   }
-  container.innerHTML = orders.map(order => `
-    <article class="admin-item">
-      <div class="admin-item-top">
-        <strong>${escapeHtml(order.hc_name || order.ship_name || "Anonymous")}</strong>
-        <span class="admin-pill">${escapeHtml(order.tier || "Pending")}</span>
-      </div>
-      <div class="admin-meta">${escapeHtml(order.hc_email || order.ship_name || "No email")}</div>
-      <div class="admin-meta">Project: ${escapeHtml(order.project_name || "Untitled")}</div>
-      <div class="admin-meta">${escapeHtml(order.project_url || "")}</div>
-      <div class="admin-meta">Submitted: ${escapeHtml(order.timestamp || "")}</div>
-      ${order.project_url ? `<a class="admin-link" href="${escapeHtml(order.project_url)}" target="_blank" rel="noopener">Open project</a>` : ""}
-    </article>
-  `).join("");
+
+  container.innerHTML = orders.map(order => {
+    const shipping = [
+      order.ship_name,
+      order.ship_line1,
+      order.ship_line2,
+      [order.ship_city, order.ship_state, order.ship_postal, order.ship_country].filter(Boolean).join(", ")
+    ].filter(Boolean).join("<br>");
+
+    const details = [
+      ["Contact", `${order.hc_name || order.ship_name || "Anonymous"} • ${order.hc_email || "No email"}`],
+      ["Project", order.project_name || "Untitled"],
+      ["Live URL", order.project_url],
+      ["Source", order.source_url],
+      ["Size", order.file_size_kb],
+      ["Tier", order.tier],
+      ["Description", order.description],
+      ["Phone", order.phone],
+      ["Slack", order.hc_slack_id],
+      ["Verified", order.hc_verified || "Not provided"],
+      ["Shipping", shipping],
+      ["Submitted", order.timestamp],
+    ].filter(([, value]) => Boolean(value));
+
+    return `
+      <article class="admin-item">
+        <div class="admin-item-top">
+          <strong>${escapeHtml(order.hc_name || order.ship_name || "Anonymous")}</strong>
+          <span class="admin-pill">${escapeHtml(order.tier || "Pending")}</span>
+        </div>
+        ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join("")}
+        ${order.project_url ? `<a class="admin-link" href="${escapeHtml(order.project_url)}" target="_blank" rel="noopener">Open project</a>` : ""}
+      </article>
+    `;
+  }).join("");
 }
 async function base64UrlEncode(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf))
