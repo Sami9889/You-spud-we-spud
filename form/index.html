@@ -629,18 +629,6 @@ function showToast(message, type = "success") {
   requestAnimationFrame(() => toast.classList.add("show"));
   setTimeout(() => toast.classList.remove("show"), 3200);
 }
-function requestNotificationPermission() {
-  if ("Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission();
-  }
-}
-function sendBrowserNotification(title, body) {
-  if ("Notification" in window && Notification.permission === "granted") {
-    try {
-      new Notification(title, { body, icon: "/favicon.ico" });
-    } catch (err) {}
-  }
-}
   toast.textContent = message;
   toast.className = "toast " + type;
   requestAnimationFrame(() => toast.classList.add("show"));
@@ -775,7 +763,6 @@ function fillForm(user) {
     }
 
     showToast("Spud submitted! 🥔");
-    sendBrowserNotification("Spud submitted", "Your order has been received.");
     await new Promise(r => setTimeout(r, 600));
     show("s-success");
     sessionStorage.removeItem("hc_user");
@@ -800,7 +787,6 @@ function fillForm(user) {
     fillForm(user);
     return;
   }
-  requestNotificationPermission();
   show("s-signin");
 })();
 </script>
