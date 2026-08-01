@@ -272,3 +272,80 @@ export async function onRequestPatch(context) {
     },
   });
 }
+
+export async function onRequestDelete(context) {
+  let payload = {};
+  try {
+    payload = await context.request.json();
+  } catch {
+    payload = {};
+  }
+
+  const orderId = sanitizeString(payload.id);
+  if (!orderId) {
+    return new Response(JSON.stringify({ error: "Missing order id." }), {
+      status: 400,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  const key = await findOrderKey(context.env, orderId);
+  if (!key) {
+    return new Response(JSON.stringify({ error: "Order not found." }), {
+      status: 404,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  const raw = await context.env.ORDERS.get(key, "json");
+  if (!raw) {
+    return new Response(JSON.stringify({ error: "Order not found." }), {
+      status: 404,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  if (!raw.cancelled) {
+    return new Response(JSON.stringify({ error: "Only cancelled orders can be deleted." }), {
+      status: 400,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  await context.env.ORDERS.delete(key);
+
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "no-referrer",
+    },
+  });
+}

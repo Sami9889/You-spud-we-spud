@@ -287,7 +287,9 @@
             ${!order.cancelled ? `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
-            ` : ''}
+            ` : `
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="deleteOrder('${order._id}')">Delete order</button>
+            `}
           </article>
         `;
       }).join('');
@@ -311,6 +313,22 @@
       if (shippingId === null) return;
       const shippingStatus = prompt('Shipping status (e.g. Shipped, In transit, Delivered):') || 'Shipped';
       await updateOrder(orderId, { shipping_id: shippingId, shipping_status: shippingStatus });
+    };
+    window.deleteOrder = async function(orderId) {
+      if (!confirm('Permanently delete this cancelled order?')) return;
+      try {
+        const response = await fetch('/api/orders', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: orderId }),
+        });
+        if (!response.ok) throw new Error('Failed to delete order');
+        const orders = await fetchOrders();
+        renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
+        showToast('Order deleted');
+      } catch (err) {
+        alert(err.message || 'Failed to delete order');
+      }
     };
     async function updateOrder(orderId, updates) {
       try {
