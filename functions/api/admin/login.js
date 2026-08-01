@@ -68,8 +68,21 @@ export async function onRequestPost(context) {
   const rawCredentials = context.env?.ADMIN_CREDENTIALS;
   const parsedCount = parseAdminCredentials(rawCredentials).length;
 
-  if (!rawCredentials || parsedCount === 0) {
+  if (!rawCredentials) {
     return new Response(JSON.stringify({ ok: false, error: "Admin credentials are not configured on the server." }), {
+      status: 500,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  if (parsedCount === 0) {
+    return new Response(JSON.stringify({ ok: false, error: "Admin credentials are set, but no valid credential entries were parsed." }), {
       status: 500,
       headers: {
         "content-type": "application/json; charset=utf-8",
