@@ -70,6 +70,60 @@ jobs:
               print('Bound KV namespace ORDERS to Pages project')
           PY
 
+      - name: Configure Pages Function environment variables
+        env:
+          CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          ADMIN_CREDENTIALS: ${{ secrets.ADMIN_CREDENTIALS }}
+          ADMIN_ORDER_TOKEN: ${{ secrets.ADMIN_ORDER_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+          import urllib.error
+
+          token = os.environ['CF_ACCOUNT_TOKEN']
+          account_id = os.environ['CF_ACCOUNT_ID']
+          project = 'youspudwespud'
+          admin_credentials = os.environ.get('ADMIN_CREDENTIALS', '')
+          admin_order_token = os.environ.get('ADMIN_ORDER_TOKEN', '')
+
+          if not admin_credentials:
+              print('::error::ADMIN_CREDENTIALS secret is missing')
+              raise SystemExit(1)
+          if not admin_order_token:
+              print('::error::ADMIN_ORDER_TOKEN secret is missing')
+              raise SystemExit(1)
+
+          def cf(method, path, data=None):
+              url = f'https://api.cloudflare.com/client/v4/accounts/{account_id}{path}'
+              body = json.dumps(data).encode() if data else None
+              req = urllib.request.Request(url, data=body, method=method)
+              req.add_header('Authorization', f'Bearer {token}')
+              req.add_header('Content-Type', 'application/json')
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      return json.loads(resp.read())
+              except urllib.error.HTTPError as e:
+                  payload = json.loads(e.read())
+                  raise SystemExit(f'Cloudflare API error {e.code}: {payload}')
+
+          project_resp = cf('GET', f'/pages/projects/{project}')
+          project_data = project_resp.get('result', {})
+
+          existing_vars = project_data.get('vars', {})
+          existing_vars['ADMIN_CREDENTIALS'] = admin_credentials
+          existing_vars['ADMIN_ORDER_TOKEN'] = admin_order_token
+          project_data['vars'] = existing_vars
+
+          update_resp = cf('PUT', f'/pages/projects/{project}', project_data)
+          if not update_resp.get('success'):
+              print(f'Warning: Pages project update response: {update_resp}')
+          else:
+              print('Configured Pages Function environment variables')
+          PY
+
       - name: Pack artifact
         run: |
           zip -r deploy.zip . -x "deploy.zip" ".git/*" ".devcontainer/*"
