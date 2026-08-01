@@ -15,11 +15,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject Apps Script URL into HTML
+      - name: Inject Apps Script URL and admin email into HTML
         env:
           APP_SCRIPT_ID: ${{ secrets.APP_SCRIPT_ID }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
         run: |
           sed -i "s|__APPS_SCRIPT_URL__|https://script.google.com/macros/s/${APP_SCRIPT_ID}/exec|g" form/index.html
+          sed -i "s|__ADMIN_EMAIL__|${ADMIN_EMAIL}|g" form/index.html
 
       - name: Pack artifact
         run: |

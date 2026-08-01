@@ -401,19 +401,9 @@
 
   <div class="admin-card">
     <h3>Admin review access</h3>
-    <p class="admin-note">Enter an admin email to request a verification link for the review board. We’ll open a mail draft to hello@sami-s.dev with a one-time code.</p>
-    <label for="admin-email">Admin email</label>
-    <input type="email" id="admin-email" placeholder="you@example.com" />
+    <p class="admin-note">Orders are only visible after an authenticated admin sign-in through Hack Club OAuth.</p>
     <div class="admin-actions">
-      <button type="button" class="btn-hc" id="btn-admin-request">Send verification link</button>
-    </div>
-    <div id="admin-status" class="note" style="display:none; margin-top:.7rem;"></div>
-    <div id="admin-code-box" style="display:none; margin-top:.75rem;">
-      <label for="admin-code">Verification code</label>
-      <input type="text" id="admin-code" placeholder="123456" />
-      <div class="admin-actions">
-        <button type="button" class="btn-hc" id="btn-admin-open" style="background:var(--brown);">Open admin board</button>
-      </div>
+      <a class="btn-hc" href="/admin/" style="width:100%; justify-content:center; text-decoration:none;">Open admin sign-in</a>
     </div>
   </div>
 </div>
@@ -533,7 +523,7 @@
       </div>
       <span class="ubar-badge" style="display:inline-block">Verified</span>
     </div>
-    <div class="sec">All orders</div>
+    <div class="sec">Recent orders</div>
     <div id="admin-orders" class="admin-list"></div>
   </div>
 </div>
@@ -573,6 +563,7 @@ const AUTH_BASE      = "https://auth.hackclub.com";
 const API_BASE       = "/api/oauth";
 const CLIENT_ID      = "";
 const OAUTH_ENABLED  = Boolean(CLIENT_ID && CLIENT_ID !== "e63922a40cd5f15e2d772276dcba8404");
+const ADMIN_EMAIL    = "__ADMIN_EMAIL__";
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -610,82 +601,7 @@ function saveStoredOrders(orders) {
 function addStoredOrder(order) {
   const orders = getStoredOrders();
   orders.unshift(order);
-  saveStoredOrders(orders.slice(0, 500));
-}
-function requestAdminAccess() {
-  const email = document.getElementById("admin-email").value.trim();
-  const status = document.getElementById("admin-status");
-  const codeBox = document.getElementById("admin-code-box");
-  const codeInput = document.getElementById("admin-code");
-  if (!email) {
-    status.textContent = "Please enter an admin email first.";
-    status.style.display = "block";
-    return;
-  }
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  localStorage.setItem("admin_code", code);
-  localStorage.setItem("admin_email", email);
-  const href = `mailto:hello@sami-s.dev?subject=${encodeURIComponent("Admin verification for You Spud, We Spud")}&body=${encodeURIComponent(`Admin verification request\nEmail: ${email}\nCode: ${code}\nOpen: https://youspudwespud.sami-s.dev/form/?admin=verify&code=${code}`)}`;
-  window.location.href = href;
-  status.textContent = `Verification code ${code} prepared. Open the mail draft or paste it below.`;
-  status.style.display = "block";
-  codeBox.style.display = "block";
-  codeInput.value = code;
-}
-function verifyAdminAccess() {
-  const entered = document.getElementById("admin-code").value.trim();
-  const expected = localStorage.getItem("admin_code") || "";
-  const status = document.getElementById("admin-status");
-  if (entered && entered === expected) {
-    renderAdminBoard();
-    show("s-admin");
-    return;
-  }
-  status.textContent = "That code did not match. Request a new one and try again.";
-  status.style.display = "block";
-}
-function renderAdminBoard() {
-  const orders = getStoredOrders().sort((a, b) => (b.timestamp || "").localeCompare(a.timestamp || ""));
-  const container = document.getElementById("admin-orders");
-  if (!orders.length) {
-    container.innerHTML = '<div class="admin-item"><strong>No orders yet.</strong><div class="admin-meta">Submissions will appear here once someone completes the form.</div></div>';
-    return;
-  }
-
-  container.innerHTML = orders.map(order => {
-    const shipping = [
-      order.ship_name,
-      order.ship_line1,
-      order.ship_line2,
-      [order.ship_city, order.ship_state, order.ship_postal, order.ship_country].filter(Boolean).join(", ")
-    ].filter(Boolean).join("<br>");
-
-    const details = [
-      ["Contact", `${order.hc_name || order.ship_name || "Anonymous"} • ${order.hc_email || "No email"}`],
-      ["Project", order.project_name || "Untitled"],
-      ["Live URL", order.project_url],
-      ["Source", order.source_url],
-      ["Size", order.file_size_kb],
-      ["Tier", order.tier],
-      ["Description", order.description],
-      ["Phone", order.phone],
-      ["Slack", order.hc_slack_id],
-      ["Verified", order.hc_verified || "Not provided"],
-      ["Shipping", shipping],
-      ["Submitted", order.timestamp],
-    ].filter(([, value]) => Boolean(value));
-
-    return `
-      <article class="admin-item">
-        <div class="admin-item-top">
-          <strong>${escapeHtml(order.hc_name || order.ship_name || "Anonymous")}</strong>
-          <span class="admin-pill">${escapeHtml(order.tier || "Pending")}</span>
-        </div>
-        ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join("")}
-        ${order.project_url ? `<a class="admin-link" href="${escapeHtml(order.project_url)}" target="_blank" rel="noopener">Open project</a>` : ""}
-      </article>
-    `;
-  }).join("");
+  saveStoredOrders(orders.slice(0, 50));
 }
 async function base64UrlEncode(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf))
@@ -761,8 +677,6 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
   });
   window.location.href = API_BASE + "/authorize?" + p;
 });
-document.getElementById("btn-admin-request").addEventListener("click", requestAdminAccess);
-document.getElementById("btn-admin-open").addEventListener("click", verifyAdminAccess);
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    STEP 2 — exchange code → token (PKCE, no client_secret)
@@ -933,11 +847,6 @@ document.getElementById("the-form").addEventListener("submit", async e => {
       errEl.style.display = "block";
     }
     show("s-signin");
-    return;
-  }
-  if (p.get("admin") === "verify" && p.get("code")) {
-    document.getElementById("admin-code").value = p.get("code");
-    verifyAdminAccess();
     return;
   }
   if (code && OAUTH_ENABLED) { await exchangeCode(code, p.get("state")); return; }

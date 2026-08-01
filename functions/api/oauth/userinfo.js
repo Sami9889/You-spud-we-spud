@@ -24,6 +24,47 @@ export async function onRequestGet(context) {
   });
 
   const text = await response.text();
+  const allowedEmailConfig = context.env?.ADMIN_EMAIL || '';
+  const allowedEmails = allowedEmailConfig
+    .split(/\s+/)
+    .map(v => v.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (response.ok) {
+    try {
+      const payload = JSON.parse(text);
+      const email = String(payload.email || '').trim().toLowerCase();
+      const isAllowed = allowedEmails.length === 0 || allowedEmails.includes(email);
+      if (!isAllowed) {
+        return new Response(JSON.stringify({ error: 'forbidden email' }), {
+          status: 403,
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+            'cache-control': 'no-store',
+            'access-control-allow-origin': 'https://youspudwespud.sami-s.dev',
+            'access-control-allow-headers': 'authorization',
+            'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+            'x-content-type-options': 'nosniff',
+            'referrer-policy': 'no-referrer',
+          },
+        });
+      }
+    } catch (err) {
+      return new Response(JSON.stringify({ error: 'invalid userinfo response' }), {
+        status: 502,
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': 'no-store',
+          'access-control-allow-origin': 'https://youspudwespud.sami-s.dev',
+          'access-control-allow-headers': 'authorization',
+          'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+          'x-content-type-options': 'nosniff',
+          'referrer-policy': 'no-referrer',
+        },
+      });
+    }
+  }
+
   return new Response(text, {
     status: response.status,
     headers: {
