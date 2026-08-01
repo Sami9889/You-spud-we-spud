@@ -7,6 +7,7 @@ export async function onRequestPost(context) {
     headers: {
       'content-type': 'application/x-www-form-urlencoded',
       'accept': 'application/json',
+      'user-agent': 'you-spud-we-spud/1.0',
     },
     body,
   });
@@ -16,7 +17,13 @@ export async function onRequestPost(context) {
     status: response.status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'access-control-allow-origin': '*',
+      'cache-control': 'no-store',
+      'access-control-allow-origin': 'https://youspudwespud.sami-s.dev',
+      'access-control-allow-headers': 'content-type, authorization',
+      'access-control-allow-methods': 'POST, OPTIONS',
+      'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+      'x-content-type-options': 'nosniff',
+      'referrer-policy': 'no-referrer',
     },
   });
 }
