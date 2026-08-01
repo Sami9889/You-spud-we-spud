@@ -20,8 +20,21 @@ jobs:
           ADMIN_CREDENTIALS: ${{ secrets.ADMIN_CREDENTIALS }}
           ADMIN_ORDER_TOKEN: ${{ secrets.ADMIN_ORDER_TOKEN }}
         run: |
-          sed -i "s|__ADMIN_CREDENTIALS__|${ADMIN_CREDENTIALS}|g" functions/api/admin/login.js
-          sed -i "s|__ADMIN_ORDER_TOKEN__|${ADMIN_ORDER_TOKEN}|g" admin/index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          creds = os.environ.get('ADMIN_CREDENTIALS', '')
+          token = os.environ.get('ADMIN_ORDER_TOKEN', '')
+
+          login_path = Path('functions/api/admin/login.js')
+          if login_path.exists():
+              login_path.write_text(login_path.read_text().replace('__ADMIN_CREDENTIALS__', creds))
+
+          admin_path = Path('admin/index.html')
+          if admin_path.exists():
+              admin_path.write_text(admin_path.read_text().replace('__ADMIN_ORDER_TOKEN__', token))
+          PY
 
       - name: Provision KV namespace and bind to Pages
         env:
