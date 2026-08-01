@@ -133,8 +133,8 @@ export async function onRequestPost(context) {
   let adminApiToken = "";
   for (const entry of entries) {
     const parts = entry.split("=").map((part) => part.trim());
-    if (parts.length >= 3 && parts[0] === "admin") {
-      adminApiToken = parts.slice(2).join("=").trim();
+    if (parts.length >= 2 && parts[0] === "admin") {
+      adminApiToken = parts.slice(1).join("=").trim();
       break;
     }
   }

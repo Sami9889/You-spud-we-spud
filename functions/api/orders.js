@@ -128,12 +128,14 @@ function isAdminRequest(context) {
     .filter(Boolean);
 
   for (const entry of entries) {
-    const parts = entry.split("=").map(part => part.trim());
-    if (parts.length >= 3 && parts[0] === "admin") {
-      const password = parts.slice(2).join("=").trim();
+    const parts = entry.split("=").map((part) => part.trim());
+    if (parts.length >= 2 && parts[0] === "admin") {
+      const password = parts.slice(1).join("=").trim();
       if (password && password === token) {
         return true;
       }
+    }
+  }
     }
   }
 
