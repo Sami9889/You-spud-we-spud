@@ -462,6 +462,29 @@ async function base64UrlEncode(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf))
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""));
 }
+function getOAuthStore() {
+  try {
+    return window.localStorage;
+  } catch (err) {
+    return window.sessionStorage;
+  }
+}
+function readOAuthValue(key) {
+  const store = getOAuthStore();
+  return store.getItem(key) || window.sessionStorage.getItem(key);
+}
+function writeOAuthValue(key, value) {
+  const store = getOAuthStore();
+  store.setItem(key, value);
+  try { window.sessionStorage.setItem(key, value); } catch (err) {}
+}
+function clearOAuthValues() {
+  const store = getOAuthStore();
+  for (const key of ["oauth_state", "pkce_verifier", "hc_user"]) {
+    try { store.removeItem(key); } catch (err) {}
+    try { window.sessionStorage.removeItem(key); } catch (err) {}
+  }
+}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    STEP 1 — redirect to HackClub OAuth (PKCE)
@@ -473,8 +496,8 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
   );
 
   const state = crypto.randomUUID();
-  sessionStorage.setItem("oauth_state", state);
-  sessionStorage.setItem("pkce_verifier", verifier);
+  writeOAuthValue("oauth_state", state);
+  writeOAuthValue("pkce_verifier", verifier);
 
   const p = new URLSearchParams({
     redirect_uri: REDIRECT_URI,
@@ -489,12 +512,12 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
    STEP 2 — exchange code → token (PKCE, no client_secret)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 async function exchangeCode(code, state) {
-  if (state !== sessionStorage.getItem("oauth_state")) {
+  if (state !== readOAuthValue("oauth_state")) {
     showErr("OAuth state mismatch — possible CSRF. Please try again.");
     return;
   }
 
-  const verifier = sessionStorage.getItem("pkce_verifier");
+  const verifier = readOAuthValue("pkce_verifier");
   if (!verifier) {
     showErr("Missing PKCE verifier. Please try again.");
     return;
@@ -525,8 +548,8 @@ async function exchangeCode(code, state) {
     const user = await meRes.json();
     if (!meRes.ok) throw new Error(user.error || "Failed to fetch user info");
 
-    sessionStorage.removeItem("pkce_verifier");
-    sessionStorage.setItem("hc_user", JSON.stringify(user));
+    clearOAuthValues();
+    writeOAuthValue("hc_user", JSON.stringify(user));
     history.replaceState({}, "", window.location.pathname);
     fillForm(user);
   } catch (e) {
@@ -652,7 +675,7 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   }
   if (code) { await exchangeCode(code, p.get("state")); return; }
 
-  const cached = sessionStorage.getItem("hc_user");
+  const cached = readOAuthValue("hc_user");
   if (cached) { fillForm(JSON.parse(cached)); return; }
 
   show("s-signin");
