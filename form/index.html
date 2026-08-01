@@ -443,7 +443,7 @@ const APPS_SCRIPT    = "__APPS_SCRIPT_URL__";
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
 const AUTH_BASE      = "https://auth.hackclub.com";
 const API_BASE       = "/api/oauth";
-const OAUTH_ENABLED  = false;
+const OAUTH_ENABLED  = true;
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -503,7 +503,7 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
     code_challenge:        challenge,
     code_challenge_method: "S256",
   });
-  window.location.href = AUTH_BASE + "/oauth/authorize?" + p;
+  window.location.href = API_BASE + "/authorize?" + p;
 });
 
 document.getElementById("btn-skip-signin").addEventListener("click", () => {
