@@ -212,19 +212,11 @@
     function escapeHtml(value) {
       return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-    function getStoredOrders() {
-      try {
-        return JSON.parse(localStorage.getItem('spud_orders') || '[]');
-      } catch (err) {
-        return [];
-      }
-    }
-    function renderAdminBoard(user) {
-      const orders = getStoredOrders().sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    function renderAdminBoard(user, orders) {
       const container = document.getElementById('admin-orders');
       document.getElementById('admin-name').textContent = user?.name || 'Admin';
       document.getElementById('admin-email').textContent = user?.email || 'Authorized organizer';
-      if (!orders.length) {
+      if (!orders || !orders.length) {
         container.innerHTML = '<div class="admin-item"><strong>No orders yet.</strong><div class="admin-meta">Submissions will appear once people finish the form.</div></div>';
         return;
       }
@@ -255,6 +247,16 @@
           </article>
         `;
       }).join('');
+    }
+    async function fetchOrders() {
+      try {
+        const response = await fetch('/api/orders');
+        if (!response.ok) throw new Error('Failed to fetch orders');
+        return await response.json();
+      } catch (err) {
+        console.error('Failed to load orders:', err);
+        return [];
+      }
     }
     function getAdminStore() {
       try { return window.localStorage; } catch (err) { return window.sessionStorage; }
@@ -303,7 +305,8 @@
         };
         clearAdminValues();
         writeAdminValue('admin_user', JSON.stringify(user));
-        renderAdminBoard(user);
+        const orders = await fetchOrders();
+        renderAdminBoard(user, orders);
         show('s-admin');
       } catch (err) {
         errorEl.textContent = err.message || 'The admin board could not be opened.';
@@ -311,10 +314,12 @@
       }
     });
 
-    (function init() {
+    (async function init() {
       const cached = readAdminValue('admin_user');
       if (cached) {
-        renderAdminBoard(JSON.parse(cached));
+        const user = JSON.parse(cached);
+        const orders = await fetchOrders();
+        renderAdminBoard(user, orders);
         show('s-admin');
         return;
       }

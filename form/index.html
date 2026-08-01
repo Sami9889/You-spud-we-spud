@@ -591,21 +591,6 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/\"/g, "&quot;");
 }
-function getStoredOrders() {
-  try {
-    return JSON.parse(localStorage.getItem("spud_orders") || "[]");
-  } catch (err) {
-    return [];
-  }
-}
-function saveStoredOrders(orders) {
-  localStorage.setItem("spud_orders", JSON.stringify(orders));
-}
-function addStoredOrder(order) {
-  const orders = getStoredOrders();
-  orders.unshift(order);
-  saveStoredOrders(orders.slice(0, 50));
-}
 async function base64UrlEncode(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf))
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""));
@@ -756,8 +741,8 @@ function fillForm(user) {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    STEP 4 — save submission locally
-    Orders are stored in localStorage for the admin review board
+    STEP 4 — save submission to Cloudflare
+    Orders are stored server-side via /api/orders
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
  document.getElementById("the-form").addEventListener("submit", async e => {
    e.preventDefault();
@@ -812,16 +797,30 @@ function fillForm(user) {
      ship_state:   document.getElementById("f-state").value.trim(),
      ship_country: document.getElementById("f-country").value.trim(),
      ship_postal:  document.getElementById("f-postal").value.trim(),
-   };
-   addStoredOrder(payload);
+  };
+  const btn = document.getElementById("btn-sub");
+  btn.disabled = true;
+  btn.textContent = "Submitting…";
 
-   const btn = document.getElementById("btn-sub");
-   btn.disabled = true;
-   btn.textContent = "Submitting…";
-
-   show("s-success");
-   sessionStorage.removeItem("hc_user");
- });
+  try {
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || "Submission failed");
+    }
+    show("s-success");
+    sessionStorage.removeItem("hc_user");
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = "🥔 Ship My Spud";
+    errEl.textContent = "Submission failed — " + err.message + ". Please try again.";
+    errEl.style.display = "block";
+  }
+});
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    INIT
