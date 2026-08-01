@@ -23,17 +23,43 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import os
+          import sys
 
-          creds = os.environ.get('ADMIN_CREDENTIALS', '')
-          token = os.environ.get('ADMIN_ORDER_TOKEN', '')
+          creds = os.environ.get('ADMIN_CREDENTIALS')
+          token = os.environ.get('ADMIN_ORDER_TOKEN')
+
+          if creds is None:
+              print('::error::ADMIN_CREDENTIALS secret is missing')
+              sys.exit(1)
+          if token is None:
+              print('::error::ADMIN_ORDER_TOKEN secret is missing')
+              sys.exit(1)
 
           login_path = Path('functions/api/admin/login.js')
-          if login_path.exists():
-              login_path.write_text(login_path.read_text().replace('__ADMIN_CREDENTIALS__', creds))
+          if not login_path.exists():
+              print(f'::error::Expected file not found: {login_path}')
+              sys.exit(1)
+
+          login_text = login_path.read_text()
+          if '__ADMIN_CREDENTIALS__' not in login_text:
+              print('::error::Placeholder __ADMIN_CREDENTIALS__ not found in login.js')
+              sys.exit(1)
+
+          login_path.write_text(login_text.replace('__ADMIN_CREDENTIALS__', creds))
+          print('Injected ADMIN_CREDENTIALS into functions/api/admin/login.js')
 
           admin_path = Path('admin/index.html')
-          if admin_path.exists():
-              admin_path.write_text(admin_path.read_text().replace('__ADMIN_ORDER_TOKEN__', token))
+          if not admin_path.exists():
+              print(f'::error::Expected file not found: {admin_path}')
+              sys.exit(1)
+
+          admin_text = admin_path.read_text()
+          if '__ADMIN_ORDER_TOKEN__' not in admin_text:
+              print('::error::Placeholder __ADMIN_ORDER_TOKEN__ not found in admin/index.html')
+              sys.exit(1)
+
+          admin_path.write_text(admin_text.replace('__ADMIN_ORDER_TOKEN__', token))
+          print('Injected ADMIN_ORDER_TOKEN into admin/index.html')
           PY
 
       - name: Provision KV namespace and bind to Pages
