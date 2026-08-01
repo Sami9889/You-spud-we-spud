@@ -24,11 +24,11 @@ export async function onRequestGet(context) {
   });
 
   const text = await response.text();
-  const allowedEmailConfig = context.env?.ADMIN_EMAIL || '';
-  const allowedEmails = allowedEmailConfig
-    .split(/\s+/)
-    .map(v => v.trim().toLowerCase())
-    .filter(Boolean);
+  const allowedEmailConfig = String(context.env?.ADMIN_EMAIL || '');
+  const allowedEmails = [...new Set(
+    (allowedEmailConfig.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || [])
+      .map(v => v.trim().toLowerCase())
+  )];
 
   if (response.ok) {
     try {

@@ -10,8 +10,11 @@ export async function onRequestGet(context) {
     return new Response('OAuth client is not configured', { status: 500 });
   }
 
-  const allowedRedirect = 'https://youspudwespud.sami-s.dev/form/';
-  if (!redirectUri || redirectUri !== allowedRedirect) {
+  const allowedRedirects = new Set([
+    'https://youspudwespud.sami-s.dev/form/',
+    'https://youspudwespud.sami-s.dev/admin/',
+  ]);
+  if (!redirectUri || !allowedRedirects.has(redirectUri)) {
     return new Response('Invalid redirect_uri', { status: 400 });
   }
   if (!state || state.length < 8 || state.length > 256) {
@@ -25,7 +28,7 @@ export async function onRequestGet(context) {
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', allowedRedirect);
   authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('scope', 'openid');
+  authUrl.searchParams.set('scope', 'openid profile email');
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('code_challenge', codeChallenge);
   authUrl.searchParams.set('code_challenge_method', codeChallengeMethod);
