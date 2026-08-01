@@ -535,6 +535,15 @@
       </div>
     </div>
 
+    <div class="sec">Extra</div>
+    <label for="f-deadline">Deadline / event date (optional)</label>
+    <input type="date" id="f-deadline" />
+    <p class="note">If this is time-sensitive, add a date so it shows up in the review board.</p>
+
+    <label for="f-shipping-id">Shipping / tracking ID (optional)</label>
+    <input type="text" id="f-shipping-id" placeholder="If you already have one" />
+    <p class="note">You can leave this blank and add it later.</p>
+
     <button type="submit" class="btn-submit" id="btn-sub">🥔 Ship My Spud</button>
   </form>
 </div>
@@ -620,6 +629,23 @@ function showToast(message, type = "success") {
   requestAnimationFrame(() => toast.classList.add("show"));
   setTimeout(() => toast.classList.remove("show"), 3200);
 }
+function requestNotificationPermission() {
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}
+function sendBrowserNotification(title, body) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification(title, { body, icon: "/favicon.ico" });
+    } catch (err) {}
+  }
+}
+  toast.textContent = message;
+  toast.className = "toast " + type;
+  requestAnimationFrame(() => toast.classList.add("show"));
+  setTimeout(() => toast.classList.remove("show"), 3200);
+}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     STEP 1 — manual sign-in
@@ -681,47 +707,58 @@ function fillForm(user) {
      return;
    }
 
-   const required = [
-     ["f-pname","project name"], ["f-purl","live URL"],   ["f-surl","source URL"],
-     ["f-size","file size"],     ["f-desc","description"],
-     ["f-sname","full name"],    ["f-phone","phone number"],
-     ["f-l1","address line 1"],  ["f-city","city"],
-     ["f-country","country"],    ["f-postal","postal code"],
-   ];
-   for (const [id, label] of required) {
-     if (!document.getElementById(id).value.trim()) {
-       document.getElementById(id).focus();
-       errEl.textContent = "Please fill in: " + label + ".";
-       errEl.style.display = "block";
-       errEl.scrollIntoView({ behavior: "smooth", block: "center" });
-       return;
-     }
-   }
+    const required = [
+      ["f-pname","project name"], ["f-purl","live URL"],   ["f-surl","source URL"],
+      ["f-size","file size"],     ["f-desc","description"],
+      ["f-sname","full name"],    ["f-phone","phone number"],
+      ["f-l1","address line 1"],  ["f-city","city"],
+      ["f-country","country"],    ["f-postal","postal code"],
+    ];
+    for (const [id, label] of required) {
+      if (!document.getElementById(id).value.trim()) {
+        document.getElementById(id).focus();
+        errEl.textContent = "Please fill in: " + label + ".";
+        errEl.style.display = "block";
+        errEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+    }
+
+    const deadline = document.getElementById("f-deadline").value;
+    if (deadline && new Date(deadline) < new Date()) {
+      document.getElementById("f-deadline").focus();
+      errEl.textContent = "Deadline cannot be in the past.";
+      errEl.style.display = "block";
+      errEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
    const user = JSON.parse(sessionStorage.getItem("hc_user") || "{}");
 
-   const payload = {
-     timestamp:    new Date().toISOString(),
-     hc_name:      user.name || "",
-     hc_email:     user.email || "",
-     hc_slack_id:  user.slack_id || "",
-     hc_verified:  user.verification_status || "",
-     hc_username:  user.preferred_username || user.nickname || "",
-     project_name: document.getElementById("f-pname").value.trim(),
-     project_url:  document.getElementById("f-purl").value.trim(),
-     source_url:   document.getElementById("f-surl").value.trim(),
-     file_size_kb: document.getElementById("f-size").value.trim(),
-     description:  document.getElementById("f-desc").value.trim(),
-     tier:         tier.value,
-     phone:        document.getElementById("f-phone").value.trim(),
-     ship_name:    document.getElementById("f-sname").value.trim(),
-     ship_line1:   document.getElementById("f-l1").value.trim(),
-     ship_line2:   document.getElementById("f-l2").value.trim(),
-     ship_city:    document.getElementById("f-city").value.trim(),
-     ship_state:   document.getElementById("f-state").value.trim(),
-     ship_country: document.getElementById("f-country").value.trim(),
-     ship_postal:  document.getElementById("f-postal").value.trim(),
-  };
+    const payload = {
+      timestamp:    new Date().toISOString(),
+      hc_name:      user.name || "",
+      hc_email:     user.email || "",
+      hc_slack_id:  user.slack_id || "",
+      hc_verified:  user.verification_status || "",
+      hc_username:  user.preferred_username || user.nickname || "",
+      project_name: document.getElementById("f-pname").value.trim(),
+      project_url:  document.getElementById("f-purl").value.trim(),
+      source_url:   document.getElementById("f-surl").value.trim(),
+      file_size_kb: document.getElementById("f-size").value.trim(),
+      description:  document.getElementById("f-desc").value.trim(),
+      tier:         tier.value,
+      phone:        document.getElementById("f-phone").value.trim(),
+      ship_name:    document.getElementById("f-sname").value.trim(),
+      ship_line1:   document.getElementById("f-l1").value.trim(),
+      ship_line2:   document.getElementById("f-l2").value.trim(),
+      ship_city:    document.getElementById("f-city").value.trim(),
+      ship_state:   document.getElementById("f-state").value.trim(),
+      ship_country: document.getElementById("f-country").value.trim(),
+      ship_postal:  document.getElementById("f-postal").value.trim(),
+      deadline:     document.getElementById("f-deadline").value || "",
+      shipping_id:  document.getElementById("f-shipping-id").value.trim(),
+    };
   const btn = document.getElementById("btn-sub");
   btn.disabled = true;
   btn.textContent = "Submitting…";
@@ -738,6 +775,7 @@ function fillForm(user) {
     }
 
     showToast("Spud submitted! 🥔");
+    sendBrowserNotification("Spud submitted", "Your order has been received.");
     await new Promise(r => setTimeout(r, 600));
     show("s-success");
     sessionStorage.removeItem("hc_user");
@@ -762,6 +800,7 @@ function fillForm(user) {
     fillForm(user);
     return;
   }
+  requestNotificationPermission();
   show("s-signin");
 })();
 </script>

@@ -53,6 +53,10 @@ function serializeOrder(order) {
     ship_state: sanitizeString(order.ship_state),
     ship_country: sanitizeString(order.ship_country),
     ship_postal: sanitizeString(order.ship_postal),
+    deadline: sanitizeString(order.deadline),
+    shipping_id: sanitizeString(order.shipping_id),
+    shipping_status: sanitizeString(order.shipping_status),
+    cancelled: Boolean(order.cancelled),
   };
 }
 
@@ -65,6 +69,17 @@ async function listOrders(env) {
   }
   orders.sort((a, b) => (b.timestamp || b._ts || "").localeCompare(a.timestamp || a._ts || ""));
   return orders;
+}
+
+async function findOrderKey(env, orderId) {
+  const list = await env.ORDERS.list({ limit: MAX_KEYS, prefix: KV_PREFIX });
+  for (const key of list.keys) {
+    const raw = await env.ORDERS.get(key.name, "json");
+    if (raw && raw._id === orderId) {
+      return key.name;
+    }
+  }
+  return null;
 }
 
 function clientIp(request) {
@@ -165,6 +180,88 @@ export async function onRequestPost(context) {
   await recordRateLimit(context.env, ip);
 
   return new Response(JSON.stringify({ ok: true, id: order._id }), {
+    status: 200,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "no-referrer",
+    },
+  });
+}
+
+export async function onRequestPatch(context) {
+  let payload = {};
+  try {
+    payload = await context.request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON payload." }), {
+      status: 400,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  const orderId = sanitizeString(payload.id);
+  if (!orderId) {
+    return new Response(JSON.stringify({ error: "Missing order id." }), {
+      status: 400,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  const key = await findOrderKey(context.env, orderId);
+  if (!key) {
+    return new Response(JSON.stringify({ error: "Order not found." }), {
+      status: 404,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  const raw = await context.env.ORDERS.get(key, "json");
+  if (!raw) {
+    return new Response(JSON.stringify({ error: "Order not found." }), {
+      status: 404,
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        "cache-control": "no-store",
+        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+      },
+    });
+  }
+
+  const allowed = ["cancelled", "shipping_id", "shipping_status", "deadline"];
+  const updates = {};
+  for (const field of allowed) {
+    if (payload[field] !== undefined) {
+      updates[field] = sanitizeString(String(payload[field]));
+    }
+  }
+
+  const updated = { ...raw, ...updates, _ts: new Date().toISOString() };
+  await context.env.ORDERS.put(key, JSON.stringify(updated));
+
+  return new Response(JSON.stringify({ ok: true, order: updated }), {
     status: 200,
     headers: {
       "content-type": "application/json; charset=utf-8",
