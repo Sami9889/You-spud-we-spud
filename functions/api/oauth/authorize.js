@@ -5,7 +5,7 @@ export async function onRequestGet(context) {
   const state = params.get('state');
   const codeChallenge = params.get('code_challenge');
   const codeChallengeMethod = params.get('code_challenge_method');
-  const clientId = params.get('client_id');
+  const clientId = params.get('client_id') || context.env?.HACKCLUB_CLIENT_ID || 'e63922a40cd5f15e2d772276dcba8404';
 
   const allowedRedirect = 'https://youspudwespud.sami-s.dev/form/';
   if (!redirectUri || redirectUri !== allowedRedirect) {
@@ -19,10 +19,10 @@ export async function onRequestGet(context) {
   }
 
   const authUrl = new URL('https://auth.hackclub.com/oauth/authorize');
-  authUrl.searchParams.set('client_id', clientId || 'e63922a40cd5f15e2d772276dcba8404');
+  authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', allowedRedirect);
   authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('scope', 'profile email name verification_status slack_id');
+  authUrl.searchParams.set('scope', 'openid profile email name verification_status slack_id');
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('code_challenge', codeChallenge);
   authUrl.searchParams.set('code_challenge_method', codeChallengeMethod);
