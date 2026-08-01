@@ -31,7 +31,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
           npm install -g wrangler
-          wrangler pages project create youspudwespud --production-branch main || true
           wrangler pages deploy . --project-name youspudwespud --commit-dirty=true
 
       - name: Attach custom domain to Pages project
