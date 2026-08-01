@@ -292,16 +292,30 @@
 
 <div id="s-signin" class="screen">
   <div class="big">🥔</div>
-  <h2>Sign in with Hack Club</h2>
-  <p>We use your Hack Club account to verify you're in the community and to link your submission to your Slack profile.</p>
-  <button class="btn-hc" id="btn-signin">
-    <img src="https://assets.hackclub.com/flag-orpheus-top.svg" alt="Hack Club" />
-    Sign in with Hack Club
-  </button>
-  <p class="note" style="margin-top: 1rem; margin-bottom: 0.75rem;">If sign-in is unavailable, you can still continue and submit your entry manually.</p>
-  <button class="btn-hc" id="btn-skip-signin" style="background: var(--brown); margin-top: 0.25rem;">
-    Continue without sign-in
-  </button>
+  <h2>Tell us who you are</h2>
+  <p>We use these details to label your submission and keep it tied to your Hack Club profile.</p>
+  <div style="max-width: 360px; margin: 0 auto; text-align: left;">
+    <label for="manual-name">Your name <span class="req">*</span></label>
+    <input type="text" id="manual-name" placeholder="Your full name" required />
+
+    <label for="manual-email">Email <span class="req">*</span></label>
+    <input type="email" id="manual-email" placeholder="you@example.com" required />
+
+    <label for="manual-slack">Slack username / ID (optional)</label>
+    <input type="text" id="manual-slack" placeholder="@yourname or ID" />
+
+    <label style="display:flex; align-items:center; gap:.4rem; margin-bottom:1rem;">
+      <input type="checkbox" id="manual-verified" checked />
+      <span>I’m part of Hack Club / verified</span>
+    </label>
+
+    <div id="signin-err" class="note" style="display:none; color:var(--red); margin-top:0; margin-bottom:.9rem;"></div>
+
+    <button class="btn-hc" id="btn-signin" style="width:100%; justify-content:center;">
+      <img src="https://assets.hackclub.com/flag-orpheus-top.svg" alt="Hack Club" />
+      Continue to form
+    </button>
+  </div>
 </div>
 
 <div id="s-form" class="screen">
@@ -470,44 +484,43 @@ async function base64UrlEncode(buf) {
    STEP 1 — redirect to HackClub OAuth (PKCE)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function continueWithoutSignIn(msg) {
-  const errEl = document.getElementById("form-err");
-  errEl.textContent = msg || "Sign-in is unavailable right now, but you can still submit your entry manually.";
-  errEl.style.display = "block";
-  document.getElementById("u-name").textContent = "Guest";
-  document.getElementById("u-email").textContent = "Sign-in unavailable";
-  document.getElementById("u-badge").style.display = "none";
+  const name = document.getElementById("manual-name")?.value.trim() || "Guest";
+  const email = document.getElementById("manual-email")?.value.trim() || "unknown@example.com";
+  const slack = document.getElementById("manual-slack")?.value.trim() || "";
+  const verified = document.getElementById("manual-verified")?.checked ? "verified" : "unverified";
+  const user = { name, email, slack_id: slack, verification_status: verified, preferred_username: "", nickname: "" };
+  sessionStorage.setItem("hc_user", JSON.stringify(user));
+  document.getElementById("u-name").textContent = user.name;
+  document.getElementById("u-email").textContent = user.email;
+  document.getElementById("u-badge").style.display = verified === "verified" ? "inline-block" : "none";
   show("s-form");
 }
 
-document.getElementById("btn-signin").addEventListener("click", async () => {
-  if (!OAUTH_ENABLED) {
-    continueWithoutSignIn("Hack Club sign-in is currently unavailable for this site, so you can continue with the form manually.");
+document.getElementById("btn-signin").addEventListener("click", () => {
+  const name = document.getElementById("manual-name").value.trim();
+  const email = document.getElementById("manual-email").value.trim();
+  const errEl = document.getElementById("signin-err");
+  errEl.style.display = "none";
+
+  if (!name || !email) {
+    errEl.textContent = "Please enter your name and email.";
+    errEl.style.display = "block";
     return;
   }
 
-  const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
-  const challenge = base64UrlEncode(
-    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))
-  );
-
-  const state = crypto.randomUUID();
-  sessionStorage.setItem("oauth_state", state);
-  sessionStorage.setItem("pkce_verifier", verifier);
-
-  const p = new URLSearchParams({
-    client_id:             CLIENT_ID,
-    redirect_uri:          REDIRECT_URI,
-    response_type:         "code",
-    scope:                 "profile email name verification_status slack_id",
-    state,
-    code_challenge:        challenge,
-    code_challenge_method: "S256",
-  });
-  window.location.href = API_BASE + "/authorize?" + p;
-});
-
-document.getElementById("btn-skip-signin").addEventListener("click", () => {
-  continueWithoutSignIn("Hack Club sign-in is unavailable right now, so you can continue with the form manually.");
+  const user = {
+    name,
+    email,
+    slack_id: document.getElementById("manual-slack").value.trim(),
+    verification_status: document.getElementById("manual-verified").checked ? "verified" : "unverified",
+    preferred_username: "",
+    nickname: "",
+  };
+  sessionStorage.setItem("hc_user", JSON.stringify(user));
+  document.getElementById("u-name").textContent = user.name;
+  document.getElementById("u-email").textContent = user.email;
+  document.getElementById("u-badge").style.display = user.verification_status === "verified" ? "inline-block" : "none";
+  show("s-form");
 });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -675,11 +688,10 @@ document.getElementById("the-form").addEventListener("submit", async e => {
   const code = p.get("code");
   const err  = p.get("error");
 
-  if (err) {
-    continueWithoutSignIn("Hack Club sign-in returned an error, so you can continue with the form manually.");
+  if (code || err) {
+    show("s-signin");
     return;
   }
-  if (code) { await exchangeCode(code, p.get("state")); return; }
 
   const cached = sessionStorage.getItem("hc_user");
   if (cached) { fillForm(JSON.parse(cached)); return; }
