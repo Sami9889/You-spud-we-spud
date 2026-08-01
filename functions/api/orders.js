@@ -1,10 +1,13 @@
 const KV_PREFIX = "order:";
 const MAX_KEYS = 1000;
+<<<<<<< ours
 const ADMIN_TOKEN = "__ADMIN_ORDER_TOKEN__";
 
 if (!ADMIN_TOKEN || ADMIN_TOKEN === "__ADMIN_ORDER_TOKEN__") {
   throw new Error("ADMIN_ORDER_TOKEN must be configured");
 }
+=======
+>>>>>>> theirs
 
 function sanitizeString(value) {
   if (typeof value !== "string") return "";
@@ -69,6 +72,7 @@ async function listOrders(env) {
   return orders;
 }
 
+<<<<<<< ours
 function checkAdminAuth(request) {
   const auth = request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) return false;
@@ -90,6 +94,9 @@ export async function onRequestGet(context) {
     });
   }
 
+=======
+export async function onRequestGet(context) {
+>>>>>>> theirs
   const orders = await listOrders(context.env);
   return new Response(JSON.stringify(orders), {
     status: 200,
