@@ -258,56 +258,6 @@
         return [];
       }
     }
-    }
-    function escapeHtml(value) {
-      return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-    function renderAdminBoard(user, orders) {
-      const container = document.getElementById('admin-orders');
-      document.getElementById('admin-name').textContent = user?.name || 'Admin';
-      document.getElementById('admin-email').textContent = user?.email || 'Authorized organizer';
-      if (!orders || !orders.length) {
-        container.innerHTML = '<div class="admin-item"><strong>No orders yet.</strong><div class="admin-meta">Submissions will appear once people finish the form.</div></div>';
-        return;
-      }
-      container.innerHTML = orders.map(order => {
-        const shipping = [order.ship_name, order.ship_line1, order.ship_line2, [order.ship_city, order.ship_state, order.ship_postal, order.ship_country].filter(Boolean).join(', ')].filter(Boolean).join('<br>');
-        const details = [
-          ['Contact', `${order.hc_name || order.ship_name || 'Anonymous'} • ${order.hc_email || 'No email'}`],
-          ['Project', order.project_name || 'Untitled'],
-          ['Live URL', order.project_url],
-          ['Source', order.source_url],
-          ['Size', order.file_size_kb],
-          ['Tier', order.tier],
-          ['Description', order.description],
-          ['Phone', order.phone],
-          ['Slack', order.hc_slack_id],
-          ['Verified', order.hc_verified || 'Not provided'],
-          ['Shipping', shipping],
-          ['Submitted', order.timestamp],
-        ].filter(([, value]) => Boolean(value));
-        return `
-          <article class="admin-item">
-            <div class="admin-item-top">
-              <strong>${escapeHtml(order.hc_name || order.ship_name || 'Anonymous')}</strong>
-              <span class="admin-pill">${escapeHtml(order.tier || 'Pending')}</span>
-            </div>
-            ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}
-            ${order.project_url ? `<a class="admin-link" href="${escapeHtml(order.project_url)}" target="_blank" rel="noopener">Open project</a>` : ''}
-          </article>
-        `;
-      }).join('');
-    }
-    async function fetchOrders() {
-      try {
-        const response = await fetch('/api/orders');
-        if (!response.ok) throw new Error('Failed to fetch orders');
-        return await response.json();
-      } catch (err) {
-        console.error('Failed to load orders:', err);
-        return [];
-      }
-    }
     function getAdminStore() {
       try { return window.localStorage; } catch (err) { return window.sessionStorage; }
     }
