@@ -1,5 +1,9 @@
 const DEFAULT_CREDENTIALS = "__ADMIN_CREDENTIALS__";
 
+if (DEFAULT_CREDENTIALS === "__ADMIN_CREDENTIALS__") {
+  throw new Error("ADMIN_CREDENTIALS must be injected at build time");
+}
+
 export function parseAdminCredentials(rawValue = "") {
   if (!rawValue) {
     return [];

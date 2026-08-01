@@ -559,18 +559,12 @@
 
 <script>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   CONFIG — injected by GitHub Actions
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
-const AUTH_BASE      = "https://auth.hackclub.com";
-const API_BASE       = "/api/oauth";
-const CLIENT_ID      = "";
-const OAUTH_ENABLED  = Boolean(CLIENT_ID && CLIENT_ID !== "e63922a40cd5f15e2d772276dcba8404");
-const ADMIN_EMAIL    = "__ADMIN_EMAIL__";
+    CONFIG — injected by GitHub Actions
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   UTILITIES
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    UTILITIES
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -591,144 +585,39 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/\"/g, "&quot;");
 }
-async function base64UrlEncode(buf) {
-  return btoa(String.fromCharCode(...new Uint8Array(buf))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""));
-}
-function getOAuthStore() {
-  try {
-    return window.localStorage;
-  } catch (err) {
-    return window.sessionStorage;
-  }
-}
-function readOAuthValue(key) {
-  const store = getOAuthStore();
-  return store.getItem(key) || window.sessionStorage.getItem(key);
-}
-function writeOAuthValue(key, value) {
-  const store = getOAuthStore();
-  store.setItem(key, value);
-  try { window.sessionStorage.setItem(key, value); } catch (err) {}
-}
-function clearOAuthValues() {
-  const store = getOAuthStore();
-  for (const key of ["oauth_state", "pkce_verifier", "hc_user"]) {
-    try { store.removeItem(key); } catch (err) {}
-    try { window.sessionStorage.removeItem(key); } catch (err) {}
-  }
-}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 1 — redirect to HackClub OAuth (PKCE)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    STEP 1 — manual sign-in
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 document.getElementById("btn-signin").addEventListener("click", async () => {
   const errEl = document.getElementById("signin-err");
   errEl.style.display = "none";
 
   const name = document.getElementById("manual-name").value.trim();
   const email = document.getElementById("manual-email").value.trim();
-  if (name && email) {
-    const user = {
-      name,
-      email,
-      slack_id: document.getElementById("manual-slack").value.trim(),
-      verification_status: document.getElementById("manual-verified").checked ? "verified" : "unverified",
-      preferred_username: "",
-      nickname: "",
-    };
-    writeOAuthValue("hc_user", JSON.stringify(user));
-    clearOAuthValues();
-    fillForm(user);
-    return;
-  }
-
-  if (!OAUTH_ENABLED) {
+  if (!name || !email) {
     errEl.textContent = "Please enter your name and email.";
     errEl.style.display = "block";
     return;
   }
 
-  const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
-  const challenge = base64UrlEncode(
-    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))
-  );
-
-  const state = crypto.randomUUID();
-  writeOAuthValue("oauth_state", state);
-  writeOAuthValue("pkce_verifier", verifier);
-
-  const p = new URLSearchParams({
-    redirect_uri: REDIRECT_URI,
-    state,
-    code_challenge: challenge,
-    code_challenge_method: "S256",
-  });
-  window.location.href = API_BASE + "/authorize?" + p;
+  const user = {
+    name,
+    email,
+    slack_id: document.getElementById("manual-slack").value.trim(),
+    verification_status: document.getElementById("manual-verified").checked ? "verified" : "unverified",
+    preferred_username: "",
+    nickname: "",
+  };
+  try {
+    sessionStorage.setItem("hc_user", JSON.stringify(user));
+  } catch (err) {}
+  fillForm(user);
 });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 2 — exchange code → token (PKCE, no client_secret)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-async function exchangeCode(code, state) {
-  if (state !== readOAuthValue("oauth_state")) {
-    showErr("OAuth state mismatch — possible CSRF. Please try again.");
-    return;
-  }
-
-  const verifier = readOAuthValue("pkce_verifier");
-  if (!verifier) {
-    showErr("Missing PKCE verifier. Please try again.");
-    return;
-  }
-
-  const params = new URLSearchParams({
-    grant_type:            "authorization_code",
-    client_id:             CLIENT_ID,
-    redirect_uri:          REDIRECT_URI,
-    code,
-    code_verifier:         verifier,
-  });
-
-  try {
-    const r = await fetch(API_BASE + "/token", {
-      method:  "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body:    params.toString(),
-    });
-
-    const tok = await r.json();
-    if (!r.ok) throw new Error(tok.error_description || tok.error || "Token exchange failed");
-
-    const meRes = await fetch(API_BASE + "/userinfo", {
-      headers: { Authorization: "Bearer " + tok.access_token },
-    });
-
-    const user = await meRes.json();
-    if (!meRes.ok) throw new Error(user.error || "Failed to fetch user info");
-
-    clearOAuthValues();
-    writeOAuthValue("hc_user", JSON.stringify(user));
-    history.replaceState({}, "", window.location.pathname);
-    fillForm(user);
-  } catch (e) {
-    const detail = e?.message || "Unknown error";
-    showErr("Couldn't complete sign-in.", detail);
-  }
-}
-function showErr(msg, detail) {
-  show("s-error");
-  document.getElementById("err-msg").textContent = msg;
-  if (detail) {
-    const el = document.getElementById("err-detail");
-    el.textContent = typeof detail === "string" ? detail : JSON.stringify(detail, null, 2);
-    el.style.display = "block";
-  }
-}
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STEP 3 — fill form with OAuth data
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    STEP 2 — fill form with user data
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function fillForm(user) {
   document.getElementById("u-name").textContent  = user.name || "Hack Clubber";
   document.getElementById("u-email").textContent = user.email || "";
@@ -823,27 +712,17 @@ function fillForm(user) {
 });
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   INIT
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-(async function init() {
-  const p    = new URLSearchParams(window.location.search);
-  const code = p.get("code");
-  const err  = p.get("error");
-
-  if (err) {
-    const errEl = document.getElementById("signin-err");
-    if (errEl) {
-      errEl.textContent = "Hack Club OAuth is unavailable right now, so please continue with your details manually.";
-      errEl.style.display = "block";
-    }
-    show("s-signin");
+    INIT
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+(function init() {
+  let user = null;
+  try {
+    user = JSON.parse(sessionStorage.getItem("hc_user") || "null");
+  } catch (err) {}
+  if (user) {
+    fillForm(user);
     return;
   }
-  if (code && OAUTH_ENABLED) { await exchangeCode(code, p.get("state")); return; }
-
-  const cached = readOAuthValue("hc_user");
-  if (cached) { fillForm(JSON.parse(cached)); return; }
-
   show("s-signin");
 })();
 </script>

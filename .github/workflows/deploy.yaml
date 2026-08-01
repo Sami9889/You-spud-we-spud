@@ -15,11 +15,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject admin credentials
+      - name: Inject admin credentials and order token
         env:
           ADMIN_CREDENTIALS: ${{ secrets.ADMIN_CREDENTIALS }}
+          ADMIN_ORDER_TOKEN: ${{ secrets.ADMIN_ORDER_TOKEN }}
         run: |
           sed -i "s|__ADMIN_CREDENTIALS__|${ADMIN_CREDENTIALS}|g" functions/api/admin/login.js
+          sed -i "s|__ADMIN_ORDER_TOKEN__|${ADMIN_ORDER_TOKEN}|g" admin/index.html
 
       - name: Provision KV namespace and bind to Pages
         env:
