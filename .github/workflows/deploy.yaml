@@ -15,13 +15,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject Apps Script URL and admin email into HTML
+      - name: Inject Apps Script URL and admin credentials
         env:
           APP_SCRIPT_ID: ${{ secrets.APP_SCRIPT_ID }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_CREDENTIALS: ${{ secrets.ADMIN_CREDENTIALS }}
         run: |
           sed -i "s|__APPS_SCRIPT_URL__|https://script.google.com/macros/s/${APP_SCRIPT_ID}/exec|g" form/index.html
-          sed -i "s|__ADMIN_EMAIL__|${ADMIN_EMAIL}|g" form/index.html
+          python - <<'PY'
+import os
+from pathlib import Path
+path = Path('functions/api/admin/login.js')
+text = path.read_text()
+text = text.replace('__ADMIN_CREDENTIALS__', os.environ.get('ADMIN_CREDENTIALS', ''))
+path.write_text(text)
+PY
 
       - name: Pack artifact
         run: |

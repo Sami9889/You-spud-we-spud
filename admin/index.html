@@ -88,6 +88,12 @@
       padding: 1rem 1rem 1.1rem;
       box-shadow: 0 8px 24px rgba(58, 31, 12, 0.08);
     }
+    .field { margin-bottom: .8rem; }
+    .field label { display: block; font-size: .86rem; margin-bottom: .28rem; color: var(--brown); }
+    .field input {
+      width: 100%; padding: .62rem .72rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .92rem;
+    }
+    .field input:focus { outline: none; border-color: var(--gold); }
     .card-wide { max-width: 100%; }
     .btn-hc {
       display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
@@ -147,8 +153,23 @@
       <h2>Admin sign in</h2>
       <p class="lead">Only authorized organizers can view the review board for submitted spuds.</p>
       <div class="card">
-        <button class="btn-hc" id="admin-oauth">Sign in with Hack Club</button>
-        <p class="note">This uses Hack Club OAuth, and the server checks your email against the configured allowlist before the board can be viewed.</p>
+        <form id="admin-login-form">
+          <div class="field">
+            <label for="admin-username">Username</label>
+            <input id="admin-username" name="username" type="text" autocomplete="username" required />
+          </div>
+          <div class="field">
+            <label for="admin-email">Email</label>
+            <input id="admin-email" name="email" type="email" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label for="admin-password">Password</label>
+            <input id="admin-password" name="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button class="btn-hc" type="submit">Open admin board</button>
+        </form>
+        <div id="admin-login-error" class="alert error" style="display:none;"></div>
+        <p class="note">Credentials are checked server-side against the configured admin secret value.</p>
       </div>
     </div>
 
@@ -182,10 +203,7 @@
   </footer>
 
   <script>
-    const REDIRECT_URI = 'https://youspudwespud.sami-s.dev/admin/';
-    const API_BASE = '/api/oauth';
-    const CLIENT_ID = '';
-    const OAUTH_ENABLED = Boolean(CLIENT_ID && CLIENT_ID !== 'e63922a40cd5f15e2d772276dcba8404');
+    const API_BASE = '/api/admin';
 
     function show(id) {
       document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
@@ -238,115 +256,63 @@
         `;
       }).join('');
     }
-    function base64UrlEncode(buf) {
-      return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    }
-    function getOAuthStore() {
+    function getAdminStore() {
       try { return window.localStorage; } catch (err) { return window.sessionStorage; }
     }
-    function writeOAuthValue(key, value) {
-      const store = getOAuthStore();
+    function writeAdminValue(key, value) {
+      const store = getAdminStore();
       store.setItem(key, value);
     }
-    function readOAuthValue(key) {
-      const store = getOAuthStore();
+    function readAdminValue(key) {
+      const store = getAdminStore();
       return store.getItem(key) || window.sessionStorage.getItem(key);
     }
-    function clearOAuthValues() {
-      const store = getOAuthStore();
-      for (const key of ['oauth_state', 'pkce_verifier', 'admin_user']) {
+    function clearAdminValues() {
+      const store = getAdminStore();
+      for (const key of ['admin_user']) {
         try { store.removeItem(key); } catch (err) {}
         try { window.sessionStorage.removeItem(key); } catch (err) {}
       }
     }
 
-    async function exchangeCode(code, state) {
-      if (state !== readOAuthValue('oauth_state')) {
-        show('s-error');
-        document.getElementById('error-msg').textContent = 'The sign-in state was invalid. Please try again.';
-        return;
-      }
-      const verifier = readOAuthValue('pkce_verifier');
-      if (!verifier) {
-        show('s-error');
-        document.getElementById('error-msg').textContent = 'The sign-in verifier was missing.';
-        return;
-      }
+    document.getElementById('admin-login-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const errorEl = document.getElementById('admin-login-error');
+      errorEl.style.display = 'none';
+      const payload = {
+        username: form.username.value.trim(),
+        email: form.email.value.trim(),
+        password: form.password.value.trim(),
+      };
 
       try {
-        const tokenResponse = await fetch(API_BASE + '/token', {
+        const response = await fetch(API_BASE + '/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'authorization_code',
-            client_id: CLIENT_ID,
-            redirect_uri: REDIRECT_URI,
-            code,
-            code_verifier: verifier,
-          }).toString(),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         });
-        const tokenBody = await tokenResponse.json();
-        if (!tokenResponse.ok) throw new Error(tokenBody.error_description || tokenBody.error || 'Token exchange failed');
-
-        const userResponse = await fetch(API_BASE + '/userinfo', {
-          headers: { Authorization: 'Bearer ' + tokenBody.access_token },
-        });
-        const userBody = await userResponse.json();
-        if (!userResponse.ok) {
-          throw new Error(userBody.error || 'You are not authorized to view the admin board.');
+        const body = await response.json();
+        if (!response.ok || !body.ok) {
+          throw new Error(body.error || 'Invalid admin credentials.');
         }
 
         const user = {
-          name: userBody.name || userBody.preferred_username || 'Admin',
-          email: userBody.email || '',
+          name: body.user?.name || payload.username,
+          email: body.user?.email || payload.email,
         };
-        clearOAuthValues();
-        writeOAuthValue('admin_user', JSON.stringify(user));
+        clearAdminValues();
+        writeAdminValue('admin_user', JSON.stringify(user));
         renderAdminBoard(user);
         show('s-admin');
       } catch (err) {
-        clearOAuthValues();
-        show('s-error');
-        document.getElementById('error-msg').textContent = err.message || 'The admin board could not be opened.';
+        errorEl.textContent = err.message || 'The admin board could not be opened.';
+        errorEl.style.display = 'block';
       }
-    }
-
-    document.getElementById('admin-oauth').addEventListener('click', async () => {
-      if (!OAUTH_ENABLED) {
-        show('s-error');
-        document.getElementById('error-msg').textContent = 'Hack Club OAuth is not configured for this deployment yet.';
-        return;
-      }
-
-      const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
-      const challenge = base64UrlEncode(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
-      const state = crypto.randomUUID();
-      writeOAuthValue('oauth_state', state);
-      writeOAuthValue('pkce_verifier', verifier);
-      const params = new URLSearchParams({
-        redirect_uri: REDIRECT_URI,
-        state,
-        code_challenge: challenge,
-        code_challenge_method: 'S256',
-        client_id: CLIENT_ID,
-      });
-      window.location.href = API_BASE + '/authorize?' + params;
     });
 
-    (async function init() {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      const error = params.get('error');
-      if (error) {
-        show('s-error');
-        document.getElementById('error-msg').textContent = 'Hack Club OAuth was not available for this sign-in.';
-        return;
-      }
-      if (code && OAUTH_ENABLED) {
-        await exchangeCode(code, params.get('state'));
-        return;
-      }
-      const cached = readOAuthValue('admin_user');
+    (function init() {
+      const cached = readAdminValue('admin_user');
       if (cached) {
         renderAdminBoard(JSON.parse(cached));
         show('s-admin');
