@@ -117,7 +117,7 @@ jobs:
           existing_vars['ADMIN_ORDER_TOKEN'] = admin_order_token
           project_data['vars'] = existing_vars
 
-          update_resp = cf('PUT', f'/pages/projects/{project}', project_data)
+          update_resp = cf('PATCH', f'/pages/projects/{project}', project_data)
           if not update_resp.get('success'):
               print(f'Warning: Pages project update response: {update_resp}')
           else:
