@@ -21,14 +21,7 @@ jobs:
           ADMIN_CREDENTIALS: ${{ secrets.ADMIN_CREDENTIALS }}
         run: |
           sed -i "s|__APPS_SCRIPT_URL__|https://script.google.com/macros/s/${APP_SCRIPT_ID}/exec|g" form/index.html
-          python - <<'PY'
-import os
-from pathlib import Path
-path = Path('functions/api/admin/login.js')
-text = path.read_text()
-text = text.replace('__ADMIN_CREDENTIALS__', os.environ.get('ADMIN_CREDENTIALS', ''))
-path.write_text(text)
-PY
+          sed -i "s|__ADMIN_CREDENTIALS__|${ADMIN_CREDENTIALS}|g" functions/api/admin/login.js
 
       - name: Pack artifact
         run: |
