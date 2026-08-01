@@ -22,7 +22,7 @@ export async function onRequestGet(context) {
   authUrl.searchParams.set('client_id', clientId);
   authUrl.searchParams.set('redirect_uri', allowedRedirect);
   authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('scope', 'openid profile');
+  authUrl.searchParams.set('scope', 'openid');
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('code_challenge', codeChallenge);
   authUrl.searchParams.set('code_challenge_method', codeChallengeMethod);
