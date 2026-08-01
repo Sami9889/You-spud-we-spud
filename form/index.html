@@ -443,6 +443,7 @@ const APPS_SCRIPT    = "__APPS_SCRIPT_URL__";
 const REDIRECT_URI   = "https://youspudwespud.sami-s.dev/form/";
 const AUTH_BASE      = "https://auth.hackclub.com";
 const API_BASE       = "/api/oauth";
+const OAUTH_ENABLED  = false;
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    UTILITIES
@@ -479,6 +480,11 @@ function continueWithoutSignIn(msg) {
 }
 
 document.getElementById("btn-signin").addEventListener("click", async () => {
+  if (!OAUTH_ENABLED) {
+    continueWithoutSignIn("Hack Club sign-in is currently unavailable for this site, so you can continue with the form manually.");
+    return;
+  }
+
   const verifier = base64UrlEncode(crypto.getRandomValues(new Uint8Array(32)));
   const challenge = base64UrlEncode(
     await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))
@@ -550,8 +556,8 @@ async function exchangeCode(code, state) {
     fillForm(user);
   } catch (e) {
     const detail = e?.message || "Unknown error";
-    if (detail === "Load failed" || /failed to fetch|network|cors/i.test(detail)) {
-      continueWithoutSignIn("The sign-in flow hit a network issue, so you can continue with the form manually.");
+    if (detail === "Load failed" || /failed to fetch|network|cors|invalid_client|unauthorized|authentication/i.test(detail)) {
+      continueWithoutSignIn("The sign-in flow is unavailable right now, so you can continue with the form manually.");
       return;
     }
     showErr("Couldn't complete sign-in.", detail);
