@@ -140,6 +140,85 @@
     .btn-hc:hover { background: #c00e26; }
     .btn-hc img { height: 20px; width: auto; }
 
+    .admin-card {
+      max-width: 440px;
+      margin: 1.1rem auto 0;
+      text-align: left;
+      background: rgba(241, 230, 200, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1rem 1.1rem;
+      box-shadow: 0 8px 24px rgba(58, 31, 12, 0.08);
+    }
+    .admin-card h3 {
+      font-family: 'Special Elite', monospace;
+      color: var(--brown);
+      font-size: 1rem;
+      margin-bottom: .35rem;
+    }
+    .admin-card .admin-note {
+      color: var(--muted);
+      font-size: .82rem;
+      margin-bottom: .8rem;
+      line-height: 1.5;
+    }
+    .admin-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      margin-top: .6rem;
+    }
+    .admin-actions .btn-hc {
+      padding: .65rem 1rem;
+      font-size: .88rem;
+    }
+    .admin-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .24rem .55rem;
+      border-radius: 999px;
+      background: #f7eed8;
+      border: 1px solid var(--border);
+      color: var(--brown);
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .admin-list {
+      display: grid;
+      gap: .7rem;
+      margin-top: .7rem;
+    }
+    .admin-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #f8efd8;
+      padding: .8rem .85rem;
+    }
+    .admin-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: .25rem;
+    }
+    .admin-meta {
+      font-size: .77rem;
+      color: var(--muted);
+      margin-bottom: .2rem;
+      word-break: break-word;
+    }
+    .admin-link {
+      display: inline-block;
+      margin-top: .35rem;
+      color: var(--brown);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .admin-link:hover { text-decoration: underline; }
+
     /* user bar */
     .ubar {
       display: flex; align-items: center; gap: .75rem;
@@ -319,6 +398,24 @@
     </button>
     <p class="note" style="margin-top:.9rem;">Hack Club OAuth is currently unavailable for this deployment, so this form continues without it.</p>
   </div>
+
+  <div class="admin-card">
+    <h3>Admin review access</h3>
+    <p class="admin-note">Enter an admin email to request a verification link for the review board. We’ll open a mail draft to hello@sami-s.dev with a one-time code.</p>
+    <label for="admin-email">Admin email</label>
+    <input type="email" id="admin-email" placeholder="you@example.com" />
+    <div class="admin-actions">
+      <button type="button" class="btn-hc" id="btn-admin-request">Send verification link</button>
+    </div>
+    <div id="admin-status" class="note" style="display:none; margin-top:.7rem;"></div>
+    <div id="admin-code-box" style="display:none; margin-top:.75rem;">
+      <label for="admin-code">Verification code</label>
+      <input type="text" id="admin-code" placeholder="123456" />
+      <div class="admin-actions">
+        <button type="button" class="btn-hc" id="btn-admin-open" style="background:var(--brown);">Open admin board</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="s-form" class="screen">
@@ -426,6 +523,21 @@
   </form>
 </div>
 
+<div id="s-admin" class="screen">
+  <div class="admin-card" style="max-width: 100%;">
+    <div class="ubar">
+      <div class="ubar-av">🧾</div>
+      <div>
+        <div class="ubar-name">Admin review board</div>
+        <div class="ubar-email">Orders captured from this form</div>
+      </div>
+      <span class="ubar-badge" style="display:inline-block">Verified</span>
+    </div>
+    <div class="sec">Recent orders</div>
+    <div id="admin-orders" class="admin-list"></div>
+  </div>
+</div>
+
 <div id="s-success" class="screen">
   <div class="big">📦</div>
   <h2>Spud submitted!</h2>
@@ -477,6 +589,81 @@ function showErr(msg, detail) {
     el.textContent = typeof detail === "string" ? detail : JSON.stringify(detail, null, 2);
     el.style.display = "block";
   }
+}
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;");
+}
+function getStoredOrders() {
+  try {
+    return JSON.parse(localStorage.getItem("spud_orders") || "[]");
+  } catch (err) {
+    return [];
+  }
+}
+function saveStoredOrders(orders) {
+  localStorage.setItem("spud_orders", JSON.stringify(orders));
+}
+function addStoredOrder(order) {
+  const orders = getStoredOrders();
+  orders.unshift(order);
+  saveStoredOrders(orders.slice(0, 50));
+}
+function requestAdminAccess() {
+  const email = document.getElementById("admin-email").value.trim();
+  const status = document.getElementById("admin-status");
+  const codeBox = document.getElementById("admin-code-box");
+  const codeInput = document.getElementById("admin-code");
+  if (!email) {
+    status.textContent = "Please enter an admin email first.";
+    status.style.display = "block";
+    return;
+  }
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  localStorage.setItem("admin_code", code);
+  localStorage.setItem("admin_email", email);
+  const href = `mailto:hello@sami-s.dev?subject=${encodeURIComponent("Admin verification for You Spud, We Spud")}&body=${encodeURIComponent(`Admin verification request\nEmail: ${email}\nCode: ${code}\nOpen: https://youspudwespud.sami-s.dev/form/?admin=verify&code=${code}`)}`;
+  window.location.href = href;
+  status.textContent = `Verification code ${code} prepared. Open the mail draft or paste it below.`;
+  status.style.display = "block";
+  codeBox.style.display = "block";
+  codeInput.value = code;
+}
+function verifyAdminAccess() {
+  const entered = document.getElementById("admin-code").value.trim();
+  const expected = localStorage.getItem("admin_code") || "";
+  const status = document.getElementById("admin-status");
+  if (entered && entered === expected) {
+    renderAdminBoard();
+    show("s-admin");
+    return;
+  }
+  status.textContent = "That code did not match. Request a new one and try again.";
+  status.style.display = "block";
+}
+function renderAdminBoard() {
+  const orders = getStoredOrders();
+  const container = document.getElementById("admin-orders");
+  if (!orders.length) {
+    container.innerHTML = '<div class="admin-item"><strong>No orders yet.</strong><div class="admin-meta">Submissions will appear here once someone completes the form.</div></div>';
+    return;
+  }
+  container.innerHTML = orders.map(order => `
+    <article class="admin-item">
+      <div class="admin-item-top">
+        <strong>${escapeHtml(order.hc_name || order.ship_name || "Anonymous")}</strong>
+        <span class="admin-pill">${escapeHtml(order.tier || "Pending")}</span>
+      </div>
+      <div class="admin-meta">${escapeHtml(order.hc_email || order.ship_name || "No email")}</div>
+      <div class="admin-meta">Project: ${escapeHtml(order.project_name || "Untitled")}</div>
+      <div class="admin-meta">${escapeHtml(order.project_url || "")}</div>
+      <div class="admin-meta">Submitted: ${escapeHtml(order.timestamp || "")}</div>
+      ${order.project_url ? `<a class="admin-link" href="${escapeHtml(order.project_url)}" target="_blank" rel="noopener">Open project</a>` : ""}
+    </article>
+  `).join("");
 }
 async function base64UrlEncode(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf))
@@ -552,6 +739,8 @@ document.getElementById("btn-signin").addEventListener("click", async () => {
   });
   window.location.href = API_BASE + "/authorize?" + p;
 });
+document.getElementById("btn-admin-request").addEventListener("click", requestAdminAccess);
+document.getElementById("btn-admin-open").addEventListener("click", verifyAdminAccess);
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    STEP 2 — exchange code → token (PKCE, no client_secret)
@@ -684,6 +873,7 @@ document.getElementById("the-form").addEventListener("submit", async e => {
     ship_country: document.getElementById("f-country").value.trim(),
     ship_postal:  document.getElementById("f-postal").value.trim(),
   };
+  addStoredOrder(payload);
 
   const btn = document.getElementById("btn-sub");
   btn.disabled = true;
@@ -697,7 +887,7 @@ document.getElementById("the-form").addEventListener("submit", async e => {
       mode:    "no-cors",
     });
     show("s-success");
-    sessionStorage.clear();
+    sessionStorage.removeItem("hc_user");
   } catch (err) {
     btn.disabled = false;
     btn.textContent = "🥔 Ship My Spud";
@@ -721,6 +911,11 @@ document.getElementById("the-form").addEventListener("submit", async e => {
       errEl.style.display = "block";
     }
     show("s-signin");
+    return;
+  }
+  if (p.get("admin") === "verify" && p.get("code")) {
+    document.getElementById("admin-code").value = p.get("code");
+    verifyAdminAccess();
     return;
   }
   if (code && OAUTH_ENABLED) { await exchangeCode(code, p.get("state")); return; }
