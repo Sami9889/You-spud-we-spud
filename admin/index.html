@@ -410,15 +410,19 @@
     window.deleteOrder = async function(orderId) {
       if (!confirm('Permanently delete this cancelled order?')) return;
       try {
+        const token = await getAdminToken();
         const response = await fetch('/api/orders', {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + (await getAdminToken()),
+            'Authorization': 'Bearer ' + token,
           },
           body: JSON.stringify({ id: orderId }),
         });
-        if (!response.ok) throw new Error('Failed to delete order');
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Delete failed: ${response.status} ${response.statusText} - ${text}`);
+        }
         const orders = await fetchOrders();
         renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
         showToast('Order deleted');
@@ -428,15 +432,19 @@
     };
     async function updateOrder(orderId, updates) {
       try {
+        const token = await getAdminToken();
         const response = await fetch('/api/orders', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + (await getAdminToken()),
+            'Authorization': 'Bearer ' + token,
           },
           body: JSON.stringify({ id: orderId, ...updates }),
         });
-        if (!response.ok) throw new Error('Failed to update order');
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Update failed: ${response.status} ${response.statusText} - ${text}`);
+        }
         const body = await response.json();
         const orders = await fetchOrders();
         renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
