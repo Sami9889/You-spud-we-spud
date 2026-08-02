@@ -5,7 +5,7 @@ export async function onRequest(context) {
     return context.next();
   }
 
-  const publicPaths = ['/api/admin/login', '/api/admin/logout'];
+  const publicPaths = ['/api/admin/login', '/api/admin/logout', '/admin/', '/admin/index.html'];
   if (publicPaths.includes(url.pathname)) {
     return context.next();
   }
