@@ -132,14 +132,25 @@ export async function onRequestPost(context) {
     expirationTtl: 60 * 60 * 24 * 30,
   });
 
+  const isSecure = new URL(context.request.url).protocol === 'https:';
+  const cookieAttributes = [
+    `admin_token=${adminApiToken}`,
+    'Path=/',
+    'Max-Age=2592000',
+    'HttpOnly',
+    'SameSite=Strict',
+    isSecure ? 'Secure' : '',
+  ].filter(Boolean).join('; ');
+
   return new Response(JSON.stringify({ ok: true, user: { name: username, email }, adminApiToken }), {
     status: 200,
     headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer",
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+      'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+      'x-content-type-options': 'nosniff',
+      'referrer-policy': 'no-referrer',
+      'Set-Cookie': cookieAttributes,
     },
   });
 }

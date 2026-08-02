@@ -463,7 +463,15 @@
         try { window.sessionStorage.removeItem(key); } catch (err) {}
       }
     }
-    window.adminLogout = function() {
+    window.adminLogout = async function() {
+      try {
+        await fetch('/api/admin/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        console.error('Logout failed:', err);
+      }
       clearAdminValues();
       show('s-signin');
     };
