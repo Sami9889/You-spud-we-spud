@@ -48,19 +48,22 @@ export function matchesAdminCredential(rawValue, username, email, password) {
 }
 
 export async function onRequestPost(context) {
-  const origin = context.request.headers.get("Origin") || context.request.headers.get("Referer") || "";
-  const allowedOrigin = "https://youspudwespud.sami-s.dev";
-  if (!origin.startsWith(allowedOrigin)) {
-    return new Response(JSON.stringify({ ok: false, error: "Invalid origin." }), {
-      status: 403,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
-    });
+  const origin = context.request.headers.get("Origin");
+  if (origin) {
+    const url = new URL(context.request.url);
+    const allowedOrigin = `${url.protocol}//${url.host}`;
+    if (origin !== allowedOrigin) {
+      return new Response(JSON.stringify({ ok: false, error: "Invalid origin." }), {
+        status: 403,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
+          "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+          "x-content-type-options": "nosniff",
+          "referrer-policy": "no-referrer",
+        },
+      });
+    }
   }
 
   let payload = {};
@@ -124,33 +127,10 @@ export async function onRequestPost(context) {
     });
   }
 
-  const entries = String(rawCredentials)
-    .replace(/\r/g, "")
-    .split(/[\n,;|]+/)
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-
-  let adminApiToken = "";
-  for (const entry of entries) {
-    const parts = entry.split("=").map((part) => part.trim());
-    if (parts.length >= 2 && parts[0] === "admin") {
-      adminApiToken = parts.slice(1).join("=").trim();
-      break;
-    }
-  }
-
-  if (!adminApiToken) {
-    return new Response(JSON.stringify({ ok: false, error: "Server is missing the admin API token entry." }), {
-      status: 500,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
-    });
-  }
+  const adminApiToken = crypto.randomUUID();
+  await context.env.ORDERS.put("admin_api_token", adminApiToken, {
+    expirationTtl: 60 * 60 * 24 * 30,
+  });
 
   return new Response(JSON.stringify({ ok: true, user: { name: username, email }, adminApiToken }), {
     status: 200,

@@ -111,34 +111,16 @@ async function recordRateLimit(env, ip) {
   } catch (err) {}
 }
 
-function isAdminRequest(context) {
-  const adminCredentials = context.env?.ADMIN_CREDENTIALS;
-  if (!adminCredentials) return false;
-
+async function isAdminRequest(context) {
   const auth = context.request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) return false;
 
   const token = auth.slice(7).trim();
   if (!token) return false;
 
-  const entries = String(adminCredentials)
-    .replace(/\r/g, "")
-    .split(/[\n,;|]+/)
-    .map(entry => entry.trim())
-    .filter(Boolean);
-
-   for (const entry of entries) {
-     const parts = entry.split("=").map((part) => part.trim());
-     if (parts.length >= 2 && parts[0] === "admin") {
-       const password = parts.slice(1).join("=").trim();
-       if (password && password === token) {
-         return true;
-       }
-     }
-   }
-
-   return false;
- }
+  const expected = await context.env.ORDERS.get("admin_api_token", "text");
+  return expected === token;
+}
 
 function isSameOrigin(request) {
   const origin = request.headers.get("Origin");
@@ -232,7 +214,7 @@ export async function onRequestPost(context) {
 }
 
 export async function onRequestPatch(context) {
-  if (!isAdminRequest(context)) {
+  if (!(await isAdminRequest(context))) {
     return new Response(JSON.stringify({ error: "Unauthorized." }), {
       status: 401,
       headers: securityHeaders(),
@@ -321,7 +303,7 @@ export async function onRequestPatch(context) {
 }
 
 export async function onRequestDelete(context) {
-  if (!isAdminRequest(context)) {
+  if (!(await isAdminRequest(context))) {
     return new Response(JSON.stringify({ error: "Unauthorized." }), {
       status: 401,
       headers: securityHeaders(),
