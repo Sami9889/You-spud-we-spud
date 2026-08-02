@@ -539,9 +539,10 @@
 
     (async function init() {
       try {
-        const cached = readAdminValue('admin_user');
-        if (cached) {
-          const user = JSON.parse(cached);
+        const cachedUser = readAdminValue('admin_user');
+        const cachedToken = readAdminValue('admin_api_token');
+        if (cachedUser && cachedToken) {
+          const user = JSON.parse(cachedUser);
           const orders = await fetchOrders();
           renderAdminBoard(user, orders);
           show('s-admin');
