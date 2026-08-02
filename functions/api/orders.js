@@ -1,5 +1,9 @@
 const KV_PREFIX = "order:";
 const MAX_KEYS = 1000;
+const RATE_PREFIX = "rate:";
+const RATE_LIMIT = 10;
+const RATE_WINDOW_SEC = 60 * 60;
+const MAX_BODY_BYTES = 1024 * 1024;
 
 function sanitizeString(value) {
   if (typeof value !== "string") return "";
@@ -50,6 +54,10 @@ function serializeOrder(order) {
     ship_state: sanitizeString(order.ship_state),
     ship_country: sanitizeString(order.ship_country),
     ship_postal: sanitizeString(order.ship_postal),
+    deadline: sanitizeString(order.deadline),
+    shipping_id: sanitizeString(order.shipping_id),
+    shipping_status: sanitizeString(order.shipping_status),
+    cancelled: Boolean(order.cancelled),
   };
 }
 
@@ -64,34 +72,122 @@ async function listOrders(env) {
   return orders;
 }
 
+async function findOrderKey(env, orderId) {
+  const list = await env.ORDERS.list({ limit: MAX_KEYS, prefix: KV_PREFIX });
+  for (const key of list.keys) {
+    const raw = await env.ORDERS.get(key.name, "json");
+    if (raw && raw._id === orderId) {
+      return key.name;
+    }
+  }
+  return null;
+}
+
+function clientIp(request) {
+  return (
+    request.headers.get("CF-Connecting-IP") ||
+    request.headers.get("X-Forwarded-For") ||
+    "unknown"
+  );
+}
+
+async function checkRateLimit(env, ip) {
+  if (!ip || ip === "unknown") return true;
+  const key = `${RATE_PREFIX}${ip}`;
+  const count = await env.ORDERS.get(key, "text");
+  if (count && Number(count) >= RATE_LIMIT) {
+    return false;
+  }
+  return true;
+}
+
+async function recordRateLimit(env, ip) {
+  if (!ip || ip === "unknown") return;
+  const key = `${RATE_PREFIX}${ip}`;
+  try {
+    await env.ORDERS.put(key, String(Number((await env.ORDERS.get(key, "text")) || 0) + 1), {
+      expirationTtl: RATE_WINDOW_SEC,
+    });
+  } catch (err) {}
+}
+
+async function isAdminRequest(context) {
+  const auth = context.request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) return false;
+
+  const token = auth.slice(7).trim();
+  if (!token) return false;
+
+  const expected = await context.env.ORDERS.get("admin_api_token", "text");
+  return expected === token;
+}
+
+function isSameOrigin(request) {
+  const origin = request.headers.get("Origin");
+  if (!origin) return true;
+  const url = new URL(request.url);
+  return origin === `${url.protocol}//${url.host}`;
+}
+
+function securityHeaders(extra = {}) {
+  return {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer",
+    ...extra,
+  };
+}
+
 export async function onRequestGet(context) {
   const orders = await listOrders(context.env);
   return new Response(JSON.stringify(orders), {
     status: 200,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer",
-    },
+    headers: securityHeaders(),
   });
 }
 
 export async function onRequestPost(context) {
+  const ip = clientIp(context.request);
+
+  if (!(await checkRateLimit(context.env, ip))) {
+    return new Response(JSON.stringify({ error: "Too many submissions. Please try again later." }), {
+      status: 429,
+      headers: securityHeaders({ "retry-after": String(RATE_WINDOW_SEC) }),
+    });
+  }
+
+  const contentType = context.request.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return new Response(JSON.stringify({ error: "Invalid content type." }), {
+      status: 415,
+      headers: securityHeaders(),
+    });
+  }
+
+  const contentLength = context.request.headers.get("content-length");
+  if (contentLength && Number(contentLength) > MAX_BODY_BYTES) {
+    return new Response(JSON.stringify({ error: "Request body too large." }), {
+      status: 413,
+      headers: securityHeaders(),
+    });
+  }
+
   let payload = {};
   try {
     payload = await context.request.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON payload." }), {
       status: 400,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
+    });
+  }
+
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    return new Response(JSON.stringify({ error: "Invalid payload structure." }), {
+      status: 400,
+      headers: securityHeaders(),
     });
   }
 
@@ -99,13 +195,7 @@ export async function onRequestPost(context) {
   if (!validation.ok) {
     return new Response(JSON.stringify(validation), {
       status: 422,
-      headers: {
-        "content-type": "application/json; charset=utf-8",
-        "cache-control": "no-store",
-        "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-        "x-content-type-options": "nosniff",
-        "referrer-policy": "no-referrer",
-      },
+      headers: securityHeaders(),
     });
   }
 
@@ -115,14 +205,167 @@ export async function onRequestPost(context) {
     expirationTtl: 60 * 60 * 24 * 365,
   });
 
+  await recordRateLimit(context.env, ip);
+
   return new Response(JSON.stringify({ ok: true, id: order._id }), {
     status: 200,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
-      "x-content-type-options": "nosniff",
-      "referrer-policy": "no-referrer",
-    },
+    headers: securityHeaders(),
+  });
+}
+
+export async function onRequestPatch(context) {
+  if (!(await isAdminRequest(context))) {
+    return new Response(JSON.stringify({ error: "Unauthorized." }), {
+      status: 401,
+      headers: securityHeaders(),
+    });
+  }
+
+  if (!isSameOrigin(context.request)) {
+    return new Response(JSON.stringify({ error: "Invalid origin." }), {
+      status: 403,
+      headers: securityHeaders(),
+    });
+  }
+
+  const contentType = context.request.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    return new Response(JSON.stringify({ error: "Invalid content type." }), {
+      status: 415,
+      headers: securityHeaders(),
+    });
+  }
+
+  const contentLength = context.request.headers.get("content-length");
+  if (contentLength && Number(contentLength) > MAX_BODY_BYTES) {
+    return new Response(JSON.stringify({ error: "Request body too large." }), {
+      status: 413,
+      headers: securityHeaders(),
+    });
+  }
+
+  let payload = {};
+  try {
+    payload = await context.request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON payload." }), {
+      status: 400,
+      headers: securityHeaders(),
+    });
+  }
+
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    return new Response(JSON.stringify({ error: "Invalid payload structure." }), {
+      status: 400,
+      headers: securityHeaders(),
+    });
+  }
+
+  const orderId = sanitizeString(payload.id);
+  if (!orderId) {
+    return new Response(JSON.stringify({ error: "Missing order id." }), {
+      status: 400,
+      headers: securityHeaders(),
+    });
+  }
+
+  const key = await findOrderKey(context.env, orderId);
+  if (!key) {
+    return new Response(JSON.stringify({ error: "Order not found." }), {
+      status: 404,
+      headers: securityHeaders(),
+    });
+  }
+
+  const raw = await context.env.ORDERS.get(key, "json");
+  if (!raw) {
+    return new Response(JSON.stringify({ error: "Order not found." }), {
+      status: 404,
+      headers: securityHeaders(),
+    });
+  }
+
+  const allowed = ["cancelled", "shipping_id", "shipping_status", "deadline"];
+  const updates = {};
+  for (const field of allowed) {
+    if (payload[field] !== undefined) {
+      updates[field] = sanitizeString(String(payload[field]));
+    }
+  }
+
+  const updated = { ...raw, ...updates, _ts: new Date().toISOString() };
+  await context.env.ORDERS.put(key, JSON.stringify(updated));
+
+  return new Response(JSON.stringify({ ok: true, order: updated }), {
+    status: 200,
+    headers: securityHeaders(),
+  });
+}
+
+export async function onRequestDelete(context) {
+  if (!(await isAdminRequest(context))) {
+    return new Response(JSON.stringify({ error: "Unauthorized." }), {
+      status: 401,
+      headers: securityHeaders(),
+    });
+  }
+
+  if (!isSameOrigin(context.request)) {
+    return new Response(JSON.stringify({ error: "Invalid origin." }), {
+      status: 403,
+      headers: securityHeaders(),
+    });
+  }
+
+  let payload = {};
+  try {
+    payload = await context.request.json();
+  } catch {
+    payload = {};
+  }
+
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    return new Response(JSON.stringify({ error: "Invalid payload structure." }), {
+      status: 400,
+      headers: securityHeaders(),
+    });
+  }
+
+  const orderId = sanitizeString(payload.id);
+  if (!orderId) {
+    return new Response(JSON.stringify({ error: "Missing order id." }), {
+      status: 400,
+      headers: securityHeaders(),
+    });
+  }
+
+  const key = await findOrderKey(context.env, orderId);
+  if (!key) {
+    return new Response(JSON.stringify({ error: "Order not found." }), {
+      status: 404,
+      headers: securityHeaders(),
+    });
+  }
+
+  const raw = await context.env.ORDERS.get(key, "json");
+  if (!raw) {
+    return new Response(JSON.stringify({ error: "Order not found." }), {
+      status: 404,
+      headers: securityHeaders(),
+    });
+  }
+
+  if (!raw.cancelled) {
+    return new Response(JSON.stringify({ error: "Only cancelled orders can be deleted." }), {
+      status: 400,
+      headers: securityHeaders(),
+    });
+  }
+
+  await context.env.ORDERS.delete(key);
+
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: securityHeaders(),
   });
 }
