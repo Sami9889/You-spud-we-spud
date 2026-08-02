@@ -132,6 +132,11 @@
     .admin-meta { font-size: .77rem; color: var(--muted); margin-bottom: .2rem; word-break: break-word; }
     .admin-link { display:inline-block; margin-top: .35rem; color: var(--brown); font-weight: 700; text-decoration: none; }
     .admin-link:hover { text-decoration: underline; }
+    .admin-toolbar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .7rem; }
+    .admin-toolbar input[type="search"], .admin-toolbar select { flex: 1; min-width: 140px; padding: .45rem .6rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .88rem; }
+    .admin-stats { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .7rem; }
+    .admin-stat { padding: .35rem .6rem; border-radius: 6px; background: #f7eed8; border: 1px solid var(--border); font-size: .78rem; color: var(--brown); font-weight: 700; }
+    .admin-note-input { width: 100%; padding: .45rem .6rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .88rem; margin-top: .4rem; }
     .toast {
       position: fixed;
       top: 1rem;
@@ -206,6 +211,15 @@
           <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="adminLogout()">Log out</button>
         </div>
         <div class="sec">Review board</div>
+        <div class="admin-toolbar">
+          <input type="search" id="admin-search" placeholder="Search name, email, project…" />
+          <select id="admin-sort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="exportOrders()">Export JSON</button>
+        </div>
+        <div id="admin-stats" class="admin-stats"></div>
         <div id="admin-orders" class="admin-list"></div>
       </div>
     </div>
@@ -251,11 +265,32 @@
       const container = document.getElementById('admin-orders');
       document.getElementById('admin-name').textContent = user?.name || 'Admin';
       document.getElementById('admin-email').textContent = user?.email || 'Authorized organizer';
-      if (!orders || !orders.length) {
-        container.innerHTML = '<div class="admin-item"><strong>No orders yet.</strong><div class="admin-meta">Submissions will appear once people finish the form.</div></div>';
+
+      const query = (document.getElementById('admin-search')?.value || '').trim().toLowerCase();
+      const sort = document.getElementById('admin-sort')?.value || 'newest';
+
+      let filtered = orders || [];
+      if (query) {
+        filtered = filtered.filter(order => {
+          const text = [
+            order.hc_name, order.hc_email, order.project_name,
+            order.ship_name, order.phone, order.tier
+          ].join(' ').toLowerCase();
+          return text.includes(query);
+        });
+      }
+      filtered = [...filtered].sort((a, b) => {
+        const ta = new Date(a.timestamp || a._ts || 0).getTime();
+        const tb = new Date(b.timestamp || b._ts || 0).getTime();
+        return sort === 'oldest' ? ta - tb : tb - ta;
+      });
+
+      renderAdminStats(filtered);
+      if (!filtered.length) {
+        container.innerHTML = '<div class="admin-item"><strong>No orders match your search.</strong><div class="admin-meta">Try a different search term.</div></div>';
         return;
       }
-      container.innerHTML = orders.map(order => {
+      container.innerHTML = filtered.map(order => {
         const shipping = [order.ship_name, order.ship_line1, order.ship_line2, [order.ship_city, order.ship_state, order.ship_postal, order.ship_country].filter(Boolean).join(', ')].filter(Boolean).join('<br>');
         const details = [
           ['Contact', `${order.hc_name || order.ship_name || 'Anonymous'} • ${order.hc_email || 'No email'}`],
@@ -290,9 +325,11 @@
             ${!order.cancelled ? `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="saveAdminNote('${order._id}')">Add admin note</button>
             ` : `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="deleteOrder('${order._id}')">Delete order</button>
             `}
+            ${order.admin_note ? `<div class="admin-meta" style="margin-top:.4rem;"><strong>Admin note:</strong> ${escapeHtml(order.admin_note)}</div>` : ''}
           </article>
         `;
       }).join('');
@@ -307,6 +344,43 @@
         return [];
       }
     }
+    function renderAdminStats(orders) {
+      const stats = document.getElementById('admin-stats');
+      if (!stats) return;
+      const total = orders.length;
+      const accepted = orders.filter(o => o.accepted === 'yes').length;
+      const cancelled = orders.filter(o => o.cancelled).length;
+      const overdue = orders.filter(o => o.deadline && new Date(o.deadline) < new Date() && !o.cancelled).length;
+      stats.innerHTML = [
+        ['Total', total],
+        ['Accepted', accepted],
+        ['Cancelled', cancelled],
+        ['Overdue', overdue],
+      ].map(([label, value]) => `<div class="admin-stat"><strong>${value}</strong> ${label}</div>`).join('');
+    }
+    window.applyAdminFilters = function() {
+      const user = JSON.parse(readAdminValue('admin_user') || '{}');
+      fetchOrders().then(orders => {
+        renderAdminBoard(user, orders);
+      });
+    };
+    window.exportOrders = function() {
+      const user = JSON.parse(readAdminValue('admin_user') || '{}');
+      fetchOrders().then(orders => {
+        const blob = new Blob([JSON.stringify(orders, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'spud-orders.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Orders exported');
+      });
+    };
+    window.saveAdminNote = async function(orderId, field, value) {
+      if (!value) return;
+      await updateOrder(orderId, { [field]: value });
+    };
     async function getAdminToken() {
       try { return sessionStorage.getItem('admin_api_token') || ''; } catch (err) { return ''; }
     }
@@ -319,6 +393,11 @@
       if (shippingId === null) return;
       const shippingStatus = prompt('Shipping status (e.g. Shipped, In transit, Delivered):') || 'Shipped';
       await updateOrder(orderId, { shipping_id: shippingId, shipping_status: shippingStatus });
+    };
+    window.saveAdminNote = async function(orderId) {
+      const note = prompt('Admin note for this order:');
+      if (note === null) return;
+      await updateOrder(orderId, { admin_note: note });
     };
     window.deleteOrder = async function(orderId) {
       if (!confirm('Permanently delete this cancelled order?')) return;
@@ -429,6 +508,10 @@
           const orders = await fetchOrders();
           renderAdminBoard(user, orders);
           show('s-admin');
+          const search = document.getElementById('admin-search');
+          const sort = document.getElementById('admin-sort');
+          if (search) search.addEventListener('input', applyAdminFilters);
+          if (sort) sort.addEventListener('change', applyAdminFilters);
           return;
         }
       } catch (err) {

@@ -57,6 +57,7 @@ function serializeOrder(order) {
     deadline: sanitizeString(order.deadline),
     shipping_id: sanitizeString(order.shipping_id),
     shipping_status: sanitizeString(order.shipping_status),
+    admin_note: sanitizeString(order.admin_note),
     cancelled: Boolean(order.cancelled),
   };
 }
@@ -285,7 +286,7 @@ export async function onRequestPatch(context) {
     });
   }
 
-  const allowed = ["cancelled", "shipping_id", "shipping_status", "deadline"];
+  const allowed = ["cancelled", "shipping_id", "shipping_status", "deadline", "admin_note"];
   const updates = {};
   for (const field of allowed) {
     if (payload[field] !== undefined) {
