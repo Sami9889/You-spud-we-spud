@@ -423,8 +423,12 @@
           const text = await response.text();
           throw new Error(`Delete failed: ${response.status} ${response.statusText} - ${text}`);
         }
-        const orders = await fetchOrders();
-        renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
+        try {
+          const orders = await fetchOrders();
+          renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
+        } catch (uiErr) {
+          throw new Error('Delete succeeded, but refreshing the board failed: ' + (uiErr.message || uiErr));
+        }
         showToast('Order deleted');
       } catch (err) {
         alert(err.message || 'Failed to delete order');
@@ -445,9 +449,18 @@
           const text = await response.text();
           throw new Error(`Update failed: ${response.status} ${response.statusText} - ${text}`);
         }
-        const body = await response.json();
-        const orders = await fetchOrders();
-        renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
+        let body;
+        try {
+          body = await response.json();
+        } catch (parseErr) {
+          throw new Error('Update succeeded but response was not valid JSON.');
+        }
+        try {
+          const orders = await fetchOrders();
+          renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
+        } catch (uiErr) {
+          throw new Error('Update succeeded, but refreshing the board failed: ' + (uiErr.message || uiErr));
+        }
         showToast('Order updated');
       } catch (err) {
         alert(err.message || 'Failed to update order');
