@@ -5,6 +5,11 @@ export async function onRequest(context) {
     return context.next();
   }
 
+  const publicPaths = ['/api/admin/login', '/api/admin/logout'];
+  if (publicPaths.includes(url.pathname)) {
+    return context.next();
+  }
+
   const cookieHeader = context.request.headers.get('Cookie') || '';
   const match = cookieHeader.match(/admin_token=([^;]+)/);
   if (!match) {
