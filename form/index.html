@@ -253,6 +253,7 @@
 
     input[type="text"], input[type="url"],
     input[type="number"], input[type="tel"], input[type="email"],
+    input[type="date"],
     textarea {
       width: 100%; padding: .58rem .72rem;
       border: 1px solid var(--border); border-radius: 6px;
@@ -261,6 +262,7 @@
       margin-bottom: .9rem; appearance: none;
       transition: border-color .15s;
     }
+    input[type="checkbox"] { accent-color: var(--brown); width: 1.1rem; height: 1.1rem; }
     input:focus, textarea:focus { outline: none; border-color: var(--gold); }
     textarea { resize: vertical; min-height: 85px; }
 
@@ -536,13 +538,17 @@
     </div>
 
     <div class="sec">Extra</div>
-    <label for="f-deadline">Deadline / event date (optional)</label>
-    <input type="date" id="f-deadline" />
-    <p class="note">If this is time-sensitive, add a date so it shows up in the review board.</p>
+    <label for="f-deadline">Deadline / event date <span class="req">*</span></label>
+    <input type="date" id="f-deadline" required />
+    <p class="note">If this is time-sensitive, add a date so it shows up in the review board. Leave blank if there’s no deadline.</p>
 
-    <label for="f-shipping-id">Shipping / tracking ID (optional)</label>
-    <input type="text" id="f-shipping-id" placeholder="If you already have one" />
-    <p class="note">You can leave this blank and add it later.</p>
+    <div class="field" style="margin-top:.6rem;">
+      <label style="display:flex; align-items:flex-start; gap:.45rem; margin-bottom:0;">
+        <input type="checkbox" id="f-accept" required />
+        <span>I agree to the submission rules and understand this is a real, tiny-project request.</span>
+      </label>
+      <p class="note" style="margin-top:.35rem;">Checking this box means you’re submitting something real and following the size rules above.</p>
+    </div>
 
     <button type="submit" class="btn-submit" id="btn-sub">🥔 Ship My Spud</button>
   </form>
@@ -696,24 +702,23 @@ function fillForm(user) {
       ["f-sname","full name"],    ["f-phone","phone number"],
       ["f-l1","address line 1"],  ["f-city","city"],
       ["f-country","country"],    ["f-postal","postal code"],
+      ["f-deadline","deadline"],  ["f-accept","acceptance checkbox"],
     ];
     for (const [id, label] of required) {
-      if (!document.getElementById(id).value.trim()) {
+      if (!document.getElementById(id).value.trim() && id !== "f-accept") {
         document.getElementById(id).focus();
         errEl.textContent = "Please fill in: " + label + ".";
         errEl.style.display = "block";
         errEl.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
-    }
-
-    const deadline = document.getElementById("f-deadline").value;
-    if (deadline && new Date(deadline) < new Date()) {
-      document.getElementById("f-deadline").focus();
-      errEl.textContent = "Deadline cannot be in the past.";
-      errEl.style.display = "block";
-      errEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
+      if (id === "f-accept" && !document.getElementById(id).checked) {
+        document.getElementById(id).focus();
+        errEl.textContent = "Please accept the submission rules before continuing.";
+        errEl.style.display = "block";
+        errEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
     }
 
    const user = JSON.parse(sessionStorage.getItem("hc_user") || "{}");
@@ -740,7 +745,7 @@ function fillForm(user) {
       ship_country: document.getElementById("f-country").value.trim(),
       ship_postal:  document.getElementById("f-postal").value.trim(),
       deadline:     document.getElementById("f-deadline").value || "",
-      shipping_id:  document.getElementById("f-shipping-id").value.trim(),
+      accepted:     document.getElementById("f-accept").checked ? "yes" : "no",
     };
   const btn = document.getElementById("btn-sub");
   btn.disabled = true;
