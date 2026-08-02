@@ -629,11 +629,6 @@ function showToast(message, type = "success") {
   requestAnimationFrame(() => toast.classList.add("show"));
   setTimeout(() => toast.classList.remove("show"), 3200);
 }
-  toast.textContent = message;
-  toast.className = "toast " + type;
-  requestAnimationFrame(() => toast.classList.add("show"));
-  setTimeout(() => toast.classList.remove("show"), 3200);
-}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     STEP 1 — manual sign-in
