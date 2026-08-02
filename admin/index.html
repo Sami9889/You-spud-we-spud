@@ -261,6 +261,12 @@
       requestAnimationFrame(() => toast.classList.add('show'));
       setTimeout(() => toast.classList.remove('show'), 3200);
     }
+    function isValidProjectUrl(url) {
+      if (!url || typeof url !== 'string') return false;
+      const trimmed = url.trim();
+      if (!trimmed) return false;
+      return /^https?:\/\//i.test(trimmed);
+    }
     function renderAdminBoard(user, orders) {
       const container = document.getElementById('admin-orders');
       document.getElementById('admin-name').textContent = user?.name || 'Admin';
@@ -313,6 +319,8 @@
         const cancelled = order.cancelled ? '<span class="admin-pill" style="background:var(--red);color:#fff;">Cancelled</span>' : '';
         const overdue = order.deadline && new Date(order.deadline) < new Date() && !order.cancelled ? '<span class="admin-pill" style="background:var(--red);color:#fff;">Overdue</span>' : '';
         const accepted = order.accepted === 'yes' ? '<span class="admin-pill" style="background:var(--green);color:#fff;">Accepted</span>' : '';
+        const projectHref = isValidProjectUrl(order.project_url) ? escapeHtml(order.project_url) : '#';
+        const projectOnClick = isValidProjectUrl(order.project_url) ? '' : ' onclick="event.preventDefault();"';
         return `
           <article class="admin-item${order.cancelled ? ' cancelled' : ''}">
             <div class="admin-item-top">
@@ -321,7 +329,7 @@
               <span class="admin-pill">${escapeHtml(order.tier || 'Pending')}</span>
             </div>
             ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}
-            ${order.project_url ? `<a class="admin-link" href="${escapeHtml(order.project_url)}" target="_blank" rel="noopener">Open project</a>` : ''}
+            ${order.project_url ? `<a class="admin-link" href="${projectHref}" target="_blank" rel="noopener"${projectOnClick}>Open project</a>` : ''}
             ${!order.cancelled ? `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
