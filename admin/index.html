@@ -390,7 +390,7 @@
       await updateOrder(orderId, { [field]: value });
     };
     async function getAdminToken() {
-      try { return sessionStorage.getItem('admin_api_token') || ''; } catch (err) { return ''; }
+      try { return readAdminValue('admin_api_token') || ''; } catch (err) { return ''; }
     }
     window.cancelOrder = async function(orderId) {
       if (!confirm('Cancel this order?')) return;
@@ -497,7 +497,7 @@
         clearAdminValues();
         writeAdminValue('admin_user', JSON.stringify(user));
         if (body.adminApiToken) {
-          try { sessionStorage.setItem('admin_api_token', body.adminApiToken); } catch (err) {}
+          writeAdminValue('admin_api_token', body.adminApiToken);
         }
         const orders = await fetchOrders();
         renderAdminBoard(user, orders);
