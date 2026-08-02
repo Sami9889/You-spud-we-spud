@@ -715,15 +715,23 @@ function fillForm(user) {
     INIT
     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 (function init() {
-  let user = null;
   try {
-    user = JSON.parse(sessionStorage.getItem("hc_user") || "null");
-  } catch (err) {}
-  if (user) {
-    fillForm(user);
-    return;
+    const cached = sessionStorage.getItem("hc_user");
+    const user = cached ? JSON.parse(cached) : null;
+    if (user && user.name) {
+      fillForm(user);
+      return;
+    }
+    show("s-signin");
+  } catch (err) {
+    console.error("Form init failed:", err);
+    const el = document.getElementById("signin-err");
+    if (el) {
+      el.textContent = "Something went wrong while loading the form. Please refresh.";
+      el.style.display = "block";
+    }
+    show("s-signin");
   }
-  show("s-signin");
 })();
 </script>
 
