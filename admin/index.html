@@ -218,6 +218,7 @@
             <option value="oldest">Oldest first</option>
           </select>
           <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="exportOrders()">Export JSON</button>
+          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--green);" onclick="migrateOrders()">Remove expiry</button>
         </div>
         <div id="admin-stats" class="admin-stats"></div>
         <div id="admin-orders" class="admin-list"></div>
@@ -384,6 +385,29 @@
         URL.revokeObjectURL(url);
         showToast('Orders exported');
       });
+    };
+    window.migrateOrders = async function() {
+      if (!confirm('Remove expiry from all existing orders? This rewrites every order record.')) return;
+      try {
+        const token = await getAdminToken();
+        const response = await fetch('/api/admin/migrate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Migration failed: ${response.status} ${response.statusText} - ${text}`);
+        }
+        const body = await response.json();
+        showToast(`Removed expiry from ${body.migrated || 0} orders`);
+        const orders = await fetchOrders();
+        renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
+      } catch (err) {
+        alert(err.message || 'Migration failed');
+      }
     };
     window.saveAdminNote = async function(orderId, field, value) {
       if (!value) return;
