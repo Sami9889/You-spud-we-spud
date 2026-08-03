@@ -202,9 +202,7 @@ export async function onRequestPost(context) {
 
   const order = serializeOrder(payload);
   const key = `${KV_PREFIX}${Date.now()}:${crypto.randomUUID()}`;
-  await context.env.ORDERS.put(key, JSON.stringify(order), {
-    expirationTtl: 60 * 60 * 24 * 365,
-  });
+  await context.env.ORDERS.put(key, JSON.stringify(order));
 
   await recordRateLimit(context.env, ip);
 
