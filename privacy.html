@@ -82,21 +82,6 @@
       box-shadow: 0 8px 24px rgba(58, 31, 12, 0.08);
       margin-bottom: 1.25rem;
     }
-    .field { margin-bottom: .8rem; }
-    .field label { display: block; font-size: .86rem; margin-bottom: .28rem; color: var(--brown); font-weight: 700; }
-    .field input, .field select {
-      width: 100%; padding: .62rem .72rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .92rem;
-    }
-    .field input:focus, .field select:focus { outline: none; border-color: var(--gold); }
-    .kv-table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
-    .kv-table th { text-align: left; padding: .5rem .6rem; background: var(--brown); color: var(--paper); font-weight: 700; font-family: 'Space Mono', monospace; font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; }
-    .kv-table td { padding: .55rem .6rem; border-bottom: 1px solid var(--border); color: var(--muted); vertical-align: top; }
-    .kv-table tr:last-child td { border-bottom: none; }
-    .kv-table tr:nth-child(even) td { background: rgba(58,31,12,0.04); }
-    .pill { display:inline-block; padding:.18rem .5rem; border-radius:99px; background:#f7eed8; border:1px solid var(--border); color:var(--brown); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-    .pill.green { background: #e8f5e9; border-color: #a5d6a7; color: var(--green); }
-    .pill.red { background: #ffebee; border-color: #ef9a9a; color: var(--red); }
-    .note { font-size: .82rem; color: var(--muted); margin-top: .85rem; line-height: 1.5; }
     footer { border-top: 2px dashed var(--border); padding: 2rem; text-align: center; font-size: .78rem; color: var(--muted); font-family: 'Space Mono', monospace; }
   </style>
 </head>
@@ -108,97 +93,27 @@
   </nav>
 
   <div class="container">
-    <h1>Privacy & data storage</h1>
-    <p>This page explains what is stored, where it is stored, who can see it, and how reviewers handle submissions. This project is meant to be transparent by default.</p>
+    <h1>Privacy</h1>
+    <p>Short version: submissions stay private, no public list, no weird data sharing.</p>
 
-    <h2>What gets stored</h2>
+    <h2>What we store</h2>
     <div class="card">
-      <p>When you submit through the form, these fields are saved:</p>
-      <table class="kv-table">
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Purpose</th>
-            <th>Visibility</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Submission metadata</td>
-            <td>Timestamp and internal ID for ordering and review.</td>
-            <td><span class="pill green">Private</span></td>
-          </tr>
-          <tr>
-            <td>Contact info</td>
-            <td>Name, email, Slack ID, phone, and Hack Club verification status.</td>
-            <td><span class="pill green">Private</span></td>
-          </tr>
-          <tr>
-            <td>Project info</td>
-            <td>Project name, live URL, source repo URL, file size, description, and tier.</td>
-            <td><span class="pill green">Private</span></td>
-          </tr>
-          <tr>
-            <td>Shipping info</td>
-            <td>Name, address lines, city, state, postal code, and country.</td>
-            <td><span class="pill green">Private</span></td>
-          </tr>
-          <tr>
-            <td>Deadline</td>
-            <td>Optional deadline set by the reviewer for shipping.</td>
-            <td><span class="pill green">Private</span></td>
-          </tr>
-          <tr>
-            <td>Shipping ID / status</td>
-            <td>Tracking number and status like “Shipped”, “In transit”, or “Delivered”.</td>
-            <td><span class="pill green">Private</span></td>
-          </tr>
-          <tr>
-            <td>Admin note</td>
-            <td>Internal reviewer notes attached to a submission.</td>
-            <td><span class="pill red">Admin only</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h2>Where it is stored</h2>
-    <div class="card">
-      <p>Submissions are stored in Cloudflare KV under keys prefixed with <code>order:</code>. The KV namespace is named <code>ORDERS</code>. Each record is a JSON object. Keys are generated from a timestamp plus a random UUID, so they are not guessable from the outside.</p>
-      <p>The admin login token is also stored in KV under the key <code>admin_api_token</code>. On successful login, the server sets an <code>HttpOnly</code> cookie named <code>admin_token</code> to authenticate later admin requests.</p>
-      <p>There is no external database. Everything lives in the Workers KV binding configured for this project.</p>
+      <p>Name, email, Slack ID, phone, project link, repo link, file size, description, shipping address, and any admin notes. We don’t sell or share this.</p>
     </div>
 
     <h2>Who can see it</h2>
     <div class="card">
-      <p><strong>Public visitors:</strong> cannot see any submissions. There is no public order list or public API for orders.</p>
-      <p><strong>Logged-in admins:</strong> can see all submissions in the admin review board, including contact info, project info, and shipping info. They can also add admin notes and update shipping status.</p>
-      <p><strong>Reviewer/training role:</strong> not yet implemented. Right now, admin access is all-or-nothing via the configured admin credentials.</p>
+      <p>No one on the public web can see submissions. Only logged-in admins can access the review board. There isn’t a separate reviewer role yet; right now it’s all-or-nothing.</p>
     </div>
 
-    <h2>How reviewers handle submissions</h2>
+    <h2>How long we keep it</h2>
     <div class="card">
-      <p>Reviewers check each submission by hand against the rules. They can:</p>
-      <ul>
-        <li>Mark a submission as accepted or not.</li>
-        <li>Add a private admin note with context for shipping.</li>
-        <li>Set a deadline by which the project should be ready to ship.</li>
-        <li>Update shipping ID and status once the parcel is mailed.</li>
-        <li>Cancel an order if needed.</li>
-        <li>Delete a cancelled order record.</li>
-      </ul>
-      <p class="note">Reviewer actions are not exposed publicly. Only admins can see and change submission state.</p>
+      <p>Submissions stay until they’re manually deleted. The only auto-expiring data is a 1-hour rate-limit counter to stop spam.</p>
     </div>
 
-    <h2>Data retention</h2>
+    <h2>Questions or removal</h2>
     <div class="card">
-      <p>Order records do not expire unless explicitly deleted. The admin token and order records are written without TTL so they persist until manually removed.</p>
-      <p>Rate-limit keys still expire after 1 hour as part of normal abuse prevention.</p>
-    </div>
-
-    <h2>Contact</h2>
-    <div class="card">
-      <p>If you want your data removed, or have questions about how it is handled, ask <strong>@sami9889</strong> in <strong>#ship</strong> on Hack Club Slack.</p>
+      <p>If you want your submission removed, or have any questions, DM <strong>@sami9889</strong> in <strong>#ship</strong> on Hack Club Slack.</p>
     </div>
   </div>
 
