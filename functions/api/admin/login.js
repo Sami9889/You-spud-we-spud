@@ -128,9 +128,7 @@ export async function onRequestPost(context) {
   }
 
   const adminApiToken = crypto.randomUUID();
-  await context.env.ORDERS.put("admin_api_token", adminApiToken, {
-    expirationTtl: 60 * 60 * 24 * 30,
-  });
+  await context.env.ORDERS.put("admin_api_token", adminApiToken);
 
   const isSecure = new URL(context.request.url).protocol === 'https:';
   const cookieAttributes = [
