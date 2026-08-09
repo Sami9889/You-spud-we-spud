@@ -51,3 +51,90 @@ review:
   size_must_match_tier: true
   auto_accept_ultra: true
   require_manual_review: true
+
+github_check:
+  enabled: true
+  default_branch: main
+  include_extensions:
+    - .js
+    - .html
+    - .css
+    - .ts
+    - .tsx
+    - .jsx
+    - .mjs
+    - .cjs
+    - .json
+  exclude_extensions:
+    - .md
+    - .png
+    - .jpg
+    - .jpeg
+    - .gif
+    - .svg
+    - .ico
+    - .woff
+    - .woff2
+    - .ttf
+    - .eot
+    - .yaml
+    - .yml
+    - .toml
+    - .lock
+    - .map
+    - .pdf
+  declared_vs_actual_warn_ratio: 1.0
+  declared_vs_actual_fail_ratio: 1.0
+  require_https_urls: true
+  strict_size_limit: true
+  forbidden_files:
+    - package.json
+    - package-lock.json
+    - yarn.lock
+    - pnpm-lock.yaml
+    - webpack.config.js
+    - webpack.config.ts
+    - vite.config.js
+    - vite.config.ts
+    - rollup.config.js
+    - rollup.config.ts
+    - parcel.config.js
+    - gulpfile.js
+    - Gruntfile.js
+    - turbo.json
+    - nx.json
+    - lerna.json
+    - .babelrc
+    - babel.config.js
+    - tsconfig.json
+    - jsconfig.json
+    - .eslintrc
+    - .prettierrc
+    - tailwind.config.js
+    - tailwind.config.ts
+  forbidden_dirs:
+    - node_modules
+    - dist
+    - build
+    - .next
+    - .nuxt
+    - .output
+    - vendor
+  forbidden_patterns:
+    - "import React"
+    - "from 'react'"
+    - "from \"react\""
+    - "import Vue"
+    - "from 'vue'"
+    - "from \"vue\""
+    - "import Angular"
+    - "from '@angular'"
+    - "require('react')"
+    - "require(\"react\")"
+    - "require('vue')"
+    - "require(\"vue\")"
+    - "webpack"
+    - "vite"
+    - "rollup"
+    - "parcel"
+    - "browserify"
