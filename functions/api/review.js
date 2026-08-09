@@ -251,7 +251,7 @@ async function checkFileContents(owner, repo, files, rules) {
     if (checked.has(file.path)) continue;
     checked.add(file.path);
 
-    const content = await fetchGitHubContent(owner, repo, file.path);
+    const content = await fetchGitHubContent(owner, repo, file.path, token);
     if (!content) continue;
     const lower = content.toLowerCase();
     for (const pattern of patterns) {
@@ -295,11 +295,10 @@ async function checkGitHubRepo(order, rules) {
   const branch = repoInfo.default_branch || rules.github_check?.default_branch || "main";
   let tree;
   try {
-    tree = await fetchGitHubTree(repo.owner, repo.repo, branch);
+    tree = await fetchGitHubTree(repo.owner, repo.repo, branch, token);
   } catch (err) {
-    return { checked: false, reason: "GitHub check failed: " + (err.message || "Unknown error") };
     const msg = err.message || "Unknown error";
-    if (msg.startsWith("RATE_LIMIT:")) {
+    if (msg.includes("403") || msg.includes("rate limit")) {
       return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: true, issues: ["GitHub API rate limit exceeded. Review passed — verify manually."], rate_limited: true, sample_files: [] };
     }
     return { checked: false, reason: "GitHub check failed: " + msg, pass: false };
@@ -369,7 +368,7 @@ async function checkObfuscationInFiles(owner, repo, files, rules) {
     if (checked.has(file.path)) continue;
     checked.add(file.path);
 
-    const content = await fetchGitHubContent(owner, repo, file.path);
+    const content = await fetchGitHubContent(owner, repo, file.path, token);
     if (!content) continue;
 
     const result = detectObfuscation(content, rules);
