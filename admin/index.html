@@ -335,6 +335,7 @@
             ${!order.cancelled ? `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="reviewOrder('${order._id}')">Review</button>
+              ${order.manual_review ? `<button class="btn-hc" style="margin-top:.5rem;background:var(--green);color:white;" onclick="revokeManualReview('${order._id}')">Revoke manual review</button>` : `<button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="manualReview('${order._id}')">Manually review</button>`}
               <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="saveAdminNote('${order._id}')">Add admin note</button>
             ` : `
@@ -461,6 +462,9 @@
         if (fields.soft_missing && fields.soft_missing.length) {
           html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--gold);"><strong>Missing (legacy):</strong> ' + escapeHtml(fields.soft_missing.join(', ')) + '</div>';
         }
+        if (r.manual) {
+          html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ' + escapeHtml(r.reason || 'Approved') + ' at ' + escapeHtml(r.at ? new Date(r.at).toLocaleString() : '') + '</div>';
+        }
         if (!fields.pass && fields.missing && fields.missing.length) {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>Missing:</strong> ' + escapeHtml(fields.missing.join(', ')) + '</div>';
         }
@@ -472,6 +476,17 @@
       } catch (err) {
         el.innerHTML = '<div style="margin-top:.4rem; color:var(--red);">Review error: ' + escapeHtml(err.message || 'Unknown error') + '</div>';
       }
+    };
+    window.manualReview = async function(orderId) {
+      const reason = prompt('Manual review reason (optional):');
+      if (reason === null) return;
+      await updateOrder(orderId, { manual_review: true, manual_review_reason: reason || 'Manually approved', manual_review_at: new Date().toISOString() });
+      showToast('Order manually reviewed');
+    };
+    window.revokeManualReview = async function(orderId) {
+      if (!confirm('Revoke manual review for this order?')) return;
+      await updateOrder(orderId, { manual_review: false, manual_review_reason: '', manual_review_at: '' });
+      showToast('Manual review revoked');
     };
     window.updateShipping = async function(orderId) {
       const shippingId = prompt('Shipping ID / tracking number:');

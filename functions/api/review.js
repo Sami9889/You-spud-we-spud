@@ -427,6 +427,45 @@ export async function onRequestGet(context) {
   }
 
   const rules = await getRules(context.env);
+  
+  if (order.manual_review) {
+    const orderForReview = {
+      _id: order._id,
+      project_name: order.project_name,
+      project_url: order.project_url,
+      source_url: order.source_url,
+      file_size_kb: order.file_size_kb,
+      description: order.description,
+      tier: order.tier,
+      hc_name: order.hc_name,
+      hc_email: order.hc_email,
+      hc_verified: order.hc_verified,
+      deadline: order.deadline,
+      accepted: order.accepted,
+      manual_review: order.manual_review,
+      manual_review_reason: order.manual_review_reason,
+      manual_review_at: order.manual_review_at,
+    };
+    return new Response(JSON.stringify({
+      ok: true,
+      order_id: orderId,
+      review: {
+        passed: true,
+        manual: true,
+        reason: order.manual_review_reason || 'Manually approved',
+        at: order.manual_review_at,
+        tier: validateTier(order, rules),
+        fields: validateRequiredFields(order, rules),
+        urls: validateUrls(order, rules),
+        github: { checked: false, reason: "Skipped due to manual review." },
+      },
+      order: orderForReview,
+    }), {
+      status: 200,
+      headers: securityHeaders(),
+    });
+  }
+  
   const tierCheck = validateTier(order, rules);
   const fieldsCheck = validateRequiredFields(order, rules);
   const urlCheck = validateUrls(order, rules);
