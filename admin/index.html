@@ -450,11 +450,16 @@
         if (gh.checked) {
           const sizeOver = gh.actual_kb > gh.tier_limit_kb;
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>GitHub:</strong> ' + escapeHtml(gh.repo || '') + ' (' + escapeHtml(gh.branch || '') + ') — actual: ' + escapeHtml(String(gh.actual_kb || '?')) + ' KB / tier limit: ' + escapeHtml(String(gh.tier_limit_kb || '?')) + ' KB — ' + escapeHtml(String(gh.files_checked || '?')) + ' files' + (sizeOver ? ' <span style="color:var(--red);">(over limit)</span>' : '') + '</div>';
-          if (gh.issues && gh.issues.length) {
+          if (gh.rate_limited) {
+            html += '<div class="admin-meta" style="margin-top:.15rem; color:var(--gold);"><strong>Note:</strong> ' + escapeHtml((gh.issues || [])[0] || 'Rate limited') + '</div>';
+          } else if (gh.issues && gh.issues.length) {
             html += '<div class="admin-meta" style="margin-top:.15rem;"><strong>GitHub issues:</strong> ' + escapeHtml(gh.issues.join('; ')) + '</div>';
           }
         } else {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>GitHub:</strong> ' + escapeHtml(gh.reason || 'Not checked') + '</div>';
+        }
+        if (fields.soft_missing && fields.soft_missing.length) {
+          html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--gold);"><strong>Missing (legacy):</strong> ' + escapeHtml(fields.soft_missing.join(', ')) + '</div>';
         }
         if (!fields.pass && fields.missing && fields.missing.length) {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>Missing:</strong> ' + escapeHtml(fields.missing.join(', ')) + '</div>';

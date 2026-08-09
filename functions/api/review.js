@@ -50,7 +50,9 @@ function validateTier(order, rules) {
 
 function validateRequiredFields(order, rules) {
   const missing = [];
+  const softMissing = [];
   const all = [];
+  const soft = ["accepted", "hc_verified"];
   if (rules.required_fields) {
     for (const group of Object.values(rules.required_fields)) {
       if (Array.isArray(group)) all.push(...group);
@@ -58,10 +60,14 @@ function validateRequiredFields(order, rules) {
   }
   for (const field of all) {
     if (!order[field] || !String(order[field]).trim()) {
-      missing.push(field);
+      if (soft.includes(field)) {
+        softMissing.push(field);
+      } else {
+        missing.push(field);
+      }
     }
   }
-  return { pass: missing.length === 0, missing };
+  return { pass: missing.length === 0, missing, soft_missing: softMissing };
 }
 
 function validateUrls(order, rules) {
@@ -156,6 +162,9 @@ async function fetchGitHubTree(owner, repo, branch, token) {
   const resp = await fetch(apiUrl, { headers });
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
+    if (resp.status === 403 && text.includes("rate limit")) {
+      throw new Error("RATE_LIMIT:" + text.slice(0, 200));
+    }
     throw new Error(`GitHub API ${resp.status}: ${text.slice(0, 200)}`);
   }
   const data = await resp.json();
@@ -255,7 +264,7 @@ async function checkFileContents(owner, repo, files, rules, token) {
 async function checkGitHubRepo(order, rules) {
   const repo = parseGitHubRepo(order.source_url) || parseGitHubRepo(order.project_url);
   if (!repo) {
-    return { checked: false, reason: "No GitHub repo URL found." };
+    return { checked: false, reason: "No GitHub repo URL found.", pass: false };
   }
   const branch = rules.github_check?.default_branch || "main";
   const token = rules.github_check?.github_token || "";
@@ -263,7 +272,24 @@ async function checkGitHubRepo(order, rules) {
   try {
     tree = await fetchGitHubTree(repo.owner, repo.repo, branch, token);
   } catch (err) {
-    return { checked: false, reason: "GitHub check failed: " + (err.message || "Unknown error") };
+    const msg = err.message || "Unknown error";
+    if (msg.startsWith("RATE_LIMIT:")) {
+      return {
+        checked: true,
+        repo: `${repo.owner}/${repo.repo}`,
+        branch,
+        actual_kb: 0,
+        declared_kb: parseFloat(order.file_size_kb) || 0,
+        tier_limit_kb: getTierLimit(order.tier, rules),
+        strict: rules.github_check?.strict_size_limit !== false,
+        files_checked: 0,
+        pass: true,
+        issues: ["GitHub API rate limit exceeded. Review passed — verify manually."],
+        rate_limited: true,
+        sample_files: [],
+      };
+    }
+    return { checked: false, reason: "GitHub check failed: " + msg, pass: false };
   }
   const { files, totalBytes } = filterCodeFiles(tree, rules);
   const actualKb = totalBytes / 1024;

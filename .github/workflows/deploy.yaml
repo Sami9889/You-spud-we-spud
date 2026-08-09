@@ -28,6 +28,7 @@ jobs:
           token = os.environ['CF_ACCOUNT_TOKEN']
           account_id = os.environ['CF_ACCOUNT_ID']
           project = 'youspudwespud'
+          github_token = os.environ.get('GITHUB_TOKEN', '')
           
           def cf(method, path, data=None):
               url = f'https://api.cloudflare.com/client/v4/accounts/{account_id}{path}'
@@ -83,6 +84,14 @@ jobs:
               rules = yaml.safe_load(yaml_text)
           
           if rules:
+              if github_token:
+                  if 'github_check' not in rules:
+                      rules['github_check'] = {}
+                  rules['github_check']['github_token'] = github_token
+                  print('Injected GitHub token into rules')
+              else:
+                  print('No GITHUB_TOKEN secret provided, skipping token injection')
+              
               rules_key = 'rules'
               put_resp = cf('PUT', f'/storage/kv/namespaces/{kv_id}/values/{rules_key}', rules)
               if put_resp.get('success'):
