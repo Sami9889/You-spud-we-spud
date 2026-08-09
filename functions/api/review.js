@@ -86,7 +86,10 @@ function validateUrls(order, rules) {
 
 function parseGitHubRepo(url) {
   if (!url || typeof url !== "string") return null;
-  const cleaned = url.trim().replace(/\/+$/, "");
+  let cleaned = url.trim().replace(/\/+$/, "");
+  cleaned = cleaned.replace(/\/tree\/[^\/]*\/?$/i, "");
+  cleaned = cleaned.replace(/\/blob\/[^\/]*\/?$/i, "");
+  cleaned = cleaned.replace(/\/commit\/[^\/]*\/?$/i, "");
   const full = cleaned.match(/https?:\/\/github\.com\/([^\/]+)\/([^\/]+)/i);
   if (full) return { owner: full[1], repo: full[2].replace(/\.git$/i, "") };
   const short = cleaned.match(/^([^\/]+)\/([^\/]+)$/);
