@@ -87,9 +87,11 @@ function validateUrls(order, rules) {
 
 function parseGitHubRepo(url) {
   if (!url || typeof url !== "string") return null;
-  const m = url.match(/https?:\/\/github\.com\/([^\/]+)\/([^\/]+)/i);
-  if (!m) return null;
-  return { owner: m[1], repo: m[2].replace(/\.git$/i, "") };
+  const full = url.match(/https?:\/\/github\.com\/([^\/]+)\/([^\/]+)/i);
+  if (full) return { owner: full[1], repo: full[2].replace(/\.git$/i, "") };
+  const short = url.match(/^([^\/]+)\/([^\/]+)$/);
+  if (short) return { owner: short[1], repo: short[2].replace(/\.git$/i, "") };
+  return null;
 }
 
 function shannonEntropy(str) {
