@@ -86,9 +86,10 @@ function validateUrls(order, rules) {
 
 function parseGitHubRepo(url) {
   if (!url || typeof url !== "string") return null;
-  const full = url.match(/https?:\/\/github\.com\/([^\/]+)\/([^\/]+)/i);
+  const cleaned = url.trim().replace(/\/+$/, "");
+  const full = cleaned.match(/https?:\/\/github\.com\/([^\/]+)\/([^\/]+)/i);
   if (full) return { owner: full[1], repo: full[2].replace(/\.git$/i, "") };
-  const short = url.match(/^([^\/]+)\/([^\/]+)$/);
+  const short = cleaned.match(/^([^\/]+)\/([^\/]+)$/);
   if (short) return { owner: short[1], repo: short[2].replace(/\.git$/i, "") };
   return null;
 }
@@ -287,6 +288,9 @@ async function checkGitHubRepo(order, rules) {
         rate_limited: true,
         sample_files: [],
       };
+    }
+    if (msg.includes("404") || msg.includes("Not Found")) {
+      return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: false, issues: ["GitHub repo not found or private. Check the URL and token access."], rate_limited: false, sample_files: [] };
     }
     return { checked: false, reason: "GitHub check failed: " + msg, pass: false };
   }
