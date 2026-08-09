@@ -262,7 +262,6 @@ async function checkGitHubRepo(order, rules) {
   if (!repo) {
     return { checked: false, reason: "No GitHub repo URL found." };
   }
-  const branch = rules.github_check?.default_branch || "main";
   const token = rules.github_check?.github_token || "";
   const repoUrl = `https://api.github.com/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}`;
   const repoHeaders = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
