@@ -43,7 +43,7 @@ shipping_rules:
 
 url_rules:
   require_https: true
-  github_repo_pattern: '^https://github\.com/[^/]+/[^/]+/?$'
+  github_repo_pattern: '^https://github\.com/[^/]+/[^/]+(/.*)?$'
   live_url_required: true
 
 review:

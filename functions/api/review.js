@@ -78,13 +78,11 @@ function validateUrls(order, rules) {
       issues.push("Non-HTTPS URL");
     }
   }
-  if (rules.url_rules?.github_repo_pattern && order.source_url) {
-    const re = new RegExp(rules.url_rules.github_repo_pattern);
-    if (!re.test(order.source_url)) {
-      issues.push("Source URL doesn't match GitHub repo pattern");
-    }
+  if (order.source_url && !parseGitHubRepo(order.source_url)) {
+    issues.push("Source URL doesn't match GitHub repo pattern");
   }
   return { pass: issues.length === 0, issues };
+}
 }
 
 function parseGitHubRepo(url) {
