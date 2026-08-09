@@ -1,0 +1,53 @@
+version: 1
+tiers:
+  - id: standard
+    label: "Standard (<15KB)"
+    max_size_kb: 15
+  - id: hard
+    label: "Hard Mode (<5KB)"
+    max_size_kb: 5
+  - id: ultra
+    label: "Ultra Hard (<2KB)"
+    max_size_kb: 2
+
+required_fields:
+  project_info:
+    - project_name
+    - project_url
+    - source_url
+    - file_size_kb
+    - description
+    - tier
+  contact:
+    - hc_name
+    - hc_email
+  shipping:
+    - ship_name
+    - phone
+    - ship_line1
+    - ship_line2
+    - ship_city
+    - ship_state
+    - ship_country
+    - ship_postal
+  agreement:
+    - accepted
+
+shipping_rules:
+  require_phone: true
+  require_address_line1: true
+  require_city: true
+  require_country: true
+  require_postal: true
+  allow_po_box: false
+
+url_rules:
+  require_https: true
+  github_repo_pattern: '^https://github\\\.com/[^/]+/[^/]+/?$'
+  live_url_required: true
+
+review:
+  size_field: file_size_kb
+  size_must_match_tier: true
+  auto_accept_ultra: true
+  require_manual_review: true

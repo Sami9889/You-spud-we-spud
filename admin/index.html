@@ -334,12 +334,14 @@
             ${order.project_url ? `<a class="admin-link" href="${projectHref}" target="_blank" rel="noopener"${projectOnClick}>Open project</a>` : ''}
             ${!order.cancelled ? `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="reviewOrder('${order._id}')">Review</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="saveAdminNote('${order._id}')">Add admin note</button>
             ` : `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="deleteOrder('${order._id}')">Delete order</button>
             `}
             ${order.admin_note ? `<div class="admin-meta" style="margin-top:.4rem;"><strong>Admin note:</strong> ${escapeHtml(order.admin_note)}</div>` : ''}
+            <div id="review-${order._id}" style="display:none;"></div>
           </article>
         `;
       }).join('');
@@ -420,6 +422,41 @@
     window.cancelOrder = async function(orderId) {
       if (!confirm('Cancel this order?')) return;
       await updateOrder(orderId, { cancelled: true });
+    };
+    window.reviewOrder = async function(orderId) {
+      const token = await getAdminToken();
+      const el = document.getElementById('review-' + orderId);
+      if (!el) return;
+      el.style.display = 'block';
+      el.innerHTML = '<em>Reviewing…</em>';
+      try {
+        const response = await fetch('/api/review?id=' + encodeURIComponent(orderId), {
+          headers: { 'Authorization': 'Bearer ' + token },
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error('Review failed: ' + response.status + ' ' + text);
+        }
+        const data = await response.json();
+        const r = data.review || {};
+        const passed = r.passed;
+        const tier = r.tier || {};
+        const fields = r.fields || {};
+        const urls = r.urls || {};
+        let html = '<div style="margin-top:.5rem; padding:.55rem .7rem; border-radius:6px; border:1px solid ' + (passed ? 'var(--green)' : 'var(--red)') + '; background:' + (passed ? '#f0f7f4' : '#fff5f5') + ';">';
+        html += '<strong style="color:' + (passed ? 'var(--green)' : 'var(--red)') + ';">' + (passed ? '✓ Review passed' : '✗ Review failed') + '</strong>';
+        html += '<div class="admin-meta" style="margin-top:.25rem;"><strong>Tier:</strong> ' + escapeHtml(tier.tier || 'N/A') + ' — size: ' + escapeHtml(String(tier.actual || '?')) + ' KB / limit: ' + escapeHtml(String(tier.limit || '?')) + ' KB' + (tier.pass ? '' : ' <span style="color:var(--red);">(over limit)</span>') + '</div>';
+        if (!fields.pass && fields.missing && fields.missing.length) {
+          html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>Missing:</strong> ' + escapeHtml(fields.missing.join(', ')) + '</div>';
+        }
+        if (!urls.pass && urls.issues && urls.issues.length) {
+          html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>URL issues:</strong> ' + escapeHtml(urls.issues.join(', ')) + '</div>';
+        }
+        html += '</div>';
+        el.innerHTML = html;
+      } catch (err) {
+        el.innerHTML = '<div style="margin-top:.4rem; color:var(--red);">Review error: ' + escapeHtml(err.message || 'Unknown error') + '</div>';
+      }
     };
     window.updateShipping = async function(orderId) {
       const shippingId = prompt('Shipping ID / tracking number:');

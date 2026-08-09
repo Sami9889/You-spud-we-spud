@@ -68,6 +68,29 @@ jobs:
               print(f'Warning: Pages project update response: {update_resp}')
           else:
               print('Bound KV namespace ORDERS to Pages project')
+          
+          with open('rules.yaml', 'r') as f:
+              yaml_text = f.read()
+          
+          try:
+              import yaml
+              rules = yaml.safe_load(yaml_text)
+          except ImportError:
+              import subprocess
+              import sys
+              subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--quiet', 'pyyaml'])
+              import yaml
+              rules = yaml.safe_load(yaml_text)
+          
+          if rules:
+              rules_key = 'rules'
+              put_resp = cf('PUT', f'/storage/kv/namespaces/{kv_id}/values/{rules_key}', rules)
+              if put_resp.get('success'):
+                  print('Uploaded rules.yaml to KV')
+              else:
+                  print(f'Warning: Failed to upload rules: {put_resp}')
+          else:
+              print('Warning: No rules parsed from rules.yaml')
           PY
 
       - name: Pack artifact
