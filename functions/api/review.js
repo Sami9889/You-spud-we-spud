@@ -269,31 +269,38 @@ async function checkGitHubRepo(order, rules) {
   if (!repo) {
     return { checked: false, reason: "No GitHub repo URL found.", pass: false };
   }
-  const branch = rules.github_check?.default_branch || "main";
   const token = rules.github_check?.github_token || "";
+  const repoUrl = `https://api.github.com/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}`;
+  const repoHeaders = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
+  if (token) repoHeaders["Authorization"] = `Bearer ${token}`;
+  
+  let repoInfo;
+  try {
+    const repoResp = await fetch(repoUrl, { headers: repoHeaders });
+    if (!repoResp.ok) {
+      const text = await repoResp.text().catch(() => "");
+      if (repoResp.status === 404) {
+        return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch: "unknown", actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: false, issues: ["GitHub repo not found or private. Check the URL and token access."], rate_limited: false, sample_files: [] };
+      }
+      if (repoResp.status === 403) {
+        const rateLimited = text.includes("rate limit");
+        return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch: "unknown", actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: rateLimited, issues: [rateLimited ? "GitHub API rate limit exceeded. Review passed — verify manually." : `GitHub API ${repoResp.status}: ${text.slice(0, 200)}`], rate_limited, sample_files: [] };
+      }
+      return { checked: false, reason: `GitHub API ${repoResp.status}: ${text.slice(0, 200)}`, pass: false };
+    }
+    repoInfo = await repoResp.json();
+  } catch (err) {
+    return { checked: false, reason: "GitHub check failed: " + (err.message || "Unknown error"), pass: false };
+  }
+  
+  const branch = repoInfo.default_branch || rules.github_check?.default_branch || "main";
   let tree;
   try {
     tree = await fetchGitHubTree(repo.owner, repo.repo, branch, token);
   } catch (err) {
     const msg = err.message || "Unknown error";
     if (msg.startsWith("RATE_LIMIT:")) {
-      return {
-        checked: true,
-        repo: `${repo.owner}/${repo.repo}`,
-        branch,
-        actual_kb: 0,
-        declared_kb: parseFloat(order.file_size_kb) || 0,
-        tier_limit_kb: getTierLimit(order.tier, rules),
-        strict: rules.github_check?.strict_size_limit !== false,
-        files_checked: 0,
-        pass: true,
-        issues: ["GitHub API rate limit exceeded. Review passed — verify manually."],
-        rate_limited: true,
-        sample_files: [],
-      };
-    }
-    if (msg.includes("404") || msg.includes("Not Found")) {
-      return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: false, issues: ["GitHub repo not found or private. Check the URL and token access."], rate_limited: false, sample_files: [] };
+      return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: true, issues: ["GitHub API rate limit exceeded. Review passed — verify manually."], rate_limited: true, sample_files: [] };
     }
     return { checked: false, reason: "GitHub check failed: " + msg, pass: false };
   }
