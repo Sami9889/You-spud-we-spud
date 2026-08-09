@@ -19,6 +19,7 @@ jobs:
         env:
           CF_ACCOUNT_TOKEN: ${{ secrets.CF_ACCOUNT_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           python3 - <<'PY'
           import json
