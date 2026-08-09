@@ -78,7 +78,9 @@ function validateUrls(order, rules) {
       issues.push("Non-HTTPS URL");
     }
   }
-  if (order.source_url && !parseGitHubRepo(order.source_url)) {
+  const sourceRepo = parseGitHubRepo(order.source_url);
+  const projectRepo = parseGitHubRepo(order.project_url);
+  if (!sourceRepo && !projectRepo) {
     issues.push("Source URL doesn't match GitHub repo pattern");
   }
   return { pass: issues.length === 0, issues };
