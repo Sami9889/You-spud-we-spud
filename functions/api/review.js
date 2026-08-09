@@ -50,9 +50,7 @@ function validateTier(order, rules) {
 
 function validateRequiredFields(order, rules) {
   const missing = [];
-  const softMissing = [];
   const all = [];
-  const soft = ["accepted", "hc_verified", "ship_line2"];
   if (rules.required_fields) {
     for (const group of Object.values(rules.required_fields)) {
       if (Array.isArray(group)) all.push(...group);
@@ -60,14 +58,10 @@ function validateRequiredFields(order, rules) {
   }
   for (const field of all) {
     if (!order[field] || !String(order[field]).trim()) {
-      if (soft.includes(field)) {
-        softMissing.push(field);
-      } else {
-        missing.push(field);
-      }
+      missing.push(field);
     }
   }
-  return { pass: missing.length === 0, missing, soft_missing: softMissing };
+  return { pass: missing.length === 0, missing };
 }
 
 function validateUrls(order, rules) {
@@ -78,7 +72,9 @@ function validateUrls(order, rules) {
       issues.push("Non-HTTPS URL");
     }
   }
-  if (order.source_url && !parseGitHubRepo(order.source_url)) {
+  const sourceRepo = parseGitHubRepo(order.source_url);
+  const projectRepo = parseGitHubRepo(order.project_url);
+  if (!sourceRepo && !projectRepo) {
     issues.push("Source URL doesn't match GitHub repo pattern");
   }
   return { pass: issues.length === 0, issues };
@@ -86,15 +82,9 @@ function validateUrls(order, rules) {
 
 function parseGitHubRepo(url) {
   if (!url || typeof url !== "string") return null;
-  let cleaned = url.trim().replace(/\/+$/, "");
-  cleaned = cleaned.replace(/\/tree\/[^\/]*\/?$/i, "");
-  cleaned = cleaned.replace(/\/blob\/[^\/]*\/?$/i, "");
-  cleaned = cleaned.replace(/\/commit\/[^\/]*\/?$/i, "");
-  const full = cleaned.match(/https?:\/\/github\.com\/([^\/]+)\/([^\/]+)/i);
-  if (full) return { owner: full[1], repo: full[2].replace(/\.git$/i, "") };
-  const short = cleaned.match(/^([^\/]+)\/([^\/]+)$/);
-  if (short) return { owner: short[1], repo: short[2].replace(/\.git$/i, "") };
-  return null;
+  const m = url.match(/https?:\/\/github\.com\/([^\/]+)\/([^\/]+)/i);
+  if (!m) return null;
+  return { owner: m[1], repo: m[2].replace(/\.git$/i, "") };
 }
 
 function shannonEntropy(str) {
@@ -158,16 +148,13 @@ function detectObfuscation(code, rules) {
   return { obfuscated, reasons };
 }
 
-async function fetchGitHubTree(owner, repo, branch, token) {
+async function fetchGitHubTree(owner, repo, branch) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
-  const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  const resp = await fetch(apiUrl, { headers });
+  const resp = await fetch(apiUrl, {
+    headers: { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" },
+  });
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
-    if (resp.status === 403 && text.includes("rate limit")) {
-      throw new Error("RATE_LIMIT:" + text.slice(0, 200));
-    }
     throw new Error(`GitHub API ${resp.status}: ${text.slice(0, 200)}`);
   }
   const data = await resp.json();
@@ -177,11 +164,11 @@ async function fetchGitHubTree(owner, repo, branch, token) {
   return data.tree;
 }
 
-async function fetchGitHubContent(owner, repo, path, token) {
+async function fetchGitHubContent(owner, repo, path) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}`;
-  const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  const resp = await fetch(apiUrl, { headers });
+  const resp = await fetch(apiUrl, {
+    headers: { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" },
+  });
   if (!resp.ok) return null;
   const data = await resp.json();
   if (data.encoding === "base64" && data.content) {
@@ -239,7 +226,7 @@ function checkForbiddenFilesAndDirs(tree, rules) {
   return { issues, forbiddenFiles, forbiddenDirs, forbiddenPatterns };
 }
 
-async function checkFileContents(owner, repo, files, rules, token) {
+async function checkFileContents(owner, repo, files, rules) {
   const issues = [];
   const patterns = rules.github_check?.forbidden_patterns || [];
   if (!patterns.length) return issues;
@@ -252,7 +239,7 @@ async function checkFileContents(owner, repo, files, rules, token) {
     if (checked.has(file.path)) continue;
     checked.add(file.path);
 
-    const content = await fetchGitHubContent(owner, repo, file.path, token);
+    const content = await fetchGitHubContent(owner, repo, file.path);
     if (!content) continue;
     const lower = content.toLowerCase();
     for (const pattern of patterns) {
@@ -267,8 +254,11 @@ async function checkFileContents(owner, repo, files, rules, token) {
 async function checkGitHubRepo(order, rules) {
   const repo = parseGitHubRepo(order.source_url) || parseGitHubRepo(order.project_url);
   if (!repo) {
-    return { checked: false, reason: "No GitHub repo URL found.", pass: false };
+    return { checked: false, reason: "No GitHub repo URL found." };
   }
+<<<<<<< ours
+  const branch = rules.github_check?.default_branch || "main";
+=======
   const token = rules.github_check?.github_token || "";
   const repoUrl = `https://api.github.com/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}`;
   const repoHeaders = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
@@ -294,15 +284,20 @@ async function checkGitHubRepo(order, rules) {
   }
   
   const branch = repoInfo.default_branch || rules.github_check?.default_branch || "main";
+>>>>>>> theirs
   let tree;
   try {
-    tree = await fetchGitHubTree(repo.owner, repo.repo, branch, token);
+    tree = await fetchGitHubTree(repo.owner, repo.repo, branch);
   } catch (err) {
+<<<<<<< ours
+    return { checked: false, reason: "GitHub check failed: " + (err.message || "Unknown error") };
+=======
     const msg = err.message || "Unknown error";
     if (msg.startsWith("RATE_LIMIT:")) {
       return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: true, issues: ["GitHub API rate limit exceeded. Review passed — verify manually."], rate_limited: true, sample_files: [] };
     }
     return { checked: false, reason: "GitHub check failed: " + msg, pass: false };
+>>>>>>> theirs
   }
   const { files, totalBytes } = filterCodeFiles(tree, rules);
   const actualKb = totalBytes / 1024;
@@ -329,13 +324,13 @@ async function checkGitHubRepo(order, rules) {
     pass = false;
   }
 
-  const contentIssues = await checkFileContents(repo.owner, repo.repo, files, rules, token);
+  const contentIssues = await checkFileContents(repo.owner, repo.repo, files, rules);
   issues.push(...contentIssues);
   if (contentIssues.length > 0) {
     pass = false;
   }
 
-  const obfuscationIssues = await checkObfuscationInFiles(repo.owner, repo.repo, files, rules, token);
+  const obfuscationIssues = await checkObfuscationInFiles(repo.owner, repo.repo, files, rules);
   issues.push(...obfuscationIssues);
   if (obfuscationIssues.length > 0) {
     pass = false;
@@ -356,7 +351,7 @@ async function checkGitHubRepo(order, rules) {
   };
 }
 
-async function checkObfuscationInFiles(owner, repo, files, rules, token) {
+async function checkObfuscationInFiles(owner, repo, files, rules) {
   const issues = [];
   const obf = rules.github_check?.obfuscation_rules || {};
   if (obf.enabled === false) return issues;
@@ -369,7 +364,7 @@ async function checkObfuscationInFiles(owner, repo, files, rules, token) {
     if (checked.has(file.path)) continue;
     checked.add(file.path);
 
-    const content = await fetchGitHubContent(owner, repo, file.path, token);
+    const content = await fetchGitHubContent(owner, repo, file.path);
     if (!content) continue;
 
     const result = detectObfuscation(content, rules);
