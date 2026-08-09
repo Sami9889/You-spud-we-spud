@@ -138,3 +138,35 @@ github_check:
     - "rollup"
     - "parcel"
     - "browserify"
+  obfuscation_rules:
+    enabled: true
+    warn_obfuscated: true
+    fail_if_obfuscated: true
+    suspicious_patterns:
+      - "eval("
+      - "Function("
+      - "setTimeout("
+      - "setInterval("
+      - "document.write("
+      - "unescape("
+      - "decodeURIComponent("
+      - "String.fromCharCode("
+      - "\\x"
+      - "\\u"
+      - "atob("
+      - "btoa("
+      - "ArrayBuffer"
+      - "Uint8Array"
+      - "DataView"
+      - "pako"
+      - "lz-string"
+      - "lzma"
+      - "Packer"
+      - "Dean Edwards"
+      - "eval(base64"
+      - "document.write(atob"
+      - "unescape(%u"
+      - "while(1)"
+      - "for(;;)"
+    min_entropy_threshold: 4.5
+    max_entropy_chunk_ratio: 0.6

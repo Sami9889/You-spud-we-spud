@@ -88,6 +88,67 @@ function parseGitHubRepo(url) {
   return { owner: m[1], repo: m[2].replace(/\.git$/i, "") };
 }
 
+function shannonEntropy(str) {
+  if (!str || str.length === 0) return 0;
+  const freq = {};
+  for (const ch of str) {
+    freq[ch] = (freq[ch] || 0) + 1;
+  }
+  let entropy = 0;
+  const len = str.length;
+  for (const count of Object.values(freq)) {
+    const p = count / len;
+    entropy -= p * Math.log2(p);
+  }
+  return entropy;
+}
+
+function detectObfuscation(code, rules) {
+  const obf = rules.github_check?.obfuscation_rules || {};
+  if (obf.enabled === false) return { obfuscated: false, reasons: [] };
+
+  const reasons = [];
+  const lower = code.toLowerCase();
+  const suspiciousPatterns = obf.suspicious_patterns || [];
+
+  for (const pattern of suspiciousPatterns) {
+    if (pattern === "\\x") {
+      const count = (lower.match(/\\x[0-9a-f]{2}/g) || []).length;
+      if (count > 5) reasons.push(`High density of hex escapes (${count}).`);
+    } else if (pattern === "\\u") {
+      const count = (lower.match(/\\u[0-9a-f]{4}/g) || []).length;
+      if (count > 5) reasons.push(`High density of unicode escapes (${count}).`);
+    } else if (lower.includes(pattern.toLowerCase())) {
+      reasons.push(`Suspicious pattern: ${pattern}`);
+    }
+  }
+
+  const lines = code.split(/[\n\r]+/);
+  let highEntropyChunks = 0;
+  let totalChunks = 0;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*")) continue;
+    const chunks = trimmed.match(/(?:["'`])([^"'`]{10,})(?:["'`])/g) || [];
+    for (const chunk of chunks) {
+      totalChunks++;
+      const inner = chunk.slice(1, -1);
+      const ent = shannonEntropy(inner);
+      const threshold = obf.min_entropy_threshold || 4.5;
+      if (ent > threshold && inner.length > 20) {
+        highEntropyChunks++;
+      }
+    }
+  }
+  const ratio = obf.max_entropy_chunk_ratio || 0.6;
+  if (totalChunks > 0 && highEntropyChunks / totalChunks > ratio) {
+    reasons.push(`High-entropy strings detected (${highEntropyChunks}/${totalChunks} chunks above threshold).`);
+  }
+
+  const obfuscated = reasons.length > 0;
+  return { obfuscated, reasons };
+}
+
 async function fetchGitHubTree(owner, repo, branch) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
   const resp = await fetch(apiUrl, {
@@ -234,6 +295,12 @@ async function checkGitHubRepo(order, rules) {
     pass = false;
   }
 
+  const obfuscationIssues = await checkObfuscationInFiles(repo.owner, repo.repo, files, rules);
+  issues.push(...obfuscationIssues);
+  if (obfuscationIssues.length > 0) {
+    pass = false;
+  }
+
   return {
     checked: true,
     repo: `${repo.owner}/${repo.repo}`,
@@ -247,6 +314,30 @@ async function checkGitHubRepo(order, rules) {
     issues,
     sample_files: files.slice(0, 10),
   };
+}
+
+async function checkObfuscationInFiles(owner, repo, files, rules) {
+  const issues = [];
+  const obf = rules.github_check?.obfuscation_rules || {};
+  if (obf.enabled === false) return issues;
+
+  const checked = new Set();
+  for (const file of files.slice(0, 15)) {
+    if (file.size > 200 * 1024) continue;
+    const ext = file.path.slice(file.path.lastIndexOf(".")).toLowerCase();
+    if (![".js", ".html", ".css", ".ts", ".tsx", ".jsx", ".mjs", ".cjs"].includes(ext)) continue;
+    if (checked.has(file.path)) continue;
+    checked.add(file.path);
+
+    const content = await fetchGitHubContent(owner, repo, file.path);
+    if (!content) continue;
+
+    const result = detectObfuscation(content, rules);
+    if (result.obfuscated && result.reasons.length > 0) {
+      issues.push(...result.reasons.map(r => `${r} (in ${file.path})`));
+    }
+  }
+  return issues;
 }
 
 function getTierLimit(tier, rules) {
