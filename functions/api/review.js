@@ -52,7 +52,7 @@ function validateRequiredFields(order, rules) {
   const missing = [];
   const softMissing = [];
   const all = [];
-  const soft = ["accepted", "hc_verified"];
+  const soft = ["accepted", "hc_verified", "ship_line2"];
   if (rules.required_fields) {
     for (const group of Object.values(rules.required_fields)) {
       if (Array.isArray(group)) all.push(...group);
