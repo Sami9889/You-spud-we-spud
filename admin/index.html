@@ -448,7 +448,8 @@
         html += '<strong style="color:' + (passed ? 'var(--green)' : 'var(--red)') + ';">' + (passed ? '✓ Review passed' : '✗ Review failed') + '</strong>';
         html += '<div class="admin-meta" style="margin-top:.25rem;"><strong>Tier:</strong> ' + escapeHtml(tier.tier || 'N/A') + ' — limit: ' + escapeHtml(String(tier.limit || '?')) + ' KB' + (tier.pass ? '' : ' <span style="color:var(--red);">(over limit)</span>') + '</div>';
         if (gh.checked) {
-          html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>GitHub:</strong> ' + escapeHtml(gh.repo || '') + ' (' + escapeHtml(gh.branch || '') + ') — actual: ' + escapeHtml(String(gh.actual_kb || '?')) + ' KB / tier limit: ' + escapeHtml(String(gh.tier_limit_kb || '?')) + ' KB — ' + escapeHtml(String(gh.files_checked || '?')) + ' files' + (gh.pass ? '' : ' <span style="color:var(--red);">(over limit)</span>') + '</div>';
+          const sizeOver = gh.actual_kb > gh.tier_limit_kb;
+          html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>GitHub:</strong> ' + escapeHtml(gh.repo || '') + ' (' + escapeHtml(gh.branch || '') + ') — actual: ' + escapeHtml(String(gh.actual_kb || '?')) + ' KB / tier limit: ' + escapeHtml(String(gh.tier_limit_kb || '?')) + ' KB — ' + escapeHtml(String(gh.files_checked || '?')) + ' files' + (sizeOver ? ' <span style="color:var(--red);">(over limit)</span>' : '') + '</div>';
           if (gh.issues && gh.issues.length) {
             html += '<div class="admin-meta" style="margin-top:.15rem;"><strong>GitHub issues:</strong> ' + escapeHtml(gh.issues.join('; ')) + '</div>';
           }
