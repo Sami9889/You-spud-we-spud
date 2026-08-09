@@ -43,7 +43,7 @@ shipping_rules:
 
 url_rules:
   require_https: true
-  github_repo_pattern: '^https://github\\\.com/[^/]+/[^/]+/?$'
+  github_repo_pattern: '^https://github\.com/[^/]+/[^/]+(/.*)?$'
   live_url_required: true
 
 review:
@@ -55,6 +55,7 @@ review:
 github_check:
   enabled: true
   default_branch: main
+  github_token: ""
   include_extensions:
     - .js
     - .html
@@ -145,8 +146,6 @@ github_check:
     suspicious_patterns:
       - "eval("
       - "Function("
-      - "setTimeout("
-      - "setInterval("
       - "document.write("
       - "unescape("
       - "decodeURIComponent("
