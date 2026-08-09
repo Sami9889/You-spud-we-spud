@@ -50,7 +50,9 @@ function validateTier(order, rules) {
 
 function validateRequiredFields(order, rules) {
   const missing = [];
+  const softMissing = [];
   const all = [];
+  const soft = ["accepted", "hc_verified", "ship_line2"];
   if (rules.required_fields) {
     for (const group of Object.values(rules.required_fields)) {
       if (Array.isArray(group)) all.push(...group);
@@ -58,10 +60,14 @@ function validateRequiredFields(order, rules) {
   }
   for (const field of all) {
     if (!order[field] || !String(order[field]).trim()) {
-      missing.push(field);
+      if (soft.includes(field)) {
+        softMissing.push(field);
+      } else {
+        missing.push(field);
+      }
     }
   }
-  return { pass: missing.length === 0, missing };
+  return { pass: missing.length === 0, missing, soft_missing: softMissing };
 }
 
 function validateUrls(order, rules) {
