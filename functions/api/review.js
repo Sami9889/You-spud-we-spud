@@ -83,7 +83,6 @@ function validateUrls(order, rules) {
   }
   return { pass: issues.length === 0, issues };
 }
-}
 
 function parseGitHubRepo(url) {
   if (!url || typeof url !== "string") return null;
