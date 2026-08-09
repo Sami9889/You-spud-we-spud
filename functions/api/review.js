@@ -154,11 +154,11 @@ function detectObfuscation(code, rules) {
   return { obfuscated, reasons };
 }
 
-async function fetchGitHubTree(owner, repo, branch) {
+async function fetchGitHubTree(owner, repo, branch, token) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
-  const resp = await fetch(apiUrl, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" },
-  });
+  const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const resp = await fetch(apiUrl, { headers });
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
     throw new Error(`GitHub API ${resp.status}: ${text.slice(0, 200)}`);
@@ -170,11 +170,11 @@ async function fetchGitHubTree(owner, repo, branch) {
   return data.tree;
 }
 
-async function fetchGitHubContent(owner, repo, path) {
+async function fetchGitHubContent(owner, repo, path, token) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}`;
-  const resp = await fetch(apiUrl, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" },
-  });
+  const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const resp = await fetch(apiUrl, { headers });
   if (!resp.ok) return null;
   const data = await resp.json();
   if (data.encoding === "base64" && data.content) {
