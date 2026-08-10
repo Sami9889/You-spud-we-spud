@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://assets.hackclub.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <title>Admin Sign In — You Spud, We Spud</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥔</text></svg>" />
+  <title>Admin Sign In</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Archivo:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -170,17 +170,8 @@
 <body>
   <div class="airmail-strip"></div>
   <nav>
-    <a href="https://youspudwespud.sami-s.dev" class="nav-logo">you spud, we spud</a>
+    <a href="https://youspudwespud.sami-s.dev" class="nav-logo">Ship Small</a>
     <div style="display:flex;gap:.5rem;align-items:center;">
-      <select id="admin-quick-action" onchange="handleQuickAction(this.value)" style="padding:.4rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--paper);color:var(--ink);font-family:'Archivo',sans-serif;font-size:.82rem;cursor:pointer;">
-        <option value="">Quick actions</option>
-        <option value="approve-all">Approve all pending</option>
-        <option value="cancel-all">Cancel all pending</option>
-        <option value="delete-cancelled">Delete all cancelled</option>
-        <option value="export-csv">Export as CSV</option>
-        <option value="refresh">Refresh board</option>
-      </select>
-      <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
       <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="showHelp()" title="Keyboard shortcuts">?</button>
       <a href="/form/" class="nav-cta">← Back to form</a>
     </div>
@@ -193,9 +184,9 @@
     </div>
 
     <div id="s-signin" class="screen">
-      <div class="big">🧾</div>
+      <div class="big">📋</div>
       <h2>Admin sign in</h2>
-      <p class="lead">Only authorized organizers can view the review board for submitted spuds.</p>
+      <p class="lead">Only authorized organizers can view the review board.</p>
       <div class="card">
         <form id="admin-login-form">
           <div class="field">
@@ -255,7 +246,7 @@
     </div>
 
     <div id="s-error" class="screen">
-      <div class="big">🥴</div>
+      <div class="big">🚫</div>
       <h2>Access denied</h2>
       <p class="lead" id="error-msg">The admin board is not available for this sign-in.</p>
       <div class="card">
@@ -265,7 +256,7 @@
   </div>
 
   <footer>
-    <p>You Spud, We Spud, a Hack Club YSWS by sami9889</p>
+    <p>Ship Small, a Hack Club YSWS by sami9889</p>
     <p style="margin-top:.4rem;"><a href="/privacy.html">Privacy & data storage</a></p>
   </footer>
 
@@ -413,7 +404,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'spud-orders.json';
+        a.download = 'orders.json';
         a.click();
         URL.revokeObjectURL(url);
         showToast('Orders exported');
@@ -446,31 +437,7 @@
       if (!value) return;
       await updateOrder(orderId, { [field]: value });
     };
-    window.handleQuickAction = async function(action) {
-      const select = document.getElementById('admin-quick-action');
-      if (!action) return;
-      select.value = '';
-      switch (action) {
-        case 'approve-all':
-          if (!confirm('Approve ALL pending orders? This will mark them as accepted.')) return;
-          await bulkApprove();
-          break;
-        case 'cancel-all':
-          if (!confirm('Cancel ALL pending orders?')) return;
-          await bulkCancelPending();
-          break;
-        case 'delete-cancelled':
-          if (!confirm('Delete ALL cancelled orders permanently?')) return;
-          await bulkDeleteCancelled();
-          break;
-        case 'export-csv':
-          exportCSV();
-          break;
-        case 'refresh':
-          await refreshBoard();
-          break;
-      }
-    };
+
     window.bulkApprove = async function() {
       const orders = await fetchOrders();
       const pending = orders.filter(o => !o.accepted && !o.cancelled && !o.manual_review);
@@ -546,7 +513,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `spud-orders-${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
         showToast('CSV exported');
