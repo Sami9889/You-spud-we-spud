@@ -819,6 +819,9 @@
         try { window.sessionStorage.removeItem(key); } catch (err) {}
       }
     }
+    window.getAdminToken = async function() {
+      return readAdminValue('admin_api_token') || '';
+    };
     window.adminLogout = async function() {
       try {
         await fetch('/api/admin/logout', {
