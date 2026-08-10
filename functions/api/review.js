@@ -45,14 +45,14 @@ function validateTier(order, rules) {
       return { pass: size < t.max_size_kb, actual: size, limit: t.max_size_kb, tier: t.label || tier };
     }
   }
-  const lower = String(tier).toLowerCase();
+  const tierBase = String(tier).split("(")[0].trim().toLowerCase();
   for (const t of rules.tiers || []) {
     const id = String(t.id || "").toLowerCase();
     const base = String(t.label || "").split("(")[0].trim().toLowerCase();
-    if (id && lower === id) {
+    if (id && tierBase === id) {
       return { pass: size < t.max_size_kb, actual: size, limit: t.max_size_kb, tier: t.label || tier };
     }
-    if (base && lower === base) {
+    if (base && tierBase === base) {
       return { pass: size < t.max_size_kb, actual: size, limit: t.max_size_kb, tier: t.label || tier };
     }
   }
@@ -365,6 +365,17 @@ function getTierLimit(tier, rules) {
   if (!tier || !Array.isArray(rules.tiers)) return 0;
   for (const t of rules.tiers) {
     if (tier === t.label || tier === t.id) {
+      return typeof t.max_size_kb === "number" ? t.max_size_kb : 0;
+    }
+  }
+  const tierBase = String(tier).split("(")[0].trim().toLowerCase();
+  for (const t of rules.tiers) {
+    const id = String(t.id || "").toLowerCase();
+    const base = String(t.label || "").split("(")[0].trim().toLowerCase();
+    if (id && tierBase === id) {
+      return typeof t.max_size_kb === "number" ? t.max_size_kb : 0;
+    }
+    if (base && tierBase === base) {
       return typeof t.max_size_kb === "number" ? t.max_size_kb : 0;
     }
   }
