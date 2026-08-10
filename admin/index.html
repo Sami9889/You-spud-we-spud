@@ -170,6 +170,12 @@
     .shortcut-hint { font-size: .72rem; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: .2rem; }
     footer { border-top: 2px dashed var(--border); padding: 2rem; text-align: center; font-size: .78rem; color: var(--muted); font-family: 'Space Mono', monospace; }
     @media (max-width: 480px) { nav { padding: .75rem 1rem; } .container { padding: 1.5rem .75rem 3rem; } }
+    body.dark-mode {
+      filter: invert(1) hue-rotate(180deg);
+    }
+    body.dark-mode img {
+      filter: invert(1) hue-rotate(180deg);
+    }
   </style>
 </head>
 <body>
@@ -185,8 +191,8 @@
         <option value="export-csv">Export as CSV</option>
         <option value="refresh">Refresh board</option>
       </select>
-      <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
-      <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="showHelp()" title="Keyboard shortcuts">?</button>
+      <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+      <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="showHelp()" title="Keyboard shortcuts">?</button>
       <a href="/form/" class="nav-cta">← Back to form</a>
     </div>
   </nav>
@@ -245,7 +251,7 @@
             <div class="ubar-email" id="admin-email">Authorized organizer</div>
           </div>
           <span class="ubar-badge">Verified</span>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="adminLogout()">Log out</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="adminLogout()">Log out</button>
         </div>
         <div class="sec">Review board</div>
         <div class="admin-toolbar">
@@ -262,18 +268,18 @@
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
           </select>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="exportOrders()">Export JSON</button>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--green);" onclick="migrateOrders()">Remove expiry</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="exportOrders()">Export JSON</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--green);" onclick="migrateOrders()">Remove expiry</button>
         </div>
         <div class="admin-toolbar">
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="bulkCancel()">Bulk cancel selected</button>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--red);" onclick="bulkDelete()">Bulk delete selected</button>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="toggleSelectAll()">Toggle select all</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="bulkCancel()">Bulk cancel selected</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--red);" onclick="bulkDelete()">Bulk delete selected</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="toggleSelectAll()">Toggle select all</button>
         </div>
         <div id="admin-stats" class="admin-stats"></div>
         <div class="admin-toolbar">
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="toggleActivityLog()">Activity log</button>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="toggleSettings()">Settings</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="toggleActivityLog()">Activity log</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="toggleSettings()">Settings</button>
         </div>
         <div id="activity-log" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;max-height:200px;overflow-y:auto;"></div>
         <div id="settings-panel" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;"></div>
@@ -395,13 +401,13 @@
             ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}
             ${order.project_url ? `<a class="admin-link" href="${projectHref}" target="_blank" rel="noopener"${projectOnClick}>Open project</a>` : ''}
             ${!order.cancelled ? `
-              <button class="btn-hc" style="margin-top:.4rem;background:var(--red);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="cancelOrder('${order._id}')">Cancel order</button>
-              <button class="btn-hc" style="margin-top:.4rem;background:var(--brown);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="reviewOrder('${order._id}')">Review</button>
-              ${order.manual_review ? `<button class="btn-hc" style="margin-top:.4rem;background:var(--green);color:white;width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="revokeManualReview('${order._id}')">Revoke manual review</button>` : `<button class="btn-hc" style="margin-top:.4rem;background:var(--gold);color:var(--brown);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="manualReview('${order._id}')">Manually review</button>`}
-              <button class="btn-hc" style="margin-top:.4rem;background:var(--gold);color:var(--brown);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="updateShipping('${order._id}')">Update shipping</button>
-              <button class="btn-hc" style="margin-top:.4rem;background:var(--brown);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="saveAdminNote('${order._id}')">Add admin note</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="cancelOrder('${order._id}')">Cancel order</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="reviewOrder('${order._id}')">Review</button>
+              ${order.manual_review ? `<button class="btn-hc" style="margin-top:.5rem;background:var(--green);color:white;width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="revokeManualReview('${order._id}')">Revoke manual review</button>` : `<button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="manualReview('${order._id}')">Manually review</button>`}
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="updateShipping('${order._id}')">Update shipping</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="saveAdminNote('${order._id}')">Add admin note</button>
             ` : `
-              <button class="btn-hc" style="margin-top:.4rem;background:var(--red);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="deleteOrder('${order._id}')">Delete order</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="deleteOrder('${order._id}')">Delete order</button>
             `}
             ${order.admin_note ? `<div class="admin-meta" style="margin-top:.4rem;"><strong>Admin note:</strong> ${escapeHtml(order.admin_note)}</div>` : ''}
             ${order.manual_review ? `<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ${escapeHtml(order.manual_review_reason || 'Approved')} at ${escapeHtml(order.manual_review_at ? new Date(order.manual_review_at).toLocaleString() : '')}</div>` : ''}
@@ -679,14 +685,9 @@
     };
     window.toggleDarkMode = function() {
       const body = document.body;
-      const isDark = body.style.filter === 'invert(1) hue-rotate(180deg)';
-      if (isDark) {
-        body.style.filter = '';
-        localStorage.setItem('dark_mode', 'false');
-      } else {
-        body.style.filter = 'invert(1) hue-rotate(180deg)';
-        localStorage.setItem('dark_mode', 'true');
-      }
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      localStorage.setItem('dark_mode', isDark ? 'true' : 'false');
     };
     window.showHelp = function() {
       const modal = document.getElementById('help-modal');
@@ -704,7 +705,7 @@
     window.bulkCancel = async function() {
       const checkboxes = document.querySelectorAll('.admin-select:checked');
       if (!checkboxes.length) {
-        alert('No orders selected.');
+        showToast('No orders selected', 'error');
         return;
       }
       if (!confirm(`Cancel ${checkboxes.length} selected orders?`)) return;
@@ -718,7 +719,7 @@
     window.bulkDelete = async function() {
       const checkboxes = document.querySelectorAll('.admin-select:checked');
       if (!checkboxes.length) {
-        alert('No orders selected.');
+        showToast('No orders selected', 'error');
         return;
       }
       if (!confirm(`Permanently delete ${checkboxes.length} selected orders? This cannot be undone.`)) return;
@@ -808,7 +809,7 @@
         if (r.manual) {
           html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ' + escapeHtml(r.reason || 'Approved') + ' at ' + escapeHtml(r.at ? new Date(r.at).toLocaleString() : '') + '</div>';
         }
-        html += '<button class="btn-hc" style="margin-top:.4rem;background:var(--muted);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="closeReview(\'' + orderId + '\')">Close review</button>';
+        html += '<button class="btn-hc" style="margin-top:.5rem;background:var(--muted);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="closeReview(\'' + orderId + '\')">Close review</button>';
         html += '</div>';
         el.innerHTML = html;
       } catch (err) {
