@@ -45,6 +45,17 @@ function validateTier(order, rules) {
       return { pass: size < t.max_size_kb, actual: size, limit: t.max_size_kb, tier: t.label || tier };
     }
   }
+  const lower = String(tier).toLowerCase();
+  for (const t of rules.tiers || []) {
+    const id = String(t.id || "").toLowerCase();
+    const base = String(t.label || "").split("(")[0].trim().toLowerCase();
+    if (id && lower === id) {
+      return { pass: size < t.max_size_kb, actual: size, limit: t.max_size_kb, tier: t.label || tier };
+    }
+    if (base && lower === base) {
+      return { pass: size < t.max_size_kb, actual: size, limit: t.max_size_kb, tier: t.label || tier };
+    }
+  }
   return { pass: false, actual: size, limit: 0, tier: tier || "unknown" };
 }
 
