@@ -159,13 +159,35 @@
     .toast.success { background: var(--green); }
     footer { border-top: 2px dashed var(--border); padding: 2rem; text-align: center; font-size: .78rem; color: var(--muted); font-family: 'Space Mono', monospace; }
     @media (max-width: 480px) { nav { padding: .75rem 1rem; } .container { padding: 1.5rem .75rem 3rem; } }
+    body.dark-mode {
+      filter: invert(1) hue-rotate(180deg);
+    }
+    body.dark-mode img {
+      filter: invert(1) hue-rotate(180deg);
+    }
   </style>
 </head>
 <body>
   <div class="airmail-strip"></div>
   <nav>
     <a href="https://youspudwespud.sami-s.dev" class="nav-logo">you spud, we spud</a>
+<<<<<<< ours
     <a href="/form/" class="nav-cta">← Back to form</a>
+=======
+    <div style="display:flex;gap:.5rem;align-items:center;">
+      <select id="admin-quick-action" onchange="handleQuickAction(this.value)" style="padding:.4rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--paper);color:var(--ink);font-family:'Archivo',sans-serif;font-size:.82rem;cursor:pointer;">
+        <option value="">Quick actions</option>
+        <option value="approve-all">Approve all pending</option>
+        <option value="cancel-all">Cancel all pending</option>
+        <option value="delete-cancelled">Delete all cancelled</option>
+        <option value="export-csv">Export as CSV</option>
+        <option value="refresh">Refresh board</option>
+      </select>
+      <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+      <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="showHelp()" title="Keyboard shortcuts">?</button>
+      <a href="/form/" class="nav-cta">← Back to form</a>
+    </div>
+>>>>>>> theirs
   </nav>
 
   <div class="container">
@@ -208,7 +230,7 @@
             <div class="ubar-email" id="admin-email">Authorized organizer</div>
           </div>
           <span class="ubar-badge">Verified</span>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="adminLogout()">Log out</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="adminLogout()">Log out</button>
         </div>
         <div class="sec">Review board</div>
         <div class="admin-toolbar">
@@ -217,10 +239,25 @@
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
           </select>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="exportOrders()">Export JSON</button>
-          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--green);" onclick="migrateOrders()">Remove expiry</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="exportOrders()">Export JSON</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--green);" onclick="migrateOrders()">Remove expiry</button>
+        </div>
+<<<<<<< ours
+        <div id="admin-stats" class="admin-stats"></div>
+=======
+        <div class="admin-toolbar">
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="bulkCancel()">Bulk cancel selected</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--red);" onclick="bulkDelete()">Bulk delete selected</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="toggleSelectAll()">Toggle select all</button>
         </div>
         <div id="admin-stats" class="admin-stats"></div>
+        <div class="admin-toolbar">
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="toggleActivityLog()">Activity log</button>
+          <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="toggleSettings()">Settings</button>
+        </div>
+        <div id="activity-log" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;max-height:200px;overflow-y:auto;"></div>
+        <div id="settings-panel" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;"></div>
+>>>>>>> theirs
         <div id="admin-orders" class="admin-list"></div>
       </div>
     </div>
@@ -333,12 +370,22 @@
             ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}
             ${order.project_url ? `<a class="admin-link" href="${projectHref}" target="_blank" rel="noopener"${projectOnClick}>Open project</a>` : ''}
             ${!order.cancelled ? `
+<<<<<<< ours
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="reviewOrder('${order._id}')">Review</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="saveAdminNote('${order._id}')">Add admin note</button>
             ` : `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="deleteOrder('${order._id}')">Delete order</button>
+=======
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="cancelOrder('${order._id}')">Cancel order</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="reviewOrder('${order._id}')">Review</button>
+              ${order.manual_review ? `<button class="btn-hc" style="margin-top:.5rem;background:var(--green);color:white;width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="revokeManualReview('${order._id}')">Revoke manual review</button>` : `<button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="manualReview('${order._id}')">Manually review</button>`}
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="updateShipping('${order._id}')">Update shipping</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="saveAdminNote('${order._id}')">Add admin note</button>
+            ` : `
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="deleteOrder('${order._id}')">Delete order</button>
+>>>>>>> theirs
             `}
             ${order.admin_note ? `<div class="admin-meta" style="margin-top:.4rem;"><strong>Admin note:</strong> ${escapeHtml(order.admin_note)}</div>` : ''}
             <div id="review-${order._id}" style="display:none;"></div>
@@ -416,9 +463,279 @@
       if (!value) return;
       await updateOrder(orderId, { [field]: value });
     };
+<<<<<<< ours
     async function getAdminToken() {
       try { return readAdminValue('admin_api_token') || ''; } catch (err) { return ''; }
     }
+=======
+    window.handleQuickAction = async function(action) {
+      const select = document.getElementById('admin-quick-action');
+      if (!action) return;
+      select.value = '';
+      switch (action) {
+        case 'approve-all':
+          if (!confirm('Approve ALL pending orders? This will mark them as accepted.')) return;
+          await bulkApprove();
+          break;
+        case 'cancel-all':
+          if (!confirm('Cancel ALL pending orders?')) return;
+          await bulkCancelPending();
+          break;
+        case 'delete-cancelled':
+          if (!confirm('Delete ALL cancelled orders permanently?')) return;
+          await bulkDeleteCancelled();
+          break;
+        case 'export-csv':
+          exportCSV();
+          break;
+        case 'refresh':
+          await refreshBoard();
+          break;
+      }
+    };
+    window.bulkApprove = async function() {
+      const orders = await fetchOrders();
+      const pending = orders.filter(o => !o.accepted && !o.cancelled && !o.manual_review);
+      if (!pending.length) {
+        showToast('No pending orders to approve', 'error');
+        return;
+      }
+      for (const order of pending) {
+        await updateOrder(order._id, { accepted: 'yes', accepted_at: new Date().toISOString() });
+      }
+      showToast(`Approved ${pending.length} orders`);
+      await refreshBoard();
+    };
+    window.bulkCancelPending = async function() {
+      const orders = await fetchOrders();
+      const pending = orders.filter(o => !o.accepted && !o.cancelled && !o.manual_review);
+      if (!pending.length) {
+        showToast('No pending orders to cancel', 'error');
+        return;
+      }
+      const reason = prompt('Cancel reason (optional):') || 'Bulk cancel';
+      for (const order of pending) {
+        await updateOrder(order._id, { cancelled: true, cancel_reason: reason, cancelled_at: new Date().toISOString() });
+      }
+      showToast(`Cancelled ${pending.length} orders`);
+      await refreshBoard();
+    };
+    window.bulkDeleteCancelled = async function() {
+      const orders = await fetchOrders();
+      const cancelled = orders.filter(o => o.cancelled);
+      if (!cancelled.length) {
+        showToast('No cancelled orders to delete', 'error');
+        return;
+      }
+      for (const order of cancelled) {
+        try {
+          const token = await getAdminToken();
+          await fetch('/api/orders', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify({ id: order._id }),
+          });
+        } catch (err) {
+          console.error('Failed to delete order:', order._id, err);
+        }
+      }
+      showToast(`Deleted ${cancelled.length} orders`);
+      await refreshBoard();
+    };
+    window.exportCSV = function() {
+      const user = JSON.parse(readAdminValue('admin_user') || '{}');
+      fetchOrders().then(orders => {
+        if (!orders.length) {
+          showToast('No orders to export', 'error');
+          return;
+        }
+        const headers = ['ID', 'Name', 'Email', 'Project', 'Tier', 'Status', 'Submitted', 'Deadline'];
+        const rows = orders.map(o => [
+          o._id,
+          o.hc_name || o.ship_name || 'Anonymous',
+          o.hc_email || '',
+          o.project_name || 'Untitled',
+          o.tier || 'Pending',
+          o.cancelled ? 'Cancelled' : o.accepted === 'yes' ? 'Accepted' : o.manual_review ? 'Manual' : 'Pending',
+          o.timestamp || '',
+          o.deadline || ''
+        ]);
+        const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `spud-orders-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV exported');
+      });
+    };
+    window.refreshBoard = async function() {
+      const user = JSON.parse(readAdminValue('admin_user') || '{}');
+      const orders = await fetchOrders();
+      renderAdminBoard(user, orders);
+      showToast('Board refreshed');
+    };
+    window.toggleActivityLog = function() {
+      const log = document.getElementById('activity-log');
+      const settings = document.getElementById('settings-panel');
+      if (log.style.display === 'none') {
+        log.style.display = 'block';
+        if (settings) settings.style.display = 'none';
+        renderActivityLog();
+      } else {
+        log.style.display = 'none';
+      }
+    };
+    window.toggleSettings = function() {
+      const settings = document.getElementById('settings-panel');
+      const log = document.getElementById('activity-log');
+      if (settings.style.display === 'none') {
+        settings.style.display = 'block';
+        if (log) log.style.display = 'none';
+        renderSettings();
+      } else {
+        settings.style.display = 'none';
+      }
+    };
+    window.renderActivityLog = function() {
+      const log = document.getElementById('activity-log');
+      if (!log) return;
+      const activities = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
+      if (!activities.length) {
+        log.innerHTML = '<div class="admin-meta">No recent activity.</div>';
+        return;
+      }
+      log.innerHTML = activities.slice(-20).reverse().map(a => 
+        `<div class="activity-item">
+          <strong>${escapeHtml(a.action)}</strong> — ${escapeHtml(a.target || '')}<br/>
+          <span class="activity-time">${escapeHtml(a.user || 'Admin')} at ${escapeHtml(new Date(a.time).toLocaleString())}</span>
+        </div>`
+      ).join('');
+    };
+    window.logActivity = function(action, target) {
+      const activities = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
+      activities.push({
+        action,
+        target,
+        user: JSON.parse(readAdminValue('admin_user') || '{}').name || 'Admin',
+        time: new Date().toISOString()
+      });
+      localStorage.setItem('admin_activity_log', JSON.stringify(activities.slice(-50)));
+    };
+    window.renderSettings = function() {
+      const panel = document.getElementById('settings-panel');
+      if (!panel) return;
+      panel.innerHTML = `
+        <div class="sec">Admin Settings</div>
+        <div class="settings-group">
+          <label>Auto-approve Ultra Hard mode submissions</label>
+          <input type="checkbox" id="setting-auto-approve" ${localStorage.getItem('auto_approve_ultra') === 'true' ? 'checked' : ''} onchange="localStorage.setItem('auto_approve_ultra', this.checked)" />
+        </div>
+        <div class="settings-group">
+          <label>Show soft-missing legacy fields</label>
+          <input type="checkbox" id="setting-soft-missing" ${localStorage.getItem('show_soft_missing') !== 'false' ? 'checked' : ''} onchange="localStorage.setItem('show_soft_missing', this.checked)" />
+        </div>
+        <div class="settings-group">
+          <label>Default sort order</label>
+          <select id="setting-sort" onchange="localStorage.setItem('default_sort', this.value);document.getElementById('admin-sort').value=this.value;applyAdminFilters();">
+            <option value="newest" ${localStorage.getItem('default_sort') !== 'oldest' ? 'selected' : ''}>Newest first</option>
+            <option value="oldest" ${localStorage.getItem('default_sort') === 'oldest' ? 'selected' : ''}>Oldest first</option>
+          </select>
+        </div>
+        <div class="settings-group">
+          <label>Items per page</label>
+          <select id="setting-per-page" onchange="localStorage.setItem('per_page', this.value)">
+            <option value="25" ${localStorage.getItem('per_page') !== '50' && localStorage.getItem('per_page') !== '100' ? 'selected' : ''}>25</option>
+            <option value="50" ${localStorage.getItem('per_page') === '50' ? 'selected' : ''}>50</option>
+            <option value="100" ${localStorage.getItem('per_page') === '100' ? 'selected' : ''}>100</option>
+          </select>
+        </div>
+      `;
+    };
+    window.toggleDarkMode = function() {
+      const body = document.body;
+      body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
+      localStorage.setItem('dark_mode', isDark ? 'true' : 'false');
+    };
+    window.showHelp = function() {
+      const modal = document.getElementById('help-modal');
+      if (modal) modal.style.display = 'flex';
+    };
+    window.hideHelp = function() {
+      const modal = document.getElementById('help-modal');
+      if (modal) modal.style.display = 'none';
+    };
+    window.toggleSelectAll = function() {
+      const checkboxes = document.querySelectorAll('.admin-select');
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      checkboxes.forEach(cb => cb.checked = !allChecked);
+    };
+    window.bulkCancel = async function() {
+      const checkboxes = document.querySelectorAll('.admin-select:checked');
+      if (!checkboxes.length) {
+        showToast('No orders selected', 'error');
+        return;
+      }
+      if (!confirm(`Cancel ${checkboxes.length} selected orders?`)) return;
+      const reason = prompt('Bulk cancel reason (optional):');
+      if (reason === null) return;
+      for (const cb of checkboxes) {
+        await updateOrder(cb.value, { cancelled: true, cancel_reason: reason || 'Bulk cancel', cancelled_at: new Date().toISOString() });
+      }
+      showToast(`Cancelled ${checkboxes.length} orders`);
+    };
+    window.bulkDelete = async function() {
+      const checkboxes = document.querySelectorAll('.admin-select:checked');
+      if (!checkboxes.length) {
+        showToast('No orders selected', 'error');
+        return;
+      }
+      if (!confirm(`Permanently delete ${checkboxes.length} selected orders? This cannot be undone.`)) return;
+      for (const cb of checkboxes) {
+        try {
+          const token = await getAdminToken();
+          await fetch('/api/orders', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify({ id: cb.value }),
+          });
+        } catch (err) {
+          console.error('Failed to delete order:', cb.value, err);
+        }
+      }
+      showToast(`Deleted ${checkboxes.length} orders`);
+      const orders = await fetchOrders();
+      renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
+    };
+    window.manualReview = async function(orderId) {
+      const reason = prompt('Manual review reason (required):');
+      if (reason === null) return;
+      if (!reason.trim()) {
+        alert('Please provide a reason for manual review.');
+        return;
+      }
+      await updateOrder(orderId, { manual_review: true, manual_review_reason: reason.trim(), manual_review_at: new Date().toISOString() });
+      showToast('Order manually reviewed');
+    };
+    window.revokeManualReview = async function(orderId) {
+      if (!confirm('Revoke manual review for this order?')) return;
+      await updateOrder(orderId, { manual_review: false, manual_review_reason: '', manual_review_at: '' });
+      showToast('Manual review revoked');
+    };
+    window.closeReview = function(orderId) {
+      const el = document.getElementById('review-' + orderId);
+      if (el) el.style.display = 'none';
+    };
+>>>>>>> theirs
     window.cancelOrder = async function(orderId) {
       if (!confirm('Cancel this order?')) return;
       await updateOrder(orderId, { cancelled: true });
@@ -461,6 +778,13 @@
         if (!urls.pass && urls.issues && urls.issues.length) {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>URL issues:</strong> ' + escapeHtml(urls.issues.join(', ')) + '</div>';
         }
+<<<<<<< ours
+=======
+        if (r.manual) {
+          html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ' + escapeHtml(r.reason || 'Approved') + ' at ' + escapeHtml(r.at ? new Date(r.at).toLocaleString() : '') + '</div>';
+        }
+        html += '<button class="btn-hc" style="margin-top:.5rem;background:var(--muted);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="closeReview(\'' + orderId + '\')">Close review</button>';
+>>>>>>> theirs
         html += '</div>';
         el.innerHTML = html;
       } catch (err) {
@@ -602,6 +926,9 @@
         const orders = await fetchOrders();
         renderAdminBoard(user, orders);
         show('s-admin');
+        if (localStorage.getItem('dark_mode') === 'true') {
+          document.body.classList.add('dark-mode');
+        }
       } catch (err) {
         errorEl.textContent = err.message || 'The admin board could not be opened.';
         errorEl.style.display = 'block';
@@ -621,6 +948,9 @@
           const sort = document.getElementById('admin-sort');
           if (search) search.addEventListener('input', applyAdminFilters);
           if (sort) sort.addEventListener('change', applyAdminFilters);
+          if (localStorage.getItem('dark_mode') === 'true') {
+            document.body.classList.add('dark-mode');
+          }
           return;
         }
       } catch (err) {

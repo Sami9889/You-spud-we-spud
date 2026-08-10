@@ -149,11 +149,11 @@ function detectObfuscation(code, rules) {
   return { obfuscated, reasons };
 }
 
-async function fetchGitHubTree(owner, repo, branch) {
+async function fetchGitHubTree(owner, repo, branch, token) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
-  const resp = await fetch(apiUrl, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" },
-  });
+  const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const resp = await fetch(apiUrl, { headers });
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
     throw new Error(`GitHub API ${resp.status}: ${text.slice(0, 200)}`);
@@ -165,11 +165,11 @@ async function fetchGitHubTree(owner, repo, branch) {
   return data.tree;
 }
 
-async function fetchGitHubContent(owner, repo, path) {
+async function fetchGitHubContent(owner, repo, path, token) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}`;
-  const resp = await fetch(apiUrl, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" },
-  });
+  const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const resp = await fetch(apiUrl, { headers });
   if (!resp.ok) return null;
   const data = await resp.json();
   if (data.encoding === "base64" && data.content) {
@@ -227,7 +227,7 @@ function checkForbiddenFilesAndDirs(tree, rules) {
   return { issues, forbiddenFiles, forbiddenDirs, forbiddenPatterns };
 }
 
-async function checkFileContents(owner, repo, files, rules) {
+async function checkFileContents(owner, repo, files, rules, token) {
   const issues = [];
   const patterns = rules.github_check?.forbidden_patterns || [];
   if (!patterns.length) return issues;
@@ -257,6 +257,7 @@ async function checkGitHubRepo(order, rules) {
   if (!repo) {
     return { checked: false, reason: "No GitHub repo URL found." };
   }
+  const token = rules.github_check?.github_token || "";
   const branch = rules.github_check?.default_branch || "main";
   let tree;
   try {
@@ -289,13 +290,13 @@ async function checkGitHubRepo(order, rules) {
     pass = false;
   }
 
-  const contentIssues = await checkFileContents(repo.owner, repo.repo, files, rules);
+  const contentIssues = await checkFileContents(repo.owner, repo.repo, files, rules, token);
   issues.push(...contentIssues);
   if (contentIssues.length > 0) {
     pass = false;
   }
 
-  const obfuscationIssues = await checkObfuscationInFiles(repo.owner, repo.repo, files, rules);
+  const obfuscationIssues = await checkObfuscationInFiles(repo.owner, repo.repo, files, rules, token);
   issues.push(...obfuscationIssues);
   if (obfuscationIssues.length > 0) {
     pass = false;
