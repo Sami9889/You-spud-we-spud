@@ -50,9 +50,7 @@ function validateTier(order, rules) {
 
 function validateRequiredFields(order, rules) {
   const missing = [];
-  const softMissing = [];
   const all = [];
-  const soft = ["accepted", "hc_verified", "ship_line2"];
   if (rules.required_fields) {
     for (const group of Object.values(rules.required_fields)) {
       if (Array.isArray(group)) all.push(...group);
@@ -60,14 +58,10 @@ function validateRequiredFields(order, rules) {
   }
   for (const field of all) {
     if (!order[field] || !String(order[field]).trim()) {
-      if (soft.includes(field)) {
-        softMissing.push(field);
-      } else {
-        missing.push(field);
-      }
+      missing.push(field);
     }
   }
-  return { pass: missing.length === 0, missing, soft_missing: softMissing };
+  return { pass: missing.length === 0, missing };
 }
 
 function validateUrls(order, rules) {
@@ -160,11 +154,11 @@ function detectObfuscation(code, rules) {
   return { obfuscated, reasons };
 }
 
-async function fetchGitHubTree(owner, repo, branch, token) {
+async function fetchGitHubTree(owner, repo, branch) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
-  const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  const resp = await fetch(apiUrl, { headers });
+  const resp = await fetch(apiUrl, {
+    headers: { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" },
+  });
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
     throw new Error(`GitHub API ${resp.status}: ${text.slice(0, 200)}`);
@@ -176,11 +170,11 @@ async function fetchGitHubTree(owner, repo, branch, token) {
   return data.tree;
 }
 
-async function fetchGitHubContent(owner, repo, path, token) {
+async function fetchGitHubContent(owner, repo, path) {
   const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}`;
-  const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  const resp = await fetch(apiUrl, { headers });
+  const resp = await fetch(apiUrl, {
+    headers: { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" },
+  });
   if (!resp.ok) return null;
   const data = await resp.json();
   if (data.encoding === "base64" && data.content) {
@@ -268,40 +262,20 @@ async function checkGitHubRepo(order, rules) {
   if (!repo) {
     return { checked: false, reason: "No GitHub repo URL found." };
   }
-  const token = rules.github_check?.github_token || "";
-  const repoUrl = `https://api.github.com/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}`;
-  const repoHeaders = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
-  if (token) repoHeaders["Authorization"] = `Bearer ${token}`;
-
-  let repoInfo;
-  try {
-    const repoResp = await fetch(repoUrl, { headers: repoHeaders });
-    if (!repoResp.ok) {
-      const text = await repoResp.text().catch(() => "");
-      if (repoResp.status === 404) {
-        return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch: "unknown", actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: false, issues: ["GitHub repo not found or private. Check the URL and token access."], rate_limited: false, sample_files: [] };
-      }
-      if (repoResp.status === 403) {
-        const rateLimited = text.includes("rate limit");
-        return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch: "unknown", actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: rateLimited, issues: [rateLimited ? "GitHub API rate limit exceeded. Review passed — verify manually." : `GitHub API ${repoResp.status}: ${text.slice(0, 200)}`], rate_limited, sample_files: [] };
-      }
-      return { checked: false, reason: `GitHub API ${repoResp.status}: ${text.slice(0, 200)}`, pass: false };
-    }
-    repoInfo = await repoResp.json();
-  } catch (err) {
-    return { checked: false, reason: "GitHub check failed: " + (err.message || "Unknown error"), pass: false };
-  }
-
-  const branch = repoInfo.default_branch || rules.github_check?.default_branch || "main";
+  const branch = rules.github_check?.default_branch || "main";
   let tree;
   try {
     tree = await fetchGitHubTree(repo.owner, repo.repo, branch, token);
   } catch (err) {
+<<<<<<< ours
+    return { checked: false, reason: "GitHub check failed: " + (err.message || "Unknown error") };
+=======
     const msg = err.message || "Unknown error";
     if (msg.includes("403") || msg.includes("rate limit")) {
       return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: true, issues: ["GitHub API rate limit exceeded. Review passed — verify manually."], rate_limited: true, sample_files: [] };
     }
     return { checked: false, reason: "GitHub check failed: " + msg, pass: false };
+>>>>>>> theirs
   }
   const { files, totalBytes } = filterCodeFiles(tree, rules);
   const actualKb = totalBytes / 1024;
@@ -425,45 +399,6 @@ export async function onRequestGet(context) {
   }
 
   const rules = await getRules(context.env);
-  
-  if (order.manual_review) {
-    const orderForReview = {
-      _id: order._id,
-      project_name: order.project_name,
-      project_url: order.project_url,
-      source_url: order.source_url,
-      file_size_kb: order.file_size_kb,
-      description: order.description,
-      tier: order.tier,
-      hc_name: order.hc_name,
-      hc_email: order.hc_email,
-      hc_verified: order.hc_verified,
-      deadline: order.deadline,
-      accepted: order.accepted,
-      manual_review: order.manual_review,
-      manual_review_reason: order.manual_review_reason,
-      manual_review_at: order.manual_review_at,
-    };
-    return new Response(JSON.stringify({
-      ok: true,
-      order_id: orderId,
-      review: {
-        passed: true,
-        manual: true,
-        reason: order.manual_review_reason || 'Manually approved',
-        at: order.manual_review_at,
-        tier: validateTier(order, rules),
-        fields: validateRequiredFields(order, rules),
-        urls: validateUrls(order, rules),
-        github: { checked: false, reason: "Skipped due to manual review." },
-      },
-      order: orderForReview,
-    }), {
-      status: 200,
-      headers: securityHeaders(),
-    });
-  }
-  
   const tierCheck = validateTier(order, rules);
   const fieldsCheck = validateRequiredFields(order, rules);
   const urlCheck = validateUrls(order, rules);
