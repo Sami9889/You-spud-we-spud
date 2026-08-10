@@ -326,7 +326,7 @@ async function checkGitHubRepo(order, rules) {
   };
 }
 
-async function checkObfuscationInFiles(owner, repo, files, rules) {
+async function checkObfuscationInFiles(owner, repo, files, rules, token) {
   const issues = [];
   const obf = rules.github_check?.obfuscation_rules || {};
   if (obf.enabled === false) return issues;
