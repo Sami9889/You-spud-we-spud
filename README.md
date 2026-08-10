@@ -9,15 +9,15 @@ A [Hack Club YSWS](https://ysws.hackclub.com) challenge by [Sami](https://sami-s
 
 ## What is this?
 
-Everyone's shipping 500KB of JavaScript just to show some text on a page. This challenge flips that: build something under **15KB**, no frameworks, no React, no Tailwind, no CDN-loaded app logic, and Sami mails you a parcel from Australia. Go smaller and the parcel gets better.
+Everyone's shipping 500KB of JavaScript just to show some text on a page. This challenge flips that: build something under **10KB**, no frameworks, no React, no Tailwind, no CDN-loaded app logic, and Sami mails you a parcel from Australia. Go smaller and the parcel gets better.
 
 ## Size tiers
 
 | Tier | Limit | You get |
 |---|---|---|
-| **Standard** | < 15KB | Custom sticker, handwritten airmail postcard, random Aussie trading card, temporary potato tattoo, permanent shoutout in `#ship` |
-| **Hard Mode** | < 5KB | Everything above + Australian chicken salt, surprise Aussie snack pack, a custom playlist |
-| **Ultra Hard Mode** | < 2KB | Everything above + instant mashed potatoes, a badly hand-drawn potato portrait of you, a feature on sami-s.dev, Sami's genuine respect |
+| **Standard** | < 10KB | Custom sticker, handwritten airmail postcard, random Aussie trading card, temporary potato tattoo, permanent shoutout in `#ship` |
+| **Hard Mode** | < 3KB | Everything above + Australian chicken salt, surprise Aussie snack pack, a custom playlist |
+| **Ultra Hard Mode** | < 1KB | Everything above + instant mashed potatoes, a badly hand-drawn potato portrait of you, a feature on sami-s.dev, Sami's genuine respect |
 
 ## Rules
 
@@ -31,12 +31,13 @@ Everyone's shipping 500KB of JavaScript just to show some text on a page. This c
 - One parcel per person per project, no farming duplicates
 - Potato theme earns bonus points, not required
 - Every submission is manually reviewed for quality and originality before any reward is sent
+- Only the top ~50% of reviewed submissions per tier receive the full physical parcel; the rest get a digital shoutout
 
 Full rules, FAQ, and the submission form live on the [website](https://youspudwespud.sami-s.dev).
 
 ## How to submit
 
-1. Build something that runs in a browser, under 15KB
+1. Build something that runs in a browser, under 10KB
 2. Host it anywhere with a public URL (GitHub Pages, Netlify, Vercel, Hack Club Nest)
 3. Post your link + repo in `#ship` on Hack Club Slack, tag `@sami9889`
 4. Fill out the submission form on the site, this is the actual entry

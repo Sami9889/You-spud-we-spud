@@ -1,14 +1,14 @@
 version: 1
 tiers:
   - id: standard
-    label: "Standard (<15KB)"
-    max_size_kb: 15
+    label: "Standard (<10KB)"
+    max_size_kb: 10
   - id: hard
-    label: "Hard Mode (<5KB)"
-    max_size_kb: 5
+    label: "Hard Mode (<3KB)"
+    max_size_kb: 3
   - id: ultra
-    label: "Ultra Hard (<2KB)"
-    max_size_kb: 2
+    label: "Ultra Hard (<1KB)"
+    max_size_kb: 1
 
 required_fields:
   project_info:
@@ -54,6 +54,8 @@ review:
   require_meaningful_project: true
   require_original_design: true
   manual_review_quality_gate: true
+  judges_pick_enabled: true
+  judges_pick_ratio: 0.5
 
 github_check:
   enabled: true
