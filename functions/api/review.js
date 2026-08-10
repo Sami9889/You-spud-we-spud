@@ -295,7 +295,7 @@ async function checkGitHubRepo(order, rules) {
     if (msg.includes("404")) {
       return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: true, issues: [`GitHub branch not found: ${msg}. Review passed — verify manually.`], rate_limited: false, sample_files: [] };
     }
-    return { checked: false, reason: "GitHub check failed: " + msg, pass: false };
+    return { checked: false, reason: "GitHub check failed: " + msg, pass: false, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), files_checked: 0, issues: [msg], sample_files: [] };
   }
   const { files, totalBytes } = filterCodeFiles(tree, rules);
   const actualKb = totalBytes / 1024;
