@@ -171,9 +171,6 @@
   <div class="airmail-strip"></div>
   <nav>
     <a href="https://youspudwespud.sami-s.dev" class="nav-logo">you spud, we spud</a>
-<<<<<<< ours
-    <a href="/form/" class="nav-cta">← Back to form</a>
-=======
     <div style="display:flex;gap:.5rem;align-items:center;">
       <select id="admin-quick-action" onchange="handleQuickAction(this.value)" style="padding:.4rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--paper);color:var(--ink);font-family:'Archivo',sans-serif;font-size:.82rem;cursor:pointer;">
         <option value="">Quick actions</option>
@@ -187,7 +184,6 @@
       <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="showHelp()" title="Keyboard shortcuts">?</button>
       <a href="/form/" class="nav-cta">← Back to form</a>
     </div>
->>>>>>> theirs
   </nav>
 
   <div class="container">
@@ -242,9 +238,6 @@
           <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="exportOrders()">Export JSON</button>
           <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--green);" onclick="migrateOrders()">Remove expiry</button>
         </div>
-<<<<<<< ours
-        <div id="admin-stats" class="admin-stats"></div>
-=======
         <div class="admin-toolbar">
           <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="bulkCancel()">Bulk cancel selected</button>
           <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--red);" onclick="bulkDelete()">Bulk delete selected</button>
@@ -257,7 +250,6 @@
         </div>
         <div id="activity-log" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;max-height:200px;overflow-y:auto;"></div>
         <div id="settings-panel" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;"></div>
->>>>>>> theirs
         <div id="admin-orders" class="admin-list"></div>
       </div>
     </div>
@@ -370,14 +362,6 @@
             ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}
             ${order.project_url ? `<a class="admin-link" href="${projectHref}" target="_blank" rel="noopener"${projectOnClick}>Open project</a>` : ''}
             ${!order.cancelled ? `
-<<<<<<< ours
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="reviewOrder('${order._id}')">Review</button>
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="saveAdminNote('${order._id}')">Add admin note</button>
-            ` : `
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="deleteOrder('${order._id}')">Delete order</button>
-=======
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="cancelOrder('${order._id}')">Cancel order</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="reviewOrder('${order._id}')">Review</button>
               ${order.manual_review ? `<button class="btn-hc" style="margin-top:.5rem;background:var(--green);color:white;width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="revokeManualReview('${order._id}')">Revoke manual review</button>` : `<button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="manualReview('${order._id}')">Manually review</button>`}
@@ -385,7 +369,6 @@
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="saveAdminNote('${order._id}')">Add admin note</button>
             ` : `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="deleteOrder('${order._id}')">Delete order</button>
->>>>>>> theirs
             `}
             ${order.admin_note ? `<div class="admin-meta" style="margin-top:.4rem;"><strong>Admin note:</strong> ${escapeHtml(order.admin_note)}</div>` : ''}
             <div id="review-${order._id}" style="display:none;"></div>
@@ -463,11 +446,6 @@
       if (!value) return;
       await updateOrder(orderId, { [field]: value });
     };
-<<<<<<< ours
-    async function getAdminToken() {
-      try { return readAdminValue('admin_api_token') || ''; } catch (err) { return ''; }
-    }
-=======
     window.handleQuickAction = async function(action) {
       const select = document.getElementById('admin-quick-action');
       if (!action) return;
@@ -735,7 +713,6 @@
       const el = document.getElementById('review-' + orderId);
       if (el) el.style.display = 'none';
     };
->>>>>>> theirs
     window.cancelOrder = async function(orderId) {
       if (!confirm('Cancel this order?')) return;
       await updateOrder(orderId, { cancelled: true });
@@ -778,13 +755,10 @@
         if (!urls.pass && urls.issues && urls.issues.length) {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>URL issues:</strong> ' + escapeHtml(urls.issues.join(', ')) + '</div>';
         }
-<<<<<<< ours
-=======
         if (r.manual) {
           html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ' + escapeHtml(r.reason || 'Approved') + ' at ' + escapeHtml(r.at ? new Date(r.at).toLocaleString() : '') + '</div>';
         }
         html += '<button class="btn-hc" style="margin-top:.5rem;background:var(--muted);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="closeReview(\'' + orderId + '\')">Close review</button>';
->>>>>>> theirs
         html += '</div>';
         el.innerHTML = html;
       } catch (err) {
