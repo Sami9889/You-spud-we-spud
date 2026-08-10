@@ -90,10 +90,10 @@
     }
     .field { margin-bottom: .8rem; }
     .field label { display: block; font-size: .86rem; margin-bottom: .28rem; color: var(--brown); }
-    .field input, .field select {
+    .field input {
       width: 100%; padding: .62rem .72rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .92rem;
     }
-    .field input:focus, .field select:focus { outline: none; border-color: var(--gold); }
+    .field input:focus { outline: none; border-color: var(--gold); }
     .card-wide { max-width: 100%; }
     .btn-hc {
       display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
@@ -157,17 +157,6 @@
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: var(--red); }
     .toast.success { background: var(--green); }
-    .admin-select { width: auto; margin-right: .5rem; cursor: pointer; }
-    .admin-bulk { background: #f7eed8; border: 1px dashed var(--border); border-radius: 8px; padding: .5rem .7rem; margin-bottom: .7rem; }
-    .admin-panel { background: #f8efd8; border: 1px solid var(--border); border-radius: 8px; padding: .7rem; margin-bottom: .7rem; }
-    .admin-panel .sec { margin-top: 0; }
-    .activity-item { padding: .35rem .5rem; border-bottom: 1px solid var(--border); font-size: .82rem; }
-    .activity-item:last-child { border-bottom: none; }
-    .activity-time { font-size: .72rem; color: var(--muted); font-family: 'Space Mono', monospace; }
-    .settings-group { margin-bottom: .6rem; }
-    .settings-group label { display: block; font-size: .82rem; font-weight: 600; margin-bottom: .2rem; color: var(--brown); }
-    .settings-group input, .settings-group select { width: 100%; padding: .4rem .5rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .85rem; }
-    .shortcut-hint { font-size: .72rem; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: .2rem; }
     footer { border-top: 2px dashed var(--border); padding: 2rem; text-align: center; font-size: .78rem; color: var(--muted); font-family: 'Space Mono', monospace; }
     @media (max-width: 480px) { nav { padding: .75rem 1rem; } .container { padding: 1.5rem .75rem 3rem; } }
     body.dark-mode {
@@ -182,6 +171,9 @@
   <div class="airmail-strip"></div>
   <nav>
     <a href="https://youspudwespud.sami-s.dev" class="nav-logo">you spud, we spud</a>
+<<<<<<< ours
+    <a href="/form/" class="nav-cta">← Back to form</a>
+=======
     <div style="display:flex;gap:.5rem;align-items:center;">
       <select id="admin-quick-action" onchange="handleQuickAction(this.value)" style="padding:.4rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--paper);color:var(--ink);font-family:'Archivo',sans-serif;font-size:.82rem;cursor:pointer;">
         <option value="">Quick actions</option>
@@ -195,29 +187,15 @@
       <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--brown);" onclick="showHelp()" title="Keyboard shortcuts">?</button>
       <a href="/form/" class="nav-cta">← Back to form</a>
     </div>
+>>>>>>> theirs
   </nav>
-  <div id="help-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;justify-content:center;align-items:center;">
-    <div style="background:var(--paper);border:2px solid var(--border);border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-        <h2 style="margin:0;font-family:'Special Elite',monospace;">Keyboard Shortcuts</h2>
-        <button class="btn-hc" style="width:auto;padding:.3rem .6rem;font-size:.78rem;background:var(--red);" onclick="hideHelp()">Close</button>
-      </div>
-      <div class="settings-group">
-        <div class="admin-meta"><strong>/</strong> — Focus search</div>
-        <div class="admin-meta"><strong>R</strong> — Select first order</div>
-        <div class="admin-meta"><strong>Esc</strong> — Clear selections</div>
-        <div class="admin-meta"><strong>Ctrl+E</strong> — Export JSON</div>
-        <div class="admin-meta"><strong>Ctrl+Shift+C</strong> — Export CSV</div>
-      </div>
-      <div class="sec">Quick Actions</div>
-      <div class="admin-meta">Use the dropdown in the navbar for bulk operations like approve all, cancel all, and delete cancelled orders.</div>
-    </div>
-  </div>
+
   <div class="container">
     <div id="s-loading" class="screen active">
       <div class="spin"></div>
       <p class="lead">Checking your access…</p>
     </div>
+
     <div id="s-signin" class="screen">
       <div class="big">🧾</div>
       <h2>Admin sign in</h2>
@@ -242,6 +220,7 @@
         <p class="note">Credentials are checked server-side against the configured admin secret value.</p>
       </div>
     </div>
+
     <div id="s-admin" class="screen">
       <div class="card card-wide">
         <div class="ubar">
@@ -256,14 +235,6 @@
         <div class="sec">Review board</div>
         <div class="admin-toolbar">
           <input type="search" id="admin-search" placeholder="Search name, email, project…" />
-          <select id="admin-filter-status">
-            <option value="all">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="manual">Manual review</option>
-            <option value="overdue">Overdue</option>
-          </select>
           <select id="admin-sort">
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
@@ -271,6 +242,9 @@
           <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="exportOrders()">Export JSON</button>
           <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--green);" onclick="migrateOrders()">Remove expiry</button>
         </div>
+<<<<<<< ours
+        <div id="admin-stats" class="admin-stats"></div>
+=======
         <div class="admin-toolbar">
           <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="bulkCancel()">Bulk cancel selected</button>
           <button class="btn-hc" style="width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;background:var(--red);" onclick="bulkDelete()">Bulk delete selected</button>
@@ -283,9 +257,11 @@
         </div>
         <div id="activity-log" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;max-height:200px;overflow-y:auto;"></div>
         <div id="settings-panel" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;"></div>
+>>>>>>> theirs
         <div id="admin-orders" class="admin-list"></div>
       </div>
     </div>
+
     <div id="s-error" class="screen">
       <div class="big">🥴</div>
       <h2>Access denied</h2>
@@ -295,12 +271,15 @@
       </div>
     </div>
   </div>
+
   <footer>
     <p>You Spud, We Spud, a Hack Club YSWS by sami9889</p>
     <p style="margin-top:.4rem;"><a href="/privacy.html">Privacy & data storage</a></p>
   </footer>
+
   <script>
     const API_BASE = '/api/admin';
+
     function show(id) {
       document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -331,10 +310,11 @@
       const container = document.getElementById('admin-orders');
       document.getElementById('admin-name').textContent = user?.name || 'Admin';
       document.getElementById('admin-email').textContent = user?.email || 'Authorized organizer';
+
       const query = (document.getElementById('admin-search')?.value || '').trim().toLowerCase();
       const sort = document.getElementById('admin-sort')?.value || 'newest';
+
       let filtered = orders || [];
-      const statusFilter = document.getElementById('admin-filter-status')?.value || 'all';
       if (query) {
         filtered = filtered.filter(order => {
           const text = [
@@ -344,21 +324,12 @@
           return text.includes(query);
         });
       }
-      if (statusFilter !== 'all') {
-        filtered = filtered.filter(order => {
-          if (statusFilter === 'pending') return !order.accepted && !order.cancelled && !order.manual_review;
-          if (statusFilter === 'accepted') return order.accepted === 'yes' && !order.cancelled;
-          if (statusFilter === 'cancelled') return order.cancelled;
-          if (statusFilter === 'manual') return order.manual_review && !order.cancelled;
-          if (statusFilter === 'overdue') return order.deadline && new Date(order.deadline) < new Date() && !order.cancelled;
-          return true;
-        });
-      }
       filtered = [...filtered].sort((a, b) => {
         const ta = new Date(a.timestamp || a._ts || 0).getTime();
         const tb = new Date(b.timestamp || b._ts || 0).getTime();
         return sort === 'oldest' ? ta - tb : tb - ta;
       });
+
       renderAdminStats(filtered);
       if (!filtered.length) {
         container.innerHTML = '<div class="admin-item"><strong>No orders match your search.</strong><div class="admin-meta">Try a different search term.</div></div>';
@@ -387,20 +358,26 @@
         const cancelled = order.cancelled ? '<span class="admin-pill" style="background:var(--red);color:#fff;">Cancelled</span>' : '';
         const overdue = order.deadline && new Date(order.deadline) < new Date() && !order.cancelled ? '<span class="admin-pill" style="background:var(--red);color:#fff;">Overdue</span>' : '';
         const accepted = order.accepted === 'yes' ? '<span class="admin-pill" style="background:var(--green);color:#fff;">Accepted</span>' : '';
-        const manual = order.manual_review && !order.cancelled ? '<span class="admin-pill" style="background:var(--gold);color:#fff;">Manual</span>' : '';
         const projectHref = isValidProjectUrl(order.project_url) ? escapeHtml(order.project_url) : '#';
         const projectOnClick = isValidProjectUrl(order.project_url) ? '' : ' onclick="event.preventDefault();"';
         return `
           <article class="admin-item${order.cancelled ? ' cancelled' : ''}">
             <div class="admin-item-top">
-              <input type="checkbox" class="admin-select" value="${escapeHtml(order._id)}" ${order.cancelled ? 'disabled' : ''} />
               <strong>${escapeHtml(order.hc_name || order.ship_name || 'Anonymous')}</strong>
-              ${accepted}${manual}${cancelled}${overdue}
+              ${accepted}${cancelled}${overdue}
               <span class="admin-pill">${escapeHtml(order.tier || 'Pending')}</span>
             </div>
             ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}
             ${order.project_url ? `<a class="admin-link" href="${projectHref}" target="_blank" rel="noopener"${projectOnClick}>Open project</a>` : ''}
             ${!order.cancelled ? `
+<<<<<<< ours
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="reviewOrder('${order._id}')">Review</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="saveAdminNote('${order._id}')">Add admin note</button>
+            ` : `
+              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="deleteOrder('${order._id}')">Delete order</button>
+=======
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="cancelOrder('${order._id}')">Cancel order</button>
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="reviewOrder('${order._id}')">Review</button>
               ${order.manual_review ? `<button class="btn-hc" style="margin-top:.5rem;background:var(--green);color:white;width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="revokeManualReview('${order._id}')">Revoke manual review</button>` : `<button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="manualReview('${order._id}')">Manually review</button>`}
@@ -408,10 +385,9 @@
               <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="saveAdminNote('${order._id}')">Add admin note</button>
             ` : `
               <button class="btn-hc" style="margin-top:.5rem;background:var(--red);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="deleteOrder('${order._id}')">Delete order</button>
+>>>>>>> theirs
             `}
             ${order.admin_note ? `<div class="admin-meta" style="margin-top:.4rem;"><strong>Admin note:</strong> ${escapeHtml(order.admin_note)}</div>` : ''}
-            ${order.manual_review ? `<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ${escapeHtml(order.manual_review_reason || 'Approved')} at ${escapeHtml(order.manual_review_at ? new Date(order.manual_review_at).toLocaleString() : '')}</div>` : ''}
-            ${order.cancel_reason ? `<div class="admin-meta" style="margin-top:.2rem; color:var(--red);"><strong>Cancel reason:</strong> ${escapeHtml(order.cancel_reason)} at ${escapeHtml(order.cancelled_at ? new Date(order.cancelled_at).toLocaleString() : '')}</div>` : ''}
             <div id="review-${order._id}" style="display:none;"></div>
           </article>
         `;
@@ -434,13 +410,9 @@
       const accepted = orders.filter(o => o.accepted === 'yes').length;
       const cancelled = orders.filter(o => o.cancelled).length;
       const overdue = orders.filter(o => o.deadline && new Date(o.deadline) < new Date() && !o.cancelled).length;
-      const manualReview = orders.filter(o => o.manual_review && !o.cancelled).length;
-      const pending = orders.filter(o => !o.accepted && !o.cancelled && !o.manual_review).length;
       stats.innerHTML = [
         ['Total', total],
-        ['Pending', pending],
         ['Accepted', accepted],
-        ['Manual review', manualReview],
         ['Cancelled', cancelled],
         ['Overdue', overdue],
       ].map(([label, value]) => `<div class="admin-stat"><strong>${value}</strong> ${label}</div>`).join('');
@@ -450,9 +422,6 @@
       fetchOrders().then(orders => {
         renderAdminBoard(user, orders);
       });
-    };
-    window.applyStatusFilter = function() {
-      applyAdminFilters();
     };
     window.exportOrders = function() {
       const user = JSON.parse(readAdminValue('admin_user') || '{}');
@@ -494,6 +463,11 @@
       if (!value) return;
       await updateOrder(orderId, { [field]: value });
     };
+<<<<<<< ours
+    async function getAdminToken() {
+      try { return readAdminValue('admin_api_token') || ''; } catch (err) { return ''; }
+    }
+=======
     window.handleQuickAction = async function(action) {
       const select = document.getElementById('admin-quick-action');
       if (!action) return;
@@ -761,10 +735,10 @@
       const el = document.getElementById('review-' + orderId);
       if (el) el.style.display = 'none';
     };
+>>>>>>> theirs
     window.cancelOrder = async function(orderId) {
-      const reason = prompt('Cancel reason (optional):');
-      if (reason === null) return;
-      await updateOrder(orderId, { cancelled: true, cancel_reason: reason || 'No reason provided', cancelled_at: new Date().toISOString() });
+      if (!confirm('Cancel this order?')) return;
+      await updateOrder(orderId, { cancelled: true });
     };
     window.reviewOrder = async function(orderId) {
       const token = await getAdminToken();
@@ -792,9 +766,7 @@
         html += '<div class="admin-meta" style="margin-top:.25rem;"><strong>Tier:</strong> ' + escapeHtml(tier.tier || 'N/A') + ' — limit: ' + escapeHtml(String(tier.limit || '?')) + ' KB' + (tier.pass ? '' : ' <span style="color:var(--red);">(over limit)</span>') + '</div>';
         if (gh.checked) {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>GitHub:</strong> ' + escapeHtml(gh.repo || '') + ' (' + escapeHtml(gh.branch || '') + ') — actual: ' + escapeHtml(String(gh.actual_kb || '?')) + ' KB / tier limit: ' + escapeHtml(String(gh.tier_limit_kb || '?')) + ' KB — ' + escapeHtml(String(gh.files_checked || '?')) + ' files' + (gh.pass ? '' : ' <span style="color:var(--red);">(over limit)</span>') + '</div>';
-          if (gh.rate_limited) {
-            html += '<div class="admin-meta" style="margin-top:.15rem; color:var(--gold);"><strong>Note:</strong> ' + escapeHtml((gh.issues || [])[0] || 'Rate limited') + '</div>';
-          } else if (gh.issues && gh.issues.length) {
+          if (gh.issues && gh.issues.length) {
             html += '<div class="admin-meta" style="margin-top:.15rem;"><strong>GitHub issues:</strong> ' + escapeHtml(gh.issues.join('; ')) + '</div>';
           }
         } else {
@@ -806,10 +778,13 @@
         if (!urls.pass && urls.issues && urls.issues.length) {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>URL issues:</strong> ' + escapeHtml(urls.issues.join(', ')) + '</div>';
         }
+<<<<<<< ours
+=======
         if (r.manual) {
           html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ' + escapeHtml(r.reason || 'Approved') + ' at ' + escapeHtml(r.at ? new Date(r.at).toLocaleString() : '') + '</div>';
         }
         html += '<button class="btn-hc" style="margin-top:.5rem;background:var(--muted);width:auto;padding:.5rem 1rem;font-size:.82rem;min-width:120px;" onclick="closeReview(\'' + orderId + '\')">Close review</button>';
+>>>>>>> theirs
         html += '</div>';
         el.innerHTML = html;
       } catch (err) {
@@ -882,19 +857,6 @@
           throw new Error('Update succeeded, but refreshing the board failed: ' + (uiErr.message || uiErr));
         }
         showToast('Order updated');
-        const actionMap = {
-          cancelled: 'Cancelled order',
-          manual_review: 'Set manual review',
-          shipping_id: 'Updated shipping',
-          admin_note: 'Added admin note',
-          accepted: 'Updated acceptance'
-        };
-        for (const [key, action] of Object.entries(actionMap)) {
-          if (updates[key]) {
-            logActivity(action, orderId);
-            break;
-          }
-        }
       } catch (err) {
         alert(err.message || 'Failed to update order');
       }
@@ -929,6 +891,7 @@
       clearAdminValues();
       show('s-signin');
     };
+
     document.getElementById('admin-login-form').addEventListener('submit', async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
@@ -939,6 +902,7 @@
         email: form.email.value.trim(),
         password: form.password.value.trim(),
       };
+
       try {
         const response = await fetch(API_BASE + '/login', {
           method: 'POST',
@@ -949,6 +913,7 @@
         if (!response.ok || !body.ok) {
           throw new Error(body.error || 'Invalid admin credentials.');
         }
+
         const user = {
           name: body.user?.name || payload.username,
           email: body.user?.email || payload.email,
@@ -961,34 +926,15 @@
         const orders = await fetchOrders();
         renderAdminBoard(user, orders);
         show('s-admin');
-        const search = document.getElementById('admin-search');
-        const sort = document.getElementById('admin-sort');
-        const statusFilter = document.getElementById('admin-filter-status');
-        if (search) search.addEventListener('input', applyAdminFilters);
-        if (sort) sort.addEventListener('change', applyAdminFilters);
-        if (statusFilter) statusFilter.addEventListener('change', applyStatusFilter);
-        document.addEventListener('keydown', (e) => {
-          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-          if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
-            e.preventDefault();
-            document.getElementById('admin-search')?.focus();
-          } else if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            e.preventDefault();
-            const firstOrder = document.querySelector('.admin-item:not(.cancelled)');
-            if (firstOrder) firstOrder.querySelector('.admin-select')?.click();
-          } else if (e.key === 'Escape') {
-            document.querySelectorAll('.admin-select:checked').forEach(cb => cb.checked = false);
-          }
-        });
         if (localStorage.getItem('dark_mode') === 'true') {
-          document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+          document.body.classList.add('dark-mode');
         }
-        return;
       } catch (err) {
         errorEl.textContent = err.message || 'The admin board could not be opened.';
         errorEl.style.display = 'block';
       }
     });
+
     (async function init() {
       try {
         const cachedUser = readAdminValue('admin_user');
@@ -1000,25 +946,10 @@
           show('s-admin');
           const search = document.getElementById('admin-search');
           const sort = document.getElementById('admin-sort');
-          const statusFilter = document.getElementById('admin-filter-status');
           if (search) search.addEventListener('input', applyAdminFilters);
           if (sort) sort.addEventListener('change', applyAdminFilters);
-          if (statusFilter) statusFilter.addEventListener('change', applyStatusFilter);
-          document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-            if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
-              e.preventDefault();
-              document.getElementById('admin-search')?.focus();
-            } else if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-              e.preventDefault();
-              const firstOrder = document.querySelector('.admin-item:not(.cancelled)');
-              if (firstOrder) firstOrder.querySelector('.admin-select')?.click();
-            } else if (e.key === 'Escape') {
-              document.querySelectorAll('.admin-select:checked').forEach(cb => cb.checked = false);
-            }
-          });
           if (localStorage.getItem('dark_mode') === 'true') {
-            document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+            document.body.classList.add('dark-mode');
           }
           return;
         }
