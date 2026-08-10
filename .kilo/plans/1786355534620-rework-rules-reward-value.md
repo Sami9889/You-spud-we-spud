@@ -1,37 +1,36 @@
-# Plan: Rework rules to justify reward value without mentioning dollar amount
+# Plan: Make the challenge harder to justify reward value
 
 ## Goal
-Address the "low time-to-reward" perception by raising the quality bar and adding friction to low-effort submissions. The site should make clear that size is only one constraint, and that meaningful effort and originality are required to qualify. Do NOT mention any specific dollar value on the site.
+Address the "low time-to-reward" perception by making the challenge itself genuinely harder, so the reward feels commensurate with the effort. The core complaint: a 2KB project can be built in ~2 hours, making a ~$30 parcel feel disproportionate. Making the tiers harder raises the skill/effort bar.
+
+## Key Design Decisions
+
+### 1. Lower size limits across all tiers
+| Current | Proposed |
+|---|---|
+| Standard: < 15KB | Standard: < 10KB |
+| Hard Mode: < 5KB | Hard Mode: < 3KB |
+| Ultra Hard: < 2KB | Ultra Hard: < 1KB |
+
+### 2. Add a "Judges' Pick" selection layer
+Not every passing submission gets the full parcel. After passing automated checks, submissions are ranked by:
+- Originality (not tutorial-based)
+- Completeness (not a stub)
+- Technical execution within constraints
+
+Only the top ~50% of reviewed submissions receive the full parcel for that tier. Others receive a digital shoutout/recognition but no physical parcel. This creates scarcity and makes the reward feel earned.
+
+### 3. Tighten review automation to catch low-effort submissions
+- `auto_accept_ultra: false` (already in current plan)
+- Add heuristics that flag submissions likely built from tutorials (common patterns, generic variable names, etc.)
+- Require minimum interactivity/complexity signals (event listeners, state changes, etc.)
 
 ## Files to modify
-1. `index.html` — Reword rules, FAQ, and prizes sections to emphasize quality, originality, and manual review.
-2. `rules.yaml` — Add stricter review rules that disqualify obvious low-effort submissions.
-3. `README.md` — Align copy with the tightened rules.
+1. `rules.yaml` — Update tier limits, add judges-pick logic config
+2. `index.html` — Update all tier references, add explanation of selection process
+3. `README.md` — Align tier limits and selection process description
 
-## Proposed changes
-
-### index.html
-- **Rules section:** Add explicit quality criteria:
-  - Must be a complete, functional project (not a prototype or stub)
-  - Must demonstrate original design and interaction
-  - Copy-paste tutorials and unmodified starter templates are disqualified
-  - Near-duplicate or trivially similar resubmissions are not eligible
-- **FAQ:** Add entries:
-  - *"What counts as a real project?"* — Explain that a 2KB page built in 2 hours from a tutorial won't pass review; it needs to be something you actually designed and built.
-  - *"How are submissions reviewed?"* — Explain manual review for quality and originality, not just size.
-- **Prizes section:** Remove any language that makes it sound like the prize is automatic upon meeting the size limit. Add: "Every entry is reviewed by hand. Size is the starting line, not the finish line."
-
-### rules.yaml
-- Add new review rules:
-  - `require_meaningful_project: true` — Reject stubs, hello-world pages, and unmodified templates
-  - `require_original_design: true` — Reject trivially tutorial-based submissions
-  - `manual_review_quality_gate: true` — Require reviewer to confirm originality and completeness before accepting
-- Update `review` section to enforce these gates before auto-accept.
-
-### README.md
-- Update rules bullet points to match the tightened language.
-- Add a note: "Every submission is manually reviewed for quality and originality before any reward is sent."
-
-## Validation
-- Review updated copy to ensure it addresses the time-to-reward concern without mentioning dollar amounts.
-- No code/logic changes beyond rules config, so no test/lint impact.
+## Open Questions
+- Should the "top ~50%" threshold be configurable or fixed in code?
+- Should there be a minimum number of submissions before judges-pick kicks in (e.g., only if >10 submissions in a batch)?
+- What's the exact heuristic for flagging tutorial-based code? Pattern matching on common tutorial variable names (`x`, `y`, `temp`, generic game loop structures)?
