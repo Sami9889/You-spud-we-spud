@@ -90,10 +90,10 @@
     }
     .field { margin-bottom: .8rem; }
     .field label { display: block; font-size: .86rem; margin-bottom: .28rem; color: var(--brown); }
-    .field input {
+    .field input, .field select {
       width: 100%; padding: .62rem .72rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .92rem;
     }
-    .field input:focus { outline: none; border-color: var(--gold); }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--gold); }
     .card-wide { max-width: 100%; }
     .btn-hc {
       display: inline-flex; align-items: center; justify-content: center; gap: .55rem;
@@ -137,8 +137,6 @@
     .admin-stats { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .7rem; }
     .admin-stat { padding: .35rem .6rem; border-radius: 6px; background: #f7eed8; border: 1px solid var(--border); font-size: .78rem; color: var(--brown); font-weight: 700; }
     .admin-note-input { width: 100%; padding: .45rem .6rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .88rem; margin-top: .4rem; }
-    .admin-select { width: auto; margin-right: .5rem; cursor: pointer; }
-    .admin-bulk { background: #f7eed8; border: 1px dashed var(--border); border-radius: 8px; padding: .5rem .7rem; margin-bottom: .7rem; }
     .toast {
       position: fixed;
       top: 1rem;
@@ -159,6 +157,17 @@
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: var(--red); }
     .toast.success { background: var(--green); }
+    .admin-select { width: auto; margin-right: .5rem; cursor: pointer; }
+    .admin-bulk { background: #f7eed8; border: 1px dashed var(--border); border-radius: 8px; padding: .5rem .7rem; margin-bottom: .7rem; }
+    .admin-panel { background: #f8efd8; border: 1px solid var(--border); border-radius: 8px; padding: .7rem; margin-bottom: .7rem; }
+    .admin-panel .sec { margin-top: 0; }
+    .activity-item { padding: .35rem .5rem; border-bottom: 1px solid var(--border); font-size: .82rem; }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-time { font-size: .72rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+    .settings-group { margin-bottom: .6rem; }
+    .settings-group label { display: block; font-size: .82rem; font-weight: 600; margin-bottom: .2rem; color: var(--brown); }
+    .settings-group input, .settings-group select { width: 100%; padding: .4rem .5rem; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); color: var(--ink); font-family: 'Archivo', sans-serif; font-size: .85rem; }
+    .shortcut-hint { font-size: .72rem; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: .2rem; }
     footer { border-top: 2px dashed var(--border); padding: 2rem; text-align: center; font-size: .78rem; color: var(--muted); font-family: 'Space Mono', monospace; }
     @media (max-width: 480px) { nav { padding: .75rem 1rem; } .container { padding: 1.5rem .75rem 3rem; } }
   </style>
@@ -167,15 +176,42 @@
   <div class="airmail-strip"></div>
   <nav>
     <a href="https://youspudwespud.sami-s.dev" class="nav-logo">you spud, we spud</a>
-    <a href="/form/" class="nav-cta">← Back to form</a>
+    <div style="display:flex;gap:.5rem;align-items:center;">
+      <select id="admin-quick-action" onchange="handleQuickAction(this.value)" style="padding:.4rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--paper);color:var(--ink);font-family:'Archivo',sans-serif;font-size:.82rem;cursor:pointer;">
+        <option value="">Quick actions</option>
+        <option value="approve-all">Approve all pending</option>
+        <option value="cancel-all">Cancel all pending</option>
+        <option value="delete-cancelled">Delete all cancelled</option>
+        <option value="export-csv">Export as CSV</option>
+        <option value="refresh">Refresh board</option>
+      </select>
+      <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+      <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="showHelp()" title="Keyboard shortcuts">?</button>
+      <a href="/form/" class="nav-cta">← Back to form</a>
+    </div>
   </nav>
-
+  <div id="help-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;justify-content:center;align-items:center;">
+    <div style="background:var(--paper);border:2px solid var(--border);border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="margin:0;font-family:'Special Elite',monospace;">Keyboard Shortcuts</h2>
+        <button class="btn-hc" style="width:auto;padding:.3rem .6rem;font-size:.78rem;background:var(--red);" onclick="hideHelp()">Close</button>
+      </div>
+      <div class="settings-group">
+        <div class="admin-meta"><strong>/</strong> — Focus search</div>
+        <div class="admin-meta"><strong>R</strong> — Select first order</div>
+        <div class="admin-meta"><strong>Esc</strong> — Clear selections</div>
+        <div class="admin-meta"><strong>Ctrl+E</strong> — Export JSON</div>
+        <div class="admin-meta"><strong>Ctrl+Shift+C</strong> — Export CSV</div>
+      </div>
+      <div class="sec">Quick Actions</div>
+      <div class="admin-meta">Use the dropdown in the navbar for bulk operations like approve all, cancel all, and delete cancelled orders.</div>
+    </div>
+  </div>
   <div class="container">
     <div id="s-loading" class="screen active">
       <div class="spin"></div>
       <p class="lead">Checking your access…</p>
     </div>
-
     <div id="s-signin" class="screen">
       <div class="big">🧾</div>
       <h2>Admin sign in</h2>
@@ -200,7 +236,6 @@
         <p class="note">Credentials are checked server-side against the configured admin secret value.</p>
       </div>
     </div>
-
     <div id="s-admin" class="screen">
       <div class="card card-wide">
         <div class="ubar">
@@ -236,10 +271,15 @@
           <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="toggleSelectAll()">Toggle select all</button>
         </div>
         <div id="admin-stats" class="admin-stats"></div>
+        <div class="admin-toolbar">
+          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;" onclick="toggleActivityLog()">Activity log</button>
+          <button class="btn-hc" style="width:auto;padding:.4rem .8rem;font-size:.78rem;background:var(--brown);" onclick="toggleSettings()">Settings</button>
+        </div>
+        <div id="activity-log" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;max-height:200px;overflow-y:auto;"></div>
+        <div id="settings-panel" style="display:none;margin-bottom:.7rem;padding:.7rem;border:1px solid var(--border);border-radius:8px;background:#f8efd8;"></div>
         <div id="admin-orders" class="admin-list"></div>
       </div>
     </div>
-
     <div id="s-error" class="screen">
       <div class="big">🥴</div>
       <h2>Access denied</h2>
@@ -249,15 +289,12 @@
       </div>
     </div>
   </div>
-
   <footer>
     <p>You Spud, We Spud, a Hack Club YSWS by sami9889</p>
     <p style="margin-top:.4rem;"><a href="/privacy.html">Privacy & data storage</a></p>
   </footer>
-
   <script>
     const API_BASE = '/api/admin';
-
     function show(id) {
       document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -288,10 +325,8 @@
       const container = document.getElementById('admin-orders');
       document.getElementById('admin-name').textContent = user?.name || 'Admin';
       document.getElementById('admin-email').textContent = user?.email || 'Authorized organizer';
-
       const query = (document.getElementById('admin-search')?.value || '').trim().toLowerCase();
       const sort = document.getElementById('admin-sort')?.value || 'newest';
-
       let filtered = orders || [];
       const statusFilter = document.getElementById('admin-filter-status')?.value || 'all';
       if (query) {
@@ -318,7 +353,6 @@
         const tb = new Date(b.timestamp || b._ts || 0).getTime();
         return sort === 'oldest' ? ta - tb : tb - ta;
       });
-
       renderAdminStats(filtered);
       if (!filtered.length) {
         container.innerHTML = '<div class="admin-item"><strong>No orders match your search.</strong><div class="admin-meta">Try a different search term.</div></div>';
@@ -454,6 +488,214 @@
       if (!value) return;
       await updateOrder(orderId, { [field]: value });
     };
+    window.handleQuickAction = async function(action) {
+      const select = document.getElementById('admin-quick-action');
+      if (!action) return;
+      select.value = '';
+      switch (action) {
+        case 'approve-all':
+          if (!confirm('Approve ALL pending orders? This will mark them as accepted.')) return;
+          await bulkApprove();
+          break;
+        case 'cancel-all':
+          if (!confirm('Cancel ALL pending orders?')) return;
+          await bulkCancelPending();
+          break;
+        case 'delete-cancelled':
+          if (!confirm('Delete ALL cancelled orders permanently?')) return;
+          await bulkDeleteCancelled();
+          break;
+        case 'export-csv':
+          exportCSV();
+          break;
+        case 'refresh':
+          await refreshBoard();
+          break;
+      }
+    };
+    window.bulkApprove = async function() {
+      const orders = await fetchOrders();
+      const pending = orders.filter(o => !o.accepted && !o.cancelled && !o.manual_review);
+      if (!pending.length) {
+        showToast('No pending orders to approve', 'error');
+        return;
+      }
+      for (const order of pending) {
+        await updateOrder(order._id, { accepted: 'yes', accepted_at: new Date().toISOString() });
+      }
+      showToast(`Approved ${pending.length} orders`);
+      await refreshBoard();
+    };
+    window.bulkCancelPending = async function() {
+      const orders = await fetchOrders();
+      const pending = orders.filter(o => !o.accepted && !o.cancelled && !o.manual_review);
+      if (!pending.length) {
+        showToast('No pending orders to cancel', 'error');
+        return;
+      }
+      const reason = prompt('Cancel reason (optional):') || 'Bulk cancel';
+      for (const order of pending) {
+        await updateOrder(order._id, { cancelled: true, cancel_reason: reason, cancelled_at: new Date().toISOString() });
+      }
+      showToast(`Cancelled ${pending.length} orders`);
+      await refreshBoard();
+    };
+    window.bulkDeleteCancelled = async function() {
+      const orders = await fetchOrders();
+      const cancelled = orders.filter(o => o.cancelled);
+      if (!cancelled.length) {
+        showToast('No cancelled orders to delete', 'error');
+        return;
+      }
+      for (const order of cancelled) {
+        try {
+          const token = await getAdminToken();
+          await fetch('/api/orders', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify({ id: order._id }),
+          });
+        } catch (err) {
+          console.error('Failed to delete order:', order._id, err);
+        }
+      }
+      showToast(`Deleted ${cancelled.length} orders`);
+      await refreshBoard();
+    };
+    window.exportCSV = function() {
+      const user = JSON.parse(readAdminValue('admin_user') || '{}');
+      fetchOrders().then(orders => {
+        if (!orders.length) {
+          showToast('No orders to export', 'error');
+          return;
+        }
+        const headers = ['ID', 'Name', 'Email', 'Project', 'Tier', 'Status', 'Submitted', 'Deadline'];
+        const rows = orders.map(o => [
+          o._id,
+          o.hc_name || o.ship_name || 'Anonymous',
+          o.hc_email || '',
+          o.project_name || 'Untitled',
+          o.tier || 'Pending',
+          o.cancelled ? 'Cancelled' : o.accepted === 'yes' ? 'Accepted' : o.manual_review ? 'Manual' : 'Pending',
+          o.timestamp || '',
+          o.deadline || ''
+        ]);
+        const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `spud-orders-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV exported');
+      });
+    };
+    window.refreshBoard = async function() {
+      const user = JSON.parse(readAdminValue('admin_user') || '{}');
+      const orders = await fetchOrders();
+      renderAdminBoard(user, orders);
+      showToast('Board refreshed');
+    };
+    window.toggleActivityLog = function() {
+      const log = document.getElementById('activity-log');
+      const settings = document.getElementById('settings-panel');
+      if (log.style.display === 'none') {
+        log.style.display = 'block';
+        if (settings) settings.style.display = 'none';
+        renderActivityLog();
+      } else {
+        log.style.display = 'none';
+      }
+    };
+    window.toggleSettings = function() {
+      const settings = document.getElementById('settings-panel');
+      const log = document.getElementById('activity-log');
+      if (settings.style.display === 'none') {
+        settings.style.display = 'block';
+        if (log) log.style.display = 'none';
+        renderSettings();
+      } else {
+        settings.style.display = 'none';
+      }
+    };
+    window.renderActivityLog = function() {
+      const log = document.getElementById('activity-log');
+      if (!log) return;
+      const activities = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
+      if (!activities.length) {
+        log.innerHTML = '<div class="admin-meta">No recent activity.</div>';
+        return;
+      }
+      log.innerHTML = activities.slice(-20).reverse().map(a => 
+        `<div class="activity-item">
+          <strong>${escapeHtml(a.action)}</strong> — ${escapeHtml(a.target || '')}<br/>
+          <span class="activity-time">${escapeHtml(a.user || 'Admin')} at ${escapeHtml(new Date(a.time).toLocaleString())}</span>
+        </div>`
+      ).join('');
+    };
+    window.logActivity = function(action, target) {
+      const activities = JSON.parse(localStorage.getItem('admin_activity_log') || '[]');
+      activities.push({
+        action,
+        target,
+        user: JSON.parse(readAdminValue('admin_user') || '{}').name || 'Admin',
+        time: new Date().toISOString()
+      });
+      localStorage.setItem('admin_activity_log', JSON.stringify(activities.slice(-50)));
+    };
+    window.renderSettings = function() {
+      const panel = document.getElementById('settings-panel');
+      if (!panel) return;
+      panel.innerHTML = `
+        <div class="sec">Admin Settings</div>
+        <div class="settings-group">
+          <label>Auto-approve Ultra Hard mode submissions</label>
+          <input type="checkbox" id="setting-auto-approve" ${localStorage.getItem('auto_approve_ultra') === 'true' ? 'checked' : ''} onchange="localStorage.setItem('auto_approve_ultra', this.checked)" />
+        </div>
+        <div class="settings-group">
+          <label>Show soft-missing legacy fields</label>
+          <input type="checkbox" id="setting-soft-missing" ${localStorage.getItem('show_soft_missing') !== 'false' ? 'checked' : ''} onchange="localStorage.setItem('show_soft_missing', this.checked)" />
+        </div>
+        <div class="settings-group">
+          <label>Default sort order</label>
+          <select id="setting-sort" onchange="localStorage.setItem('default_sort', this.value);document.getElementById('admin-sort').value=this.value;applyAdminFilters();">
+            <option value="newest" ${localStorage.getItem('default_sort') !== 'oldest' ? 'selected' : ''}>Newest first</option>
+            <option value="oldest" ${localStorage.getItem('default_sort') === 'oldest' ? 'selected' : ''}>Oldest first</option>
+          </select>
+        </div>
+        <div class="settings-group">
+          <label>Items per page</label>
+          <select id="setting-per-page" onchange="localStorage.setItem('per_page', this.value)">
+            <option value="25" ${localStorage.getItem('per_page') !== '50' && localStorage.getItem('per_page') !== '100' ? 'selected' : ''}>25</option>
+            <option value="50" ${localStorage.getItem('per_page') === '50' ? 'selected' : ''}>50</option>
+            <option value="100" ${localStorage.getItem('per_page') === '100' ? 'selected' : ''}>100</option>
+          </select>
+        </div>
+      `;
+    };
+    window.toggleDarkMode = function() {
+      const body = document.body;
+      const isDark = body.style.filter === 'invert(1) hue-rotate(180deg)';
+      if (isDark) {
+        body.style.filter = '';
+        localStorage.setItem('dark_mode', 'false');
+      } else {
+        body.style.filter = 'invert(1) hue-rotate(180deg)';
+        localStorage.setItem('dark_mode', 'true');
+      }
+    };
+    window.showHelp = function() {
+      const modal = document.getElementById('help-modal');
+      if (modal) modal.style.display = 'flex';
+    };
+    window.hideHelp = function() {
+      const modal = document.getElementById('help-modal');
+      if (modal) modal.style.display = 'none';
+    };
     window.toggleSelectAll = function() {
       const checkboxes = document.querySelectorAll('.admin-select');
       const allChecked = Array.from(checkboxes).every(cb => cb.checked);
@@ -499,9 +741,25 @@
       const orders = await fetchOrders();
       renderAdminBoard(JSON.parse(readAdminValue('admin_user') || '{}'), orders);
     };
-    async function getAdminToken() {
-      try { return readAdminValue('admin_api_token') || ''; } catch (err) { return ''; }
-    }
+    window.manualReview = async function(orderId) {
+      const reason = prompt('Manual review reason (required):');
+      if (reason === null) return;
+      if (!reason.trim()) {
+        alert('Please provide a reason for manual review.');
+        return;
+      }
+      await updateOrder(orderId, { manual_review: true, manual_review_reason: reason.trim(), manual_review_at: new Date().toISOString() });
+      showToast('Order manually reviewed');
+    };
+    window.revokeManualReview = async function(orderId) {
+      if (!confirm('Revoke manual review for this order?')) return;
+      await updateOrder(orderId, { manual_review: false, manual_review_reason: '', manual_review_at: '' });
+      showToast('Manual review revoked');
+    };
+    window.closeReview = function(orderId) {
+      const el = document.getElementById('review-' + orderId);
+      if (el) el.style.display = 'none';
+    };
     window.cancelOrder = async function(orderId) {
       const reason = prompt('Cancel reason (optional):');
       if (reason === null) return;
@@ -533,7 +791,9 @@
         html += '<div class="admin-meta" style="margin-top:.25rem;"><strong>Tier:</strong> ' + escapeHtml(tier.tier || 'N/A') + ' — limit: ' + escapeHtml(String(tier.limit || '?')) + ' KB' + (tier.pass ? '' : ' <span style="color:var(--red);">(over limit)</span>') + '</div>';
         if (gh.checked) {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>GitHub:</strong> ' + escapeHtml(gh.repo || '') + ' (' + escapeHtml(gh.branch || '') + ') — actual: ' + escapeHtml(String(gh.actual_kb || '?')) + ' KB / tier limit: ' + escapeHtml(String(gh.tier_limit_kb || '?')) + ' KB — ' + escapeHtml(String(gh.files_checked || '?')) + ' files' + (gh.pass ? '' : ' <span style="color:var(--red);">(over limit)</span>') + '</div>';
-          if (gh.issues && gh.issues.length) {
+          if (gh.rate_limited) {
+            html += '<div class="admin-meta" style="margin-top:.15rem; color:var(--gold);"><strong>Note:</strong> ' + escapeHtml((gh.issues || [])[0] || 'Rate limited') + '</div>';
+          } else if (gh.issues && gh.issues.length) {
             html += '<div class="admin-meta" style="margin-top:.15rem;"><strong>GitHub issues:</strong> ' + escapeHtml(gh.issues.join('; ')) + '</div>';
           }
         } else {
@@ -548,34 +808,12 @@
         if (r.manual) {
           html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ' + escapeHtml(r.reason || 'Approved') + ' at ' + escapeHtml(r.at ? new Date(r.at).toLocaleString() : '') + '</div>';
         }
-        if (fields.soft_missing && fields.soft_missing.length) {
-          html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--gold);"><strong>Missing (legacy):</strong> ' + escapeHtml(fields.soft_missing.join(', ')) + '</div>';
-        }
         html += '<button class="btn-hc" style="margin-top:.4rem;background:var(--muted);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="closeReview(\'' + orderId + '\')">Close review</button>';
         html += '</div>';
         el.innerHTML = html;
       } catch (err) {
         el.innerHTML = '<div style="margin-top:.4rem; color:var(--red);">Review error: ' + escapeHtml(err.message || 'Unknown error') + '</div>';
       }
-    };
-    window.manualReview = async function(orderId) {
-      const reason = prompt('Manual review reason (required):');
-      if (reason === null) return;
-      if (!reason.trim()) {
-        alert('Please provide a reason for manual review.');
-        return;
-      }
-      await updateOrder(orderId, { manual_review: true, manual_review_reason: reason.trim(), manual_review_at: new Date().toISOString() });
-      showToast('Order manually reviewed');
-    };
-    window.revokeManualReview = async function(orderId) {
-      if (!confirm('Revoke manual review for this order?')) return;
-      await updateOrder(orderId, { manual_review: false, manual_review_reason: '', manual_review_at: '' });
-      showToast('Manual review revoked');
-    };
-    window.closeReview = function(orderId) {
-      const el = document.getElementById('review-' + orderId);
-      if (el) el.style.display = 'none';
     };
     window.updateShipping = async function(orderId) {
       const shippingId = prompt('Shipping ID / tracking number:');
@@ -643,6 +881,19 @@
           throw new Error('Update succeeded, but refreshing the board failed: ' + (uiErr.message || uiErr));
         }
         showToast('Order updated');
+        const actionMap = {
+          cancelled: 'Cancelled order',
+          manual_review: 'Set manual review',
+          shipping_id: 'Updated shipping',
+          admin_note: 'Added admin note',
+          accepted: 'Updated acceptance'
+        };
+        for (const [key, action] of Object.entries(actionMap)) {
+          if (updates[key]) {
+            logActivity(action, orderId);
+            break;
+          }
+        }
       } catch (err) {
         alert(err.message || 'Failed to update order');
       }
@@ -677,7 +928,6 @@
       clearAdminValues();
       show('s-signin');
     };
-
     document.getElementById('admin-login-form').addEventListener('submit', async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
@@ -688,7 +938,6 @@
         email: form.email.value.trim(),
         password: form.password.value.trim(),
       };
-
       try {
         const response = await fetch(API_BASE + '/login', {
           method: 'POST',
@@ -699,7 +948,6 @@
         if (!response.ok || !body.ok) {
           throw new Error(body.error || 'Invalid admin credentials.');
         }
-
         const user = {
           name: body.user?.name || payload.username,
           email: body.user?.email || payload.email,
@@ -712,12 +960,34 @@
         const orders = await fetchOrders();
         renderAdminBoard(user, orders);
         show('s-admin');
+        const search = document.getElementById('admin-search');
+        const sort = document.getElementById('admin-sort');
+        const statusFilter = document.getElementById('admin-filter-status');
+        if (search) search.addEventListener('input', applyAdminFilters);
+        if (sort) sort.addEventListener('change', applyAdminFilters);
+        if (statusFilter) statusFilter.addEventListener('change', applyStatusFilter);
+        document.addEventListener('keydown', (e) => {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+          if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            document.getElementById('admin-search')?.focus();
+          } else if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            const firstOrder = document.querySelector('.admin-item:not(.cancelled)');
+            if (firstOrder) firstOrder.querySelector('.admin-select')?.click();
+          } else if (e.key === 'Escape') {
+            document.querySelectorAll('.admin-select:checked').forEach(cb => cb.checked = false);
+          }
+        });
+        if (localStorage.getItem('dark_mode') === 'true') {
+          document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+        }
+        return;
       } catch (err) {
         errorEl.textContent = err.message || 'The admin board could not be opened.';
         errorEl.style.display = 'block';
       }
     });
-
     (async function init() {
       try {
         const cachedUser = readAdminValue('admin_user');
@@ -733,6 +1003,22 @@
           if (search) search.addEventListener('input', applyAdminFilters);
           if (sort) sort.addEventListener('change', applyAdminFilters);
           if (statusFilter) statusFilter.addEventListener('change', applyStatusFilter);
+          document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+              e.preventDefault();
+              document.getElementById('admin-search')?.focus();
+            } else if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+              e.preventDefault();
+              const firstOrder = document.querySelector('.admin-item:not(.cancelled)');
+              if (firstOrder) firstOrder.querySelector('.admin-select')?.click();
+            } else if (e.key === 'Escape') {
+              document.querySelectorAll('.admin-select:checked').forEach(cb => cb.checked = false);
+            }
+          });
+          if (localStorage.getItem('dark_mode') === 'true') {
+            document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+          }
           return;
         }
       } catch (err) {
