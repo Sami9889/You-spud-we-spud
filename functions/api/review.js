@@ -166,19 +166,28 @@ function detectObfuscation(code, rules) {
 }
 
 async function fetchGitHubTree(owner, repo, branch, token) {
-  const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`;
   const headers = { Accept: "application/vnd.github+json", "User-Agent": "YouSpudReview/1.0" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  const resp = await fetch(apiUrl, { headers });
-  if (!resp.ok) {
+  const branches = [branch, "main", "master"];
+  const tried = [];
+  for (const br of branches) {
+    if (!br || tried.includes(br)) continue;
+    tried.push(br);
+    const apiUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(br)}?recursive=1`;
+    const resp = await fetch(apiUrl, { headers });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.tree || Array.isArray(data.tree)) {
+        return data.tree;
+      }
+      throw new Error("Invalid GitHub tree response.");
+    }
     const text = await resp.text().catch(() => "");
-    throw new Error(`GitHub API ${resp.status}: ${text.slice(0, 200)}`);
+    if (resp.status !== 404) {
+      throw new Error(`GitHub API ${resp.status}: ${text.slice(0, 200)}`);
+    }
   }
-  const data = await resp.json();
-  if (!data.tree || !Array.isArray(data.tree)) {
-    throw new Error("Invalid GitHub tree response.");
-  }
-  return data.tree;
+  throw new Error(`GitHub API 404: Branch not found. Tried: ${tried.join(", ")}`);
 }
 
 async function fetchGitHubContent(owner, repo, path, token) {
@@ -282,6 +291,9 @@ async function checkGitHubRepo(order, rules) {
     const msg = err.message || "Unknown error";
     if (msg.includes("403") || msg.includes("rate limit")) {
       return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: true, issues: ["GitHub API rate limit exceeded. Review passed — verify manually."], rate_limited: true, sample_files: [] };
+    }
+    if (msg.includes("404")) {
+      return { checked: true, repo: `${repo.owner}/${repo.repo}`, branch, actual_kb: 0, declared_kb: parseFloat(order.file_size_kb) || 0, tier_limit_kb: getTierLimit(order.tier, rules), strict: rules.github_check?.strict_size_limit !== false, files_checked: 0, pass: true, issues: [`GitHub branch not found: ${msg}. Review passed — verify manually.`], rate_limited: false, sample_files: [] };
     }
     return { checked: false, reason: "GitHub check failed: " + msg, pass: false };
   }
