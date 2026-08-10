@@ -30,6 +30,7 @@ Everyone's shipping 500KB of JavaScript just to show some text on a page. This c
 - Must be live at a public URL with public source code
 - One parcel per person per project, no farming duplicates
 - Potato theme earns bonus points, not required
+- Every submission is manually reviewed for quality and originality before any reward is sent
 
 Full rules, FAQ, and the submission form live on the [website](https://youspudwespud.sami-s.dev).
 

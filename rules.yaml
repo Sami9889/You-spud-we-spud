@@ -49,8 +49,11 @@ url_rules:
 review:
   size_field: file_size_kb
   size_must_match_tier: true
-  auto_accept_ultra: true
+  auto_accept_ultra: false
   require_manual_review: true
+  require_meaningful_project: true
+  require_original_design: true
+  manual_review_quality_gate: true
 
 github_check:
   enabled: true
