@@ -361,20 +361,18 @@
             ${details.map(([label, value]) => `<div class="admin-meta"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</div>`).join('')}
             ${order.project_url ? `<a class="admin-link" href="${projectHref}" target="_blank" rel="noopener"${projectOnClick}>Open project</a>` : ''}
             ${!order.cancelled ? `
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="cancelOrder('${order._id}')">Cancel order</button>
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="reviewOrder('${order._id}')">Review</button>
-              ${order.manual_review ? `<button class="btn-hc" style="margin-top:.5rem;background:var(--green);color:white;" onclick="revokeManualReview('${order._id}')">Revoke manual review</button>` : `<button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="manualReview('${order._id}')">Manually review</button>`}
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--gold);color:var(--brown);" onclick="updateShipping('${order._id}')">Update shipping</button>
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--brown);" onclick="saveAdminNote('${order._id}')">Add admin note</button>
+              <button class="btn-hc" style="margin-top:.4rem;background:var(--red);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="cancelOrder('${order._id}')">Cancel order</button>
+              <button class="btn-hc" style="margin-top:.4rem;background:var(--brown);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="reviewOrder('${order._id}')">Review</button>
+              ${order.manual_review ? `<button class="btn-hc" style="margin-top:.4rem;background:var(--green);color:white;width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="revokeManualReview('${order._id}')">Revoke manual review</button>` : `<button class="btn-hc" style="margin-top:.4rem;background:var(--gold);color:var(--brown);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="manualReview('${order._id}')">Manually review</button>`}
+              <button class="btn-hc" style="margin-top:.4rem;background:var(--gold);color:var(--brown);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="updateShipping('${order._id}')">Update shipping</button>
+              <button class="btn-hc" style="margin-top:.4rem;background:var(--brown);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="saveAdminNote('${order._id}')">Add admin note</button>
             ` : `
-              <button class="btn-hc" style="margin-top:.5rem;background:var(--red);" onclick="deleteOrder('${order._id}')">Delete order</button>
+              <button class="btn-hc" style="margin-top:.4rem;background:var(--red);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="deleteOrder('${order._id}')">Delete order</button>
             `}
             ${order.admin_note ? `<div class="admin-meta" style="margin-top:.4rem;"><strong>Admin note:</strong> ${escapeHtml(order.admin_note)}</div>` : ''}
             ${order.manual_review ? `<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ${escapeHtml(order.manual_review_reason || 'Approved')} at ${escapeHtml(order.manual_review_at ? new Date(order.manual_review_at).toLocaleString() : '')}</div>` : ''}
             ${order.cancel_reason ? `<div class="admin-meta" style="margin-top:.2rem; color:var(--red);"><strong>Cancel reason:</strong> ${escapeHtml(order.cancel_reason)} at ${escapeHtml(order.cancelled_at ? new Date(order.cancelled_at).toLocaleString() : '')}</div>` : ''}
             <div id="review-${order._id}" style="display:none;"></div>
-            <button class="btn-hc" style="margin-top:.5rem;background:var(--muted);" onclick="closeReview('${order._id}')">Close review</button>
-            <button class="btn-hc" style="margin-top:.5rem;background:var(--muted);" onclick="document.getElementById('review-${order._id}').style.display='none'">Close review</button>
           </article>
         `;
       }).join('');
@@ -553,7 +551,7 @@
         if (fields.soft_missing && fields.soft_missing.length) {
           html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--gold);"><strong>Missing (legacy):</strong> ' + escapeHtml(fields.soft_missing.join(', ')) + '</div>';
         }
-        html += '<button class="btn-hc" style="margin-top:.5rem;background:var(--muted);" onclick="closeReview(\'' + orderId + '\')">Close review</button>';
+        html += '<button class="btn-hc" style="margin-top:.4rem;background:var(--muted);width:auto;padding:.45rem .9rem;font-size:.82rem;" onclick="closeReview(\'' + orderId + '\')">Close review</button>';
         html += '</div>';
         el.innerHTML = html;
       } catch (err) {
