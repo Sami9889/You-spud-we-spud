@@ -710,16 +710,16 @@
         if (gh.checked) {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>GitHub:</strong> ' + escapeHtml(gh.repo || '') + ' (' + escapeHtml(gh.branch || '') + ') — actual: ' + escapeHtml(gh.actual_kb != null ? String(gh.actual_kb) : '?') + ' KB / tier limit: ' + escapeHtml(gh.tier_limit_kb != null ? String(gh.tier_limit_kb) : '?') + ' KB — ' + escapeHtml(gh.files_checked != null ? String(gh.files_checked) : '?') + ' files' + (gh.pass ? '' : ' <span style="color:var(--red);">(failed)</span>') + '</div>';
           if (gh.issues && gh.issues.length) {
-            html += '<div class="admin-meta" style="margin-top:.15rem;"><strong>GitHub issues:</strong> ' + escapeHtml(gh.issues.join('; ')) + '</div>';
+            html += '<div class="admin-meta" style="margin-top:.15rem; color:var(--red);"><strong>GitHub issues:</strong> ' + escapeHtml(gh.issues.join('; ')) + '</div>';
           }
         } else {
           html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>GitHub:</strong> ' + escapeHtml(gh.reason || 'Not checked') + '</div>';
         }
         if (!fields.pass && fields.missing && fields.missing.length) {
-          html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>Missing:</strong> ' + escapeHtml(fields.missing.join(', ')) + '</div>';
+          html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--red);"><strong>Missing fields:</strong> ' + escapeHtml(fields.missing.join(', ')) + '</div>';
         }
         if (!urls.pass && urls.issues && urls.issues.length) {
-          html += '<div class="admin-meta" style="margin-top:.2rem;"><strong>URL issues:</strong> ' + escapeHtml(urls.issues.join(', ')) + '</div>';
+          html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--red);"><strong>URL issues:</strong> ' + escapeHtml(urls.issues.join(', ')) + '</div>';
         }
         if (r.manual) {
           html += '<div class="admin-meta" style="margin-top:.2rem; color:var(--green);"><strong>Manual review:</strong> ' + escapeHtml(r.reason || 'Approved') + ' at ' + escapeHtml(r.at ? new Date(r.at).toLocaleString() : '') + '</div>';
