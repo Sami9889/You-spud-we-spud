@@ -105,7 +105,7 @@
 
   <div class="container">
     <h1>Privacy & data storage</h1>
-    <p>This page explains what is stored, where it is stored, who can see it, and how reviewer actions work. No lawyer speak, just the actual setup.</p>
+    <p>Here's what I save, where it lives, who can see it, and what reviewers can do with it. No legal jargon — just the actual setup.</p>
 
     <h2>What gets stored</h2>
     <div class="card">
@@ -114,8 +114,8 @@
         <thead>
           <tr>
             <th>Field</th>
-            <th>Purpose</th>
-            <th>Visibility</th>
+            <th>Why I keep it</th>
+            <th>Who sees it</th>
           </tr>
         </thead>
         <tbody>
@@ -146,7 +146,7 @@
           </tr>
           <tr>
             <td>Shipping ID / status</td>
-            <td>Tracking number and status like “Shipped”, “In transit”, or “Delivered”.</td>
+            <td>Tracking number and status like "Shipped", "In transit", or "Delivered".</td>
             <td><span class="pill green">Private</span></td>
           </tr>
           <tr>
@@ -158,16 +158,16 @@
       </table>
     </div>
 
-    <h2>Where it is stored</h2>
+    <h2>Where it lives</h2>
     <div class="card">
-      <p>Submissions are stored in Cloudflare KV under keys prefixed with <code>order:</code>. The KV namespace is named <code>ORDERS</code>. Each record is a JSON object. Keys are generated from a timestamp plus a random UUID, so they are not guessable from the outside.</p>
+      <p>Submissions are stored in Cloudflare KV under keys prefixed with <code>order:</code>. The KV namespace is named <code>ORDERS</code>. Each record is a JSON object. Keys are generated from a timestamp plus a random UUID, so they're not guessable from the outside.</p>
       <p>The admin login token is also stored in KV under the key <code>admin_api_token</code>. On successful login, the server sets an <code>HttpOnly</code> cookie named <code>admin_token</code> to authenticate later admin requests.</p>
-      <p>There is no external database. Everything lives in the Workers KV binding configured for this project.</p>
+      <p>There's no external database. Everything lives in the Workers KV binding configured for this project.</p>
     </div>
 
     <h2>Who can see it</h2>
     <div class="card">
-      <p><strong>Public visitors:</strong> cannot see any submissions. There is no public order list or public API for orders.</p>
+      <p><strong>Public visitors:</strong> can't see any submissions. There's no public order list or public API for orders.</p>
       <p><strong>Logged-in admins:</strong> can see all submissions in the admin review board, including contact info, project info, and shipping info. They can also add admin notes and update shipping status.</p>
       <p><strong>Reviewer/training role:</strong> not yet implemented. Right now, admin access is all-or-nothing via the configured admin credentials.</p>
     </div>
@@ -188,13 +188,13 @@
 
     <h2>Data retention</h2>
     <div class="card">
-      <p>Order records do not expire unless explicitly deleted. The admin token and order records are written without TTL so they persist until manually removed.</p>
+      <p>Order records don't expire unless explicitly deleted. The admin token and order records are written without TTL so they persist until manually removed.</p>
       <p>Rate-limit keys still expire after 1 hour as part of normal abuse prevention.</p>
     </div>
 
     <h2>Contact</h2>
     <div class="card">
-      <p>If you want your data removed, or have questions about how it is handled, ask <strong>@sami9889</strong> in <strong>#ship</strong> on Hack Club Slack.</p>
+      <p>If you want your data removed, or have questions about how it's handled, ask <strong>@sami9889</strong> in <strong>#ship</strong> on Hack Club Slack.</p>
     </div>
   </div>
 
