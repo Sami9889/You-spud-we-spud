@@ -26,7 +26,7 @@ Everyone's shipping 500KB of JavaScript just to show some text on a page. This c
 - Fonts/CDN scripts are allowed and don't count toward your KB limit, but only for styling and assets, your actual app logic has to be code you wrote
 - No iframing in a separately-hosted app, no offloading the real logic to your own backend, the size limit has to be real
 - It has to actually do something: no blank pages, no "hello world," no unmodified starter templates
-- AI is fine for debugging a specific issue, not for generating your core logic wholesale
+- AI is fine for debugging a specific issue, not for generating your core logic all at once
 - Must be live at a public URL with public source code
 - One parcel per person per project, no farming duplicates
 - Potato theme earns bonus points, not required
