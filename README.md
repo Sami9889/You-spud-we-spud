@@ -1,6 +1,6 @@
 # 🥔 You Spud, We Spud
 
-A [Hack Club YSWS](https://ysws.hackclub.com) challenge by [Sami](https://sami-s.dev). Build a fast, lightweight website or game using pure vanilla HTML, CSS, and JS under strict size constraints, earn custom Aussie loot mailed straight from Australia.
+A [Hack Club YSWS](https://ysws.hackclub.com) challenge by [Sami](https://sami-s.dev). Build something tiny using vanilla HTML, CSS, and JS under strict size limits, and I'll mail you custom Aussie loot from Melbourne.
 
 **Live site:** [youspudwespud.sami-s.dev](https://youspudwespud.sami-s.dev)
 **Slack:** [#youspudwespud](https://hackclub.slack.com/archives/C0BMCT6U3H6)
@@ -9,7 +9,7 @@ A [Hack Club YSWS](https://ysws.hackclub.com) challenge by [Sami](https://sami-s
 
 ## What is this?
 
-Everyone's shipping 500KB of JavaScript just to show some text on a page. This challenge flips that: build something under **10KB**, no frameworks, no React, no Tailwind, no CDN-loaded app logic, and Sami mails you a parcel from Australia. Go smaller and the parcel gets better.
+Everyone's shipping 500KB of JavaScript just to show some text on a page. This challenge flips that: build something under **10KB**, no frameworks, no React, no Tailwind, no CDN-loaded app logic, and I'll mail you a parcel from Australia. Go smaller and the parcel gets better.
 
 ## Size tiers
 
@@ -17,7 +17,7 @@ Everyone's shipping 500KB of JavaScript just to show some text on a page. This c
 |---|---|---|
 | **Standard** | < 10KB | Custom sticker, handwritten airmail postcard, random Aussie trading card, temporary potato tattoo, permanent shoutout in `#ship` |
 | **Hard Mode** | < 3KB | Everything above + Australian chicken salt, surprise Aussie snack pack, a custom playlist |
-| **Ultra Hard Mode** | < 1KB | Everything above + instant mashed potatoes, a badly hand-drawn potato portrait of you, a feature on sami-s.dev, Sami's genuine respect |
+| **Ultra Hard Mode** | < 1KB | Everything above + instant mashed potatoes, a badly hand-drawn potato portrait of you, a feature on sami-s.dev, my genuine respect |
 
 ## Rules
 
