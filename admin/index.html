@@ -368,7 +368,10 @@
     }
     async function fetchOrders() {
       try {
-        const response = await fetch('/api/orders');
+        const token = await getAdminToken();
+        const response = await fetch('/api/orders', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        });
         if (!response.ok) throw new Error('Failed to fetch orders');
         return await response.json();
       } catch (err) {
