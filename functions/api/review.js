@@ -20,11 +20,23 @@ function securityHeaders(extra = {}) {
 
 async function isAdminRequest(context) {
   const auth = context.request.headers.get("Authorization") || "";
-  if (!auth.startsWith("Bearer ")) return false;
-  const token = auth.slice(7).trim();
-  if (!token) return false;
-  const expected = await context.env.ORDERS.get("admin_api_token", "text");
-  return expected === token;
+  if (auth.startsWith("Bearer ")) {
+    const token = auth.slice(7).trim();
+    if (token) {
+      const expected = await context.env.ORDERS.get("admin_api_token", "text");
+      if (expected === token) return true;
+    }
+  }
+
+  const cookieHeader = context.request.headers.get("Cookie") || "";
+  const match = cookieHeader.match(/admin_token=([^;]+)/);
+  if (match) {
+    const token = decodeURIComponent(match[1]);
+    const expected = await context.env.ORDERS.get("admin_api_token", "text");
+    if (expected && expected === token) return true;
+  }
+
+  return false;
 }
 
 async function getRules(env) {
