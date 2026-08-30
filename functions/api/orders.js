@@ -114,13 +114,23 @@ async function recordRateLimit(env, ip) {
 
 async function isAdminRequest(context) {
   const auth = context.request.headers.get("Authorization") || "";
-  if (!auth.startsWith("Bearer ")) return false;
+  if (auth.startsWith("Bearer ")) {
+    const token = auth.slice(7).trim();
+    if (token) {
+      const expected = await context.env.ORDERS.get("admin_api_token", "text");
+      if (expected === token) return true;
+    }
+  }
 
-  const token = auth.slice(7).trim();
-  if (!token) return false;
+  const cookieHeader = context.request.headers.get("Cookie") || "";
+  const match = cookieHeader.match(/admin_token=([^;]+)/);
+  if (match) {
+    const token = decodeURIComponent(match[1]);
+    const expected = await context.env.ORDERS.get("admin_api_token", "text");
+    if (expected && expected === token) return true;
+  }
 
-  const expected = await context.env.ORDERS.get("admin_api_token", "text");
-  return expected === token;
+  return false;
 }
 
 function isSameOrigin(request) {
