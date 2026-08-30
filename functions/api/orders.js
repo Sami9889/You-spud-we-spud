@@ -142,6 +142,13 @@ function securityHeaders(extra = {}) {
 }
 
 export async function onRequestGet(context) {
+  if (!(await isAdminRequest(context))) {
+    return new Response(JSON.stringify({ error: "Unauthorized." }), {
+      status: 401,
+      headers: securityHeaders(),
+    });
+  }
+
   const orders = await listOrders(context.env);
   return new Response(JSON.stringify(orders), {
     status: 200,
