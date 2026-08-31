@@ -19,6 +19,13 @@ async function isAdminRequest(context) {
   return false;
 }
 
+function isSameOrigin(request) {
+  const origin = request.headers.get("Origin");
+  if (!origin) return true;
+  const url = new URL(request.url);
+  return origin === `${url.protocol}//${url.host}`;
+}
+
 function securityHeaders(extra = {}) {
   return {
     "content-type": "application/json; charset=utf-8",
@@ -34,6 +41,13 @@ export async function onRequest(context) {
   if (!(await isAdminRequest(context))) {
     return new Response(JSON.stringify({ error: "Unauthorized." }), {
       status: 401,
+      headers: securityHeaders(),
+    });
+  }
+
+  if (!isSameOrigin(context.request)) {
+    return new Response(JSON.stringify({ error: "Invalid origin." }), {
+      status: 403,
       headers: securityHeaders(),
     });
   }
