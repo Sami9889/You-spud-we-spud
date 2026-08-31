@@ -39,6 +39,13 @@ async function isAdminRequest(context) {
   return false;
 }
 
+function isSameOrigin(request) {
+  const origin = request.headers.get("Origin");
+  if (!origin) return true;
+  const url = new URL(request.url);
+  return origin === `${url.protocol}//${url.host}`;
+}
+
 async function getRules(env) {
   try {
     const raw = await env.ORDERS.get(RULES_KEY, "text");
@@ -410,6 +417,13 @@ export async function onRequestGet(context) {
   if (!(await isAdminRequest(context))) {
     return new Response(JSON.stringify({ error: "Unauthorized." }), {
       status: 401,
+      headers: securityHeaders(),
+    });
+  }
+
+  if (!isSameOrigin(context.request)) {
+    return new Response(JSON.stringify({ error: "Invalid origin." }), {
+      status: 403,
       headers: securityHeaders(),
     });
   }

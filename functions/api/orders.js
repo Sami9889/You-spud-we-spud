@@ -159,6 +159,13 @@ export async function onRequestGet(context) {
     });
   }
 
+  if (!isSameOrigin(context.request)) {
+    return new Response(JSON.stringify({ error: "Invalid origin." }), {
+      status: 403,
+      headers: securityHeaders(),
+    });
+  }
+
   const orders = await listOrders(context.env);
   return new Response(JSON.stringify(orders), {
     status: 200,
