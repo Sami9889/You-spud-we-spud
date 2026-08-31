@@ -41,9 +41,15 @@ async function isAdminRequest(context) {
 
 function isSameOrigin(request) {
   const origin = request.headers.get("Origin");
-  if (!origin) return true;
+  if (origin) {
+    const url = new URL(request.url);
+    return origin === `${url.protocol}//${url.host}`;
+  }
+
+  const host = request.headers.get("Host");
+  if (!host) return false;
   const url = new URL(request.url);
-  return origin === `${url.protocol}//${url.host}`;
+  return host === url.host;
 }
 
 async function getRules(env) {
