@@ -158,6 +158,16 @@ function securityHeaders(extra = {}) {
 }
 
 export async function onRequestGet(context) {
+  const url = new URL(context.request.url);
+  const pathname = decodeURIComponent(url.pathname);
+
+  if (!pathname.startsWith('/api/orders')) {
+    return new Response(JSON.stringify({ error: "Not found." }), {
+      status: 404,
+      headers: securityHeaders(),
+    });
+  }
+
   if (!(await isAdminRequest(context))) {
     return new Response(JSON.stringify({ error: "Unauthorized." }), {
       status: 401,

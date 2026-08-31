@@ -1,12 +1,13 @@
 export async function onRequest(context) {
   const url = new URL(context.request.url);
+  const pathname = decodeURIComponent(url.pathname);
 
-  if (!url.pathname.startsWith('/admin')) {
+  if (!pathname.startsWith('/admin')) {
     return context.next();
   }
 
   const publicPaths = ['/api/admin/login', '/api/admin/logout', '/api/admin/migrate', '/admin', '/admin/', '/admin/index.html'];
-  if (publicPaths.includes(url.pathname)) {
+  if (publicPaths.includes(pathname)) {
     return context.next();
   }
 
