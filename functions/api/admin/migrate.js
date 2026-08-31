@@ -30,10 +30,17 @@ function securityHeaders(extra = {}) {
   };
 }
 
-export async function onRequestPost(context) {
+export async function onRequest(context) {
   if (!(await isAdminRequest(context))) {
     return new Response(JSON.stringify({ error: "Unauthorized." }), {
       status: 401,
+      headers: securityHeaders(),
+    });
+  }
+
+  if (context.request.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed." }), {
+      status: 405,
       headers: securityHeaders(),
     });
   }
